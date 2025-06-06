@@ -1,0 +1,20 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          explicit_to_json: true
+      freezed:
+        options:
+          to_json: false
+          format: false
+          when: false
+          map: false
+          union_key: type
+      auto_route_generator:auto_route_generator:
+        generate_for:
+          - lib/features/**/presentation/screens/**_screen.dart
+          - lib/features/**/presentation/screens/**/**_screen.dart
+      auto_route_generator:auto_router_generator: # this for @AutoRouterConfig
+        generate_for:
+          - lib/features/navigation/app_router.dart
