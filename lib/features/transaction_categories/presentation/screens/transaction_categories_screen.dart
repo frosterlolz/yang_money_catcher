@@ -10,5 +10,5 @@ class TransactionCategoriesScreen extends StatelessWidget {
   const TransactionCategoriesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const Center(child: Text('Категории'));
+  Widget build(BuildContext context) => const Center(child: Text('Статьи'));
 }

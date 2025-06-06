@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 
 /// {@template MainScreen.class}
@@ -14,6 +15,14 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = context.l10n;
+    const bottomRoutes = [
+      ExpensesRoute(),
+      IncomeRoute(),
+      AccountRoute(),
+      TransactionCategoriesRoute(),
+      SettingsRoute(),
+    ];
+
     // TODO(frosterlolz): заменить иконки
     final bottomItems = <String, IconData>{
       localizations.expenses: Icons.abc,
@@ -24,8 +33,7 @@ class MainScreen extends StatelessWidget {
     };
 
     return AutoTabsRouter(
-      // TODO(frosterlolz): заменить роуты
-      routes: const [],
+      routes: bottomRoutes,
       transitionBuilder: (context, child, animation) => FadeTransition(
         opacity: animation,
         child: child,
@@ -34,6 +42,7 @@ class MainScreen extends StatelessWidget {
         final tabsRouter = AutoTabsRouter.of(context);
 
         return Scaffold(
+          body: child,
           bottomNavigationBar: Theme(
             data: Theme.of(context).copyWith(
               splashColor: Colors.transparent,
