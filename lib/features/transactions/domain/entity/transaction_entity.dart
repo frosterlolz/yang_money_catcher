@@ -34,4 +34,6 @@ class TransactionDetailEntity with _$TransactionDetailEntity {
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _TransactionDetailEntity;
+
+  factory TransactionDetailEntity.fromJson(JsonMap json) => _$TransactionDetailEntityFromJson(json);
 }
