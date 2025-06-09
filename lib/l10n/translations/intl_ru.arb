@@ -1,7 +1,11 @@
 {
   "expenses": "Расходы",
+  "expensesToday": "Расходы сегодня",
   "income": "Доходы",
+  "incomesToday": "Доходы сегодня",
   "account": "Счет",
+  "myAccount": "Мой счет",
   "articles": "Статьи",
+  "myArticles": "Мои статьи",
   "settings": "Настройки"
 }

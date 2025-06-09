@@ -15,6 +15,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
     required this.regular16,
     required this.regular18,
     required this.regular20,
+    required this.regular22,
     required this.medium11,
     required this.medium12,
     required this.medium13,
@@ -23,6 +24,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
     required this.medium16,
     required this.medium18,
     required this.medium20,
+    required this.semiBold12,
     required this.bold10,
     required this.bold11,
     required this.bold13,
@@ -40,6 +42,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
         regular16 = AppTextStyle.regular16.value,
         regular18 = AppTextStyle.regular18.value,
         regular20 = AppTextStyle.regular20.value,
+        regular22 = AppTextStyle.regular22.value,
         medium11 = AppTextStyle.medium11.value,
         medium12 = AppTextStyle.medium12.value,
         medium13 = AppTextStyle.medium13.value,
@@ -48,6 +51,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
         medium16 = AppTextStyle.medium16.value,
         medium18 = AppTextStyle.medium18.value,
         medium20 = AppTextStyle.medium20.value,
+        semiBold12 = AppTextStyle.semiBold12.value,
         bold10 = AppTextStyle.bold10.value,
         bold11 = AppTextStyle.bold11.value,
         bold13 = AppTextStyle.bold13.value,
@@ -78,6 +82,9 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
   /// Text style 20_124
   final TextStyle regular20;
 
+  /// Text style 22_124
+  final TextStyle regular22;
+
   /// Text style 11_140.
   final TextStyle medium11;
 
@@ -101,6 +108,9 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
 
   /// Text style 20_124_500.
   final TextStyle medium20;
+
+  /// Text style 12_140_600.
+  final TextStyle semiBold12;
 
   /// Text style 10_140_700.
   final TextStyle bold10;
@@ -135,6 +145,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
       regular16: TextStyle.lerp(regular16, other.regular16, t),
       regular18: TextStyle.lerp(regular18, other.regular18, t),
       regular20: TextStyle.lerp(regular20, other.regular20, t),
+      regular22: TextStyle.lerp(regular22, other.regular22, t),
       medium11: TextStyle.lerp(medium11, other.regular20, t),
       medium12: TextStyle.lerp(medium12, other.medium12, t),
       medium13: TextStyle.lerp(medium13, other.medium13, t),
@@ -167,6 +178,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
     TextStyle? regular16,
     TextStyle? regular18,
     TextStyle? regular20,
+    TextStyle? regular22,
     TextStyle? medium11,
     TextStyle? medium12,
     TextStyle? medium13,
@@ -175,6 +187,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
     TextStyle? medium16,
     TextStyle? medium18,
     TextStyle? medium20,
+    TextStyle? semiBold12,
     TextStyle? bold10,
     TextStyle? bold11,
     TextStyle? bold13,
@@ -190,6 +203,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
         regular16: regular16 ?? this.regular16,
         regular18: regular18 ?? this.regular18,
         regular20: regular20 ?? this.regular20,
+        regular22: regular22 ?? this.regular22,
         medium11: medium11 ?? this.medium11,
         medium12: medium12 ?? this.medium12,
         medium13: medium13 ?? this.medium13,
@@ -198,6 +212,7 @@ class AppTextTheme extends ThemeExtension<AppTextTheme> {
         medium16: medium16 ?? this.medium16,
         medium18: medium18 ?? this.medium18,
         medium20: medium20 ?? this.medium20,
+        semiBold12: semiBold12 ?? this.semiBold12,
         bold10: bold10 ?? this.bold10,
         bold11: bold11 ?? this.bold11,
         bold13: bold13 ?? this.bold13,

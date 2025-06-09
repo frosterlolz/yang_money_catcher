@@ -6,9 +6,28 @@ import 'package:yang_money_catcher/ui_kit/colors/color_palette.dart';
 /// App color scheme.
 @immutable
 class AppColorScheme extends ThemeExtension<AppColorScheme> {
+  /// Base light theme of the app.
+  const AppColorScheme.light()
+      : primary = ColorPalette.ufoGreen,
+        onPrimary = ColorPalette.white,
+        secondary = ColorPalette.aeroBlue,
+        onSecondary = ColorPalette.appBarFgColor,
+        inactiveSecondary = ColorPalette.labelGrey,
+        subtitle = ColorPalette.subtitleGrey,
+        onSubtitle = ColorPalette.bodyTextGrey,
+        grabber = ColorPalette.grabberGrey,
+        surface = ColorPalette.antiFlashWhite,
+        onSurface = ColorPalette.eerieBlack,
+        background = ColorPalette.scaffoldBgGrey,
+        onBackground = ColorPalette.eerieBlack,
+        error = ColorPalette.freeSpeechRed,
+        onError = ColorPalette.alarmRed,
+        selectedItem = ColorPalette.ufoGreen,
+        unselectedItem = ColorPalette.eerieBlack;
+
   /// Dark theme of the app.
   const AppColorScheme.dark()
-      : primary = ColorPalette.white,
+      : primary = ColorPalette.ufoGreen,
         onPrimary = ColorPalette.darkGrey,
         secondary = ColorPalette.appBarFgColor,
         onSecondary = ColorPalette.white,
@@ -24,25 +43,6 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         onError = ColorPalette.darkGrey,
         selectedItem = ColorPalette.white,
         unselectedItem = ColorPalette.subtitleGrey;
-
-  /// Base light theme of the app.
-  const AppColorScheme.light()
-      : primary = ColorPalette.corpDark,
-        onPrimary = ColorPalette.white,
-        secondary = ColorPalette.corpLight,
-        onSecondary = ColorPalette.appBarFgColor,
-        inactiveSecondary = ColorPalette.labelGrey,
-        subtitle = ColorPalette.subtitleGrey,
-        onSubtitle = ColorPalette.bodyTextGrey,
-        grabber = ColorPalette.grabberGrey,
-        surface = ColorPalette.white,
-        onSurface = ColorPalette.black,
-        background = ColorPalette.scaffoldBgGrey,
-        onBackground = ColorPalette.black,
-        error = ColorPalette.freeSpeechRed,
-        onError = ColorPalette.alarmRed,
-        selectedItem = ColorPalette.corpDark,
-        unselectedItem = ColorPalette.darkGrey;
 
   const AppColorScheme._({
     required this.primary,

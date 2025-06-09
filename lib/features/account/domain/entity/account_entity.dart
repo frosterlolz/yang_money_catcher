@@ -6,6 +6,8 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 part 'account_entity.freezed.dart';
 part 'account_entity.g.dart';
 
+// Account (swagger)
+
 @freezed
 class AccountEntity with _$AccountEntity {
   const factory AccountEntity({
@@ -22,6 +24,7 @@ class AccountEntity with _$AccountEntity {
   factory AccountEntity.fromJson(JsonMap json) => _$AccountEntityFromJson(json);
 }
 
+// AccountResponse (swagger)
 @freezed
 class AccountDetailEntity with _$AccountDetailEntity {
   const factory AccountDetailEntity({

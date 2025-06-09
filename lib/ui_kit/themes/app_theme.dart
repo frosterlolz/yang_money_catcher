@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/core/utils/layout/material_spacing.dart';
+import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 import 'package:yang_money_catcher/ui_kit/text/text_extention.dart';
 
@@ -17,7 +18,6 @@ abstract class AppThemeData {
     ),
     useMaterial3: true,
     brightness: Brightness.light,
-    primaryColor: Colors.white,
     radioTheme: RadioThemeData(
       fillColor: WidgetStateColor.resolveWith((states) => _lightColorScheme.primary),
     ),
@@ -44,12 +44,9 @@ abstract class AppThemeData {
     appBarTheme: AppBarTheme(
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: _lightColorScheme.onPrimary,
-      foregroundColor: _lightColorScheme.onSecondary,
-      centerTitle: false,
-      titleTextStyle: _textTheme.medium20.copyWith(
-        color: _lightColorScheme.onSecondary,
-      ),
+      centerTitle: true,
+      backgroundColor: _lightColorScheme.primary,
+      titleTextStyle: _textTheme.regular20.copyWith(color: _lightColorScheme.onSecondary),
     ),
     applyElevationOverlayColor: false,
     badgeTheme: BadgeThemeData(
@@ -86,17 +83,13 @@ abstract class AppThemeData {
     fontFamily: 'NunitoSans',
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       elevation: 0,
-      backgroundColor: _lightColorScheme.onPrimary,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: _lightColorScheme.selectedItem,
+      selectedItemColor: _lightColorScheme.unselectedItem,
       unselectedItemColor: _lightColorScheme.unselectedItem,
-      selectedLabelStyle: _textTheme.bold11,
-      unselectedLabelStyle: _textTheme.regular11,
-      // selectedIconTheme: ,
-      // selectedIconTheme:
-      //     IconThemeData(size: 24, color: _lightColorScheme.selectedItem),
-      // unselectedIconTheme:
-      //     const BottomNavigationBarThemeData().unselectedIconTheme,
+      selectedLabelStyle: _textTheme.semiBold12,
+      unselectedLabelStyle: _textTheme.semiBold12,
+      selectedIconTheme: const IconThemeData(size: AppSizes.double24),
+      unselectedIconTheme: const IconThemeData(size: AppSizes.double24),
     ),
     extensions: [_lightColorScheme, _textTheme],
   );

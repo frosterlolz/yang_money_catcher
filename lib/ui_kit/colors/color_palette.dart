@@ -13,12 +13,18 @@ abstract class ColorPalette {
   static const scaffoldBgGrey = Color(0xFFF2F2F9);
   static const corpLight = Color(0xFFE8F6F8);
   static const grabberGrey = Color(0xFFD9D9D9);
+  static const antiFlashWhite = Color(0xffF3EDF7);
+  static const spanishGray = Color(0xff999999);
   static const labelGrey = Color(0xFFA5A7AE);
   static const subtitleGrey = Color(0xFF9D9D9D);
   static const bodyTextGrey = Color(0xFF555555);
   static const appBarFgColor = Color(0xFF333333);
   static const darkGrey = Color(0xFF4B505D);
+  static const eerieBlack = Color(0xff1D1B20);
   static const black = Colors.black;
+
+  static const aeroBlue = Color(0xffD4FAE6);
+  static const ufoGreen = Color(0xff2AE881);
 
   static const alarmRed = Color(0xFFFF2600);
   static const corpDark = Color(0xFF129EB3);

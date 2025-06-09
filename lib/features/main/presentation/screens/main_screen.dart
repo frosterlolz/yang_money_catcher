@@ -1,7 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
+import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 
 /// {@template MainScreen.class}
 /// Главный экран после запуска приложения.
@@ -14,6 +17,7 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final localizations = context.l10n;
     const bottomRoutes = [
       ExpensesRoute(),
@@ -24,12 +28,12 @@ class MainScreen extends StatelessWidget {
     ];
 
     // TODO(frosterlolz): заменить иконки
-    final bottomItems = <String, IconData>{
-      localizations.expenses: Icons.abc,
-      localizations.income: Icons.abc,
-      localizations.account: Icons.abc,
-      localizations.articles: Icons.abc,
-      localizations.settings: Icons.abc,
+    final bottomItems = <String, String>{
+      localizations.expenses: SvgIcons.graphDown,
+      localizations.income: SvgIcons.graphUp,
+      localizations.account: SvgIcons.calculator,
+      localizations.articles: SvgIcons.articles,
+      localizations.settings: SvgIcons.settings,
     };
 
     return AutoTabsRouter(
@@ -56,9 +60,24 @@ class MainScreen extends StatelessWidget {
                 bottomItems.length,
                 (index) {
                   final bottomBarEntry = bottomItems.entries.elementAt(index);
+                  final isSelected = index == tabsRouter.activeIndex;
                   return BottomNavigationBarItem(
                     label: bottomBarEntry.key,
-                    icon: Icon(bottomBarEntry.value),
+                    icon: DecoratedBox(
+                      decoration: BoxDecoration(
+                          color: isSelected ? colorScheme.secondary : null,
+                          borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16))),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSizes.double20, vertical: AppSizes.double4),
+                        child: SvgPicture.asset(
+                          bottomBarEntry.value,
+                          colorFilter: ColorFilter.mode(
+                            isSelected ? colorScheme.primary : colorScheme.onSurface,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
