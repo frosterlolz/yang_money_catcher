@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:yang_money_catcher/core/types/json_types.dart';
 
 part 'transaction_change_request.freezed.dart';
 part 'transaction_change_request.g.dart';

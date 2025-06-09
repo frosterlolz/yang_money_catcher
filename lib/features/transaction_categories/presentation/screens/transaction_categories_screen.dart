@@ -13,6 +13,6 @@ class TransactionCategoriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text(context.l10n.myArticles)),
-        body: const Center(child: Text('Статьи')),
+        body: Center(child: Text(context.l10n.articles)),
       );
 }

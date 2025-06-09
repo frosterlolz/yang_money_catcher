@@ -13,6 +13,6 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text(context.l10n.myAccount)),
-        body: const Center(child: Text('Счет')),
+        body: Center(child: Text(context.l10n.account)),
       );
 }

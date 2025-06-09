@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yang_money_catcher/core/utils/extensions/value_notifier_x.dart';
 import 'package:yang_money_catcher/core/utils/layout/material_spacing.dart';
+import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/l10n/localization.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/colors/color_palette.dart';
@@ -66,7 +67,7 @@ class _InitializationFailedAppState extends State<InitializationFailedApp> {
     await Clipboard.setData(ClipboardData(text: copiedErrorData));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Адрес скопирован')),
+      const SnackBar(content: Text('Address copied to clipboard')),
     );
   }
 
@@ -101,12 +102,12 @@ class _InitializationFailedAppState extends State<InitializationFailedApp> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'В данный момент приложение не доступно',
+                                context.l10n.appCurrentlyUnavailable,
                                 style: AppTextStyle.medium20.value,
                               ),
                               const SizedBox(height: 19.0),
                               Text(
-                                'Возможно произошла техническая ошибка, попробуйте снова позднее',
+                                context.l10n.mayBeFailTryItLater,
                                 style: AppTextStyle.regular16.value,
                               ),
                               if (kDebugMode)
@@ -152,7 +153,7 @@ class _InitializationFailedAppState extends State<InitializationFailedApp> {
                             if (v) {
                               return const Center(child: CircularProgressIndicator.adaptive());
                             }
-                            return const Text('Перезапустить');
+                            return Text(context.l10n.reload);
                           },
                         ),
                       ),

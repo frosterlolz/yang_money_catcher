@@ -27,7 +27,6 @@ class MainScreen extends StatelessWidget {
       SettingsRoute(),
     ];
 
-    // TODO(frosterlolz): заменить иконки
     final bottomItems = <String, String>{
       localizations.expenses: SvgIcons.graphDown,
       localizations.income: SvgIcons.graphUp,
@@ -65,8 +64,9 @@ class MainScreen extends StatelessWidget {
                     label: bottomBarEntry.key,
                     icon: DecoratedBox(
                       decoration: BoxDecoration(
-                          color: isSelected ? colorScheme.secondary : null,
-                          borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16))),
+                        color: isSelected ? colorScheme.secondary : null,
+                        borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: AppSizes.double20, vertical: AppSizes.double4),
                         child: SvgPicture.asset(

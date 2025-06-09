@@ -13,6 +13,6 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text(context.l10n.settings)),
-        body: const Center(child: Text('Настройки')),
+        body: Center(child: Text(context.l10n.settings)),
       );
 }
