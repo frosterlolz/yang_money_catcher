@@ -4,21 +4,24 @@ import 'package:yang_money_catcher/core/types/json_types.dart';
 part 'transaction_change_request.freezed.dart';
 part 'transaction_change_request.g.dart';
 
-abstract interface class TransactionRequest$Create {}
+// ignore_for_file: invalid_annotation_target
 
-abstract interface class TransactionRequest$Update {}
-
-@freezed
+@Freezed(fromJson: false, toJson: true)
 class TransactionRequest with _$TransactionRequest {
-  @Implements<TransactionRequest$Create>()
-  @Implements<TransactionRequest$Update>()
-  const factory TransactionRequest({
+  const factory TransactionRequest.create({
     required int accountId,
     required int categoryId,
     required String amount,
     required DateTime transactionDate,
     required String? comment,
-  }) = _TransactionRequest;
+  }) = TransactionRequest$Create;
 
-  factory TransactionRequest.fromJson(JsonMap json) => _$TransactionRequestFromJson(json);
+  const factory TransactionRequest.update({
+    @JsonKey(includeToJson: false) required int id,
+    required int accountId,
+    required int categoryId,
+    required String amount,
+    required DateTime transactionDate,
+    required String? comment,
+  }) = TransactionRequest$Update;
 }
