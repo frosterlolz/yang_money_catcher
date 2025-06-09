@@ -6,6 +6,8 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 part 'account_entity.freezed.dart';
 part 'account_entity.g.dart';
 
+// ignore_for_file: invalid_annotation_target
+
 // Account (swagger)
 
 @freezed
@@ -16,7 +18,7 @@ class AccountEntity with _$AccountEntity {
     required String name,
     required String balance,
     // TODO(frosterlolz): уточнить по Currency, тк в схеме это String, но для матчинга со знаком рубля- нужен enum
-    @Default(Currency.rub) required Currency currency,
+    @JsonKey(defaultValue: Currency.rub) required Currency currency,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _AccountEntity;
