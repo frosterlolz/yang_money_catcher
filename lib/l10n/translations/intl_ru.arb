@@ -1,0 +1,14 @@
+{
+  "appCurrentlyUnavailable": "В данный момент приложение не доступно",
+  "mayBeFailTryItLater": "Возможно произошла техническая ошибка, попробуйте снова позднее",
+  "reload": "Перезапустить",
+  "expenses": "Расходы",
+  "expensesToday": "Расходы сегодня",
+  "income": "Доходы",
+  "incomesToday": "Доходы сегодня",
+  "account": "Счет",
+  "myAccount": "Мой счет",
+  "articles": "Статьи",
+  "myArticles": "Мои статьи",
+  "settings": "Настройки"
+}
