@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:yang_money_catcher/core/utils/layout/material_spacing.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
+import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 import 'package:yang_money_catcher/ui_kit/text/text_extention.dart';
 
 enum AppTheme { light, dark }

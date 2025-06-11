@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yang_money_catcher/core/utils/extensions/value_notifier_x.dart';
-import 'package:yang_money_catcher/core/utils/layout/material_spacing.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/l10n/localization.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/colors/color_palette.dart';
+import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 import 'package:yang_money_catcher/ui_kit/text/text_style.dart';
 
 /// {@template initialization_failed_screen}
