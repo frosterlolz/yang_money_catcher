@@ -100,7 +100,7 @@ final class MockTransactionsRepository implements TransactionsRepository {
       50,
       (index) => TransactionRequest.create(
         accountId: 1,
-        amount: '100.00',
+        amount: '10000.${index.isOdd ? 00 : 50}',
         categoryId: index.isOdd ? 1 : 2,
         comment: 'Comment at $index',
         transactionDate: DateTime.now().subtract(Duration(days: Random().nextInt(2))),

@@ -48,6 +48,5 @@ class TransactionListTile extends StatelessWidget {
           Icons.chevron_right,
           color: AppColorScheme.of(context).labelTertiary.withValues(alpha: AppSizes.double03),
         ),
-        onTap: onTap,
       );
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
+import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
@@ -90,7 +92,7 @@ class _TransactionsListView extends StatelessWidget {
               SliverToBoxAdapter(
                 child: ListTile(
                   title: Text(context.l10n.total),
-                  trailing: Text('$total ${transactions.first.account.currency.symbol}'),
+                  trailing: Text(total.thousandsSeparated(fractionalLength: null).withCurrency(transactions.first.account.currency.symbol, 1)),
                   tileColor: AppColorScheme.of(context).secondary,
                 ),
               ),
@@ -105,7 +107,7 @@ class _TransactionsListView extends StatelessWidget {
                         leadingEmoji: transaction.category.emoji,
                         title: transaction.category.name,
                         subtitle: transaction.comment,
-                        amount: transaction.amount,
+                        amount: transaction.amount.amountToNum().thousandsSeparated(fractionalLength: null).withCurrency(transaction.account.currency.symbol, 1),
                         onTap: () => _onTransactionTap(transaction),
                       ),
                       if (index == transactions.length - 1) const Divider(),
