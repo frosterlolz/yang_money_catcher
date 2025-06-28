@@ -12,7 +12,6 @@ environment:
 
 workspace:
   - packages/pretty_logger
-  - packages/rest_client
 
 dependencies:
   # ✅ Core Flutter SDK
@@ -24,11 +23,9 @@ dependencies:
   # 🧱 Workspace / Local packages
   pretty_logger:
     path: ./packages/pretty_logger
-  rest_client:
-    path: ./packages/rest_client
 
   # 🚀 Navigation
-  auto_route: ^10.0.1
+  auto_route: 10.1.0
 
   # 📦 Data Models / Code Generation
   freezed: ^2.5.8

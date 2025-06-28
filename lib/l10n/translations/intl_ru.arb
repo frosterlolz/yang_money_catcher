@@ -4,11 +4,19 @@
   "reload": "Перезапустить",
   "expenses": "Расходы",
   "expensesToday": "Расходы сегодня",
+  "expensesAreEmpty": "Расходов нет",
   "income": "Доходы",
+  "incomeAreEmpty": "Доходов нет",
   "incomesToday": "Доходы сегодня",
   "account": "Счет",
+  "accountsAreEmpty": "У вас нет счетов",
   "myAccount": "Мой счет",
   "articles": "Статьи",
   "myArticles": "Мои статьи",
-  "settings": "Настройки"
+  "settings": "Настройки",
+  "somethingWentWrong": "Что-то пошло не так",
+  "tryItAgain": "Попробуйте ещё раз",
+  "retry": "Повторить",
+  "update": "Обновить",
+  "total": "Всего"
 }

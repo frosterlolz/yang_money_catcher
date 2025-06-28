@@ -14,10 +14,12 @@ abstract class ColorPalette {
   static const corpLight = Color(0xFFE8F6F8);
   static const grabberGrey = Color(0xFFD9D9D9);
   static const antiFlashWhite = Color(0xffF3EDF7);
+  static const lavenderGray = Color(0xffCAC4D0);
   static const spanishGray = Color(0xff999999);
   static const labelGrey = Color(0xFFA5A7AE);
   static const subtitleGrey = Color(0xFF9D9D9D);
   static const bodyTextGrey = Color(0xFF555555);
+  static const arsenic = Color(0xff3C3C43);
   static const appBarFgColor = Color(0xFF333333);
   static const darkGrey = Color(0xFF4B505D);
   static const eerieBlack = Color(0xff1D1B20);

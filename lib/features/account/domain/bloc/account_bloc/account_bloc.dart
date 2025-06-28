@@ -1,3 +1,4 @@
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
@@ -15,6 +16,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       (event, emitter) => switch (event) {
         _Load() => _load(event, emitter),
       },
+      transformer: droppable(),
     );
   }
 

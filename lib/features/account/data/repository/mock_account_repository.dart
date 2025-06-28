@@ -5,6 +5,10 @@ import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
 
 final class MockAccountRepository implements AccountRepository {
+  MockAccountRepository() {
+    _generateMockData();
+  }
+
   final List<AccountEntity> _accounts = [];
   final Map<int, AccountDetailEntity> _accountDetails = {};
   final Map<int, AccountHistory> _accountHistories = {};
@@ -95,5 +99,19 @@ final class MockAccountRepository implements AccountRepository {
   Future<void> deleteAccount(int accountId) async {
     _accounts.removeWhere((account) => account.id == accountId);
     return Future<void>.value();
+  }
+
+  void _generateMockData() {
+    final requests = List.generate(
+      10,
+      (index) => AccountRequest.create(
+        name: 'Transaction $index',
+        balance: '100$index.00',
+        currency: Currency.rub,
+      ),
+    ).cast<AccountRequest$Create>();
+    for (final request in requests) {
+      createAccount(request);
+    }
   }
 }
