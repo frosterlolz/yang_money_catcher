@@ -90,4 +90,10 @@ final class MockAccountRepository implements AccountRepository {
 
     return updated;
   }
+
+  @override
+  Future<void> deleteAccount(int accountId) async {
+    _accounts.removeWhere((account) => account.id == accountId);
+    return Future<void>.value();
+  }
 }

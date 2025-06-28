@@ -37,6 +37,15 @@ abstract interface class AccountRepository {
   ///   AccountEntity — обновленный счет.
   Future<AccountEntity> updateAccount(AccountRequest$Update request);
 
+  /// Удалить существующий банковский счет.
+  ///
+  /// Parameters:
+  ///   [accountId] — идентификатор счета.
+  ///
+  /// Returns:
+  ///   void
+  Future<void> deleteAccount(int accountId);
+
   /// Получить историю операций по конкретному счету.
   ///
   /// Parameters:

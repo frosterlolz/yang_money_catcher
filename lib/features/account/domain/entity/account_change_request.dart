@@ -7,7 +7,7 @@ part 'account_change_request.g.dart';
 // ignore_for_file: invalid_annotation_target
 
 @Freezed(fromJson: false, toJson: true)
-class AccountRequest with _$AccountRequest {
+sealed class AccountRequest with _$AccountRequest {
   const factory AccountRequest.create({
     required String name,
     required String balance,
