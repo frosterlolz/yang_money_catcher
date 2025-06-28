@@ -92,7 +92,11 @@ class _TransactionsListView extends StatelessWidget {
               SliverToBoxAdapter(
                 child: ListTile(
                   title: Text(context.l10n.total),
-                  trailing: Text(total.thousandsSeparated(fractionalLength: null).withCurrency(transactions.first.account.currency.symbol, 1)),
+                  trailing: Text(
+                    total
+                        .thousandsSeparated(fractionalLength: null)
+                        .withCurrency(transactions.first.account.currency.symbol, 1),
+                  ),
                   tileColor: AppColorScheme.of(context).secondary,
                 ),
               ),
@@ -107,7 +111,10 @@ class _TransactionsListView extends StatelessWidget {
                         leadingEmoji: transaction.category.emoji,
                         title: transaction.category.name,
                         subtitle: transaction.comment,
-                        amount: transaction.amount.amountToNum().thousandsSeparated(fractionalLength: null).withCurrency(transaction.account.currency.symbol, 1),
+                        amount: transaction.amount
+                            .amountToNum()
+                            .thousandsSeparated(fractionalLength: null)
+                            .withCurrency(transaction.account.currency.symbol, 1),
                         onTap: () => _onTransactionTap(transaction),
                       ),
                       if (index == transactions.length - 1) const Divider(),

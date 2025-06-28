@@ -23,7 +23,11 @@ class AccountsEmptyView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Text(context.l10n.accountsAreEmpty, textAlign: TextAlign.center, style: TextTheme.of(context).titleMedium),
+              Text(
+                context.l10n.accountsAreEmpty,
+                textAlign: TextAlign.center,
+                style: TextTheme.of(context).titleMedium,
+              ),
               const Spacer(),
               ElevatedButton(onPressed: () => _onReloadAccountsTap(context), child: Text(context.l10n.update)),
               const SizedBox(height: AppSizes.double10),
