@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pretty_logger/pretty_logger.dart';
+import 'package:yang_money_catcher/core/domain/bloc/app_bloc_observer.dart';
 import 'package:yang_money_catcher/features/app/presentation/app.dart';
 import 'package:yang_money_catcher/features/initialization/domain/service/initialization_root.dart';
 import 'package:yang_money_catcher/features/initialization/presentation/initialization_failed_app.dart';
@@ -14,6 +17,9 @@ final class AppRunner {
 
     FlutterError.onError = logger.logFlutterError;
     WidgetsBinding.instance.platformDispatcher.onError = logger.logPlatformDispatcherError;
+
+    Bloc.observer = AppBlocObserver(logger);
+    Bloc.transformer = sequential();
 
     final initializationRoot = InitializationRoot(logger);
 
