@@ -23,9 +23,8 @@ Future<T?> showItemSelectorModalBottomSheet<T>(
 /// {@endtemplate}
 class _ItemSelectorSheet extends StatelessWidget {
   /// {@macro _ItemSelectorSheet.class}
-  const _ItemSelectorSheet(this.body, {this.titleText});
+  const _ItemSelectorSheet(this.body);
 
-  final String? titleText;
   final Widget body;
 
   // TODO(frosterlolz): актуализировать дизайн

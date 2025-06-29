@@ -71,7 +71,10 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
   Future<void> _selectTransactionCategory() async {
     final selectedTransactionCategory = await showItemSelectorModalBottomSheet<TransactionCategory>(
       context,
-      body: TransactionCategorySelectorView(currentTransactionCategoryId: _transactionCategory?.id, isIncome: widget.isIncome),
+      body: TransactionCategorySelectorView(
+        currentTransactionCategoryId: _transactionCategory?.id,
+        isIncome: widget.isIncome,
+      ),
     );
     if (selectedTransactionCategory == null) return;
     _changeTransactionCategory(selectedTransactionCategory);
@@ -93,7 +96,11 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
     final fallbackFirstDate = _transactionDate.isBefore(effectiveFirstDate) ? _transactionDate : effectiveFirstDate;
     final fallbackEndDate = _transactionDate.isAfter(effectiveEndDate) ? _transactionDate : effectiveEndDate;
     final date = await showDatePicker(
-        context: context, firstDate: fallbackFirstDate, lastDate: fallbackEndDate, initialDate: _transactionDate);
+      context: context,
+      firstDate: fallbackFirstDate,
+      lastDate: fallbackEndDate,
+      initialDate: _transactionDate,
+    );
     if (date == null) return;
     _changeTransactionDate(date);
   }
@@ -108,8 +115,10 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
   }
 
   Future<void> _selectComment() async {
-    final comment =
-        await showDialog<String>(context: context, builder: (context) => _SelectCommentDialog(initialComment: _comment));
+    final comment = await showDialog<String>(
+      context: context,
+      builder: (context) => _SelectCommentDialog(initialComment: _comment),
+    );
     if (comment == null) return;
     _changeComment(comment);
   }
