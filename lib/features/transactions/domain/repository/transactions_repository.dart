@@ -1,3 +1,4 @@
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
@@ -9,7 +10,7 @@ abstract interface class TransactionsRepository {
   ///   [request] — данные для создания транзакции.
   ///
   /// Returns:
-  ///   TransactionEntity — созданная транзакция.
+  ///   [TransactionEntity] — созданная транзакция.
   Future<TransactionEntity> createTransaction(TransactionRequest$Create request);
 
   /// Получить полную информацию о конкретной транзакции.
@@ -18,8 +19,8 @@ abstract interface class TransactionsRepository {
   ///   [id] — идентификатор транзакции.
   ///
   /// Returns:
-  ///   TransactionDetailEntity — подробные данные транзакции.
-  Future<TransactionDetailEntity> getTransaction(int id);
+  ///   [TransactionDetailEntity] — подробные данные транзакции.
+  Future<TransactionDetailEntity?> getTransaction(int id);
 
   /// Обновить существующую транзакцию.
   ///
@@ -27,7 +28,7 @@ abstract interface class TransactionsRepository {
   ///   [request] — обновленные данные транзакции.
   ///
   /// Returns:
-  ///   TransactionDetailEntity — обновлённая транзакция.
+  ///   [TransactionDetailEntity] — обновлённая транзакция.
   Future<TransactionDetailEntity> updateTransaction(TransactionRequest$Update request);
 
   /// Удалить транзакцию по ID.
@@ -49,6 +50,23 @@ abstract interface class TransactionsRepository {
   ///   Iterable<TransactionDetailEntity> — список транзакций.
   Future<Iterable<TransactionDetailEntity>> getTransactions({
     required int accountId,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+
+  /// Получить поток изменений транзакций.
+  ///
+  /// Parameters:
+  ///   [id] — идентификатор транзакции. Если он указан- диапазон дат игнорируется.
+  ///   [startDate] — начальная дата (включительно).
+  ///   Если не указана, все считаются подходящими.
+  ///   [endDate] — конечная дата (включительно).
+  ///   Если не указана, все считаются подходящими.
+  ///
+  /// Returns:
+  ///   Stream<TransactionChangeEntry> — поток изменений транзакций.
+  Stream<TransactionChangeEntry> transactionChangesStream({
+    int? id,
     DateTime? startDate,
     DateTime? endDate,
   });

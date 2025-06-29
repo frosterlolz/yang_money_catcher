@@ -1,12 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 
 void main() {
+  late TransactionsLocalDataSource transactionsLocalDataSource;
   late MockTransactionsRepository repository;
 
   setUp(() {
-    repository = MockTransactionsRepository();
+    transactionsLocalDataSource = TransactionsLocalDataSource();
+    repository = MockTransactionsRepository(transactionsLocalDataSource);
   });
 
   test('Создание новой транзакции', () async {
@@ -37,7 +40,7 @@ void main() {
 
     final detail = await repository.getTransaction(created.id);
 
-    expect(detail.id, equals(created.id));
+    expect(detail?.id, equals(created.id));
   });
 
   test('Обновление транзакции', () async {
