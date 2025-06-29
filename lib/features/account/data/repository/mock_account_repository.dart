@@ -5,9 +5,7 @@ import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
 
 final class MockAccountRepository implements AccountRepository {
-  MockAccountRepository() {
-    _generateMockData();
-  }
+  MockAccountRepository();
 
   final List<AccountEntity> _accounts = [];
   final Map<int, AccountDetailEntity> _accountDetails = {};
@@ -101,7 +99,7 @@ final class MockAccountRepository implements AccountRepository {
     return Future<void>.value();
   }
 
-  void _generateMockData() {
+  Future<void> generateMockData() async {
     final requests = List.generate(
       10,
       (index) => AccountRequest.create(
@@ -111,7 +109,7 @@ final class MockAccountRepository implements AccountRepository {
       ),
     ).cast<AccountRequest$Create>();
     for (final request in requests) {
-      createAccount(request);
+      await createAccount(request);
     }
   }
 }

@@ -28,11 +28,15 @@ final class InitializationRoot {
   /// Preparing initialization steps [InitializationStep]
   Map<String, InitializationStep> _prepareInitializationSteps() => {
         'Init logger': (d) async => d.logger = logger,
-        'Init root repositories': (d) {
+        'Init root repositories': (d) async {
+          final accountsRepository = MockAccountRepository();
+          await accountsRepository.generateMockData();
           final transactionsLocalDataSource = TransactionsLocalDataSource();
+          final transactionsRepository = MockTransactionsRepository(transactionsLocalDataSource);
+          await transactionsRepository.generateMockData();
           d
-            ..accountRepository = MockAccountRepository()
-            ..transactionsRepository = MockTransactionsRepository(transactionsLocalDataSource);
+            ..accountRepository = accountsRepository
+            ..transactionsRepository = transactionsRepository;
         },
       };
 

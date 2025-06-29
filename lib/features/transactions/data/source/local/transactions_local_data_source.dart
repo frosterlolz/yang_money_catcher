@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
 /// [int] -> id транзакции, [TransactionDetailEntity] -> измененная/новая транзакция. Если Null- значит транзакция удалена
@@ -31,8 +33,11 @@ base class TransactionsLocalDataSource {
     return result;
   }
 
-  Future<TransactionDetailEntity?> getTransaction(int id) async =>
-      _queueOp(() async => _transactions.firstWhereOrNull((tx) => tx.id == id));
+  Future<TransactionDetailEntity?> getTransaction(int id) async => _queueOp(() async {
+        // Имитация микро-задержки
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        return _transactions.firstWhereOrNull((tx) => tx.id == id);
+      });
 
   Future<TransactionEntity> saveTransaction(TransactionDetailEntity transaction) async {
     final updated = await updateTransaction(transaction, true);
@@ -55,6 +60,8 @@ base class TransactionsLocalDataSource {
   ]) async =>
       _queueOp(() async {
         final overlapIndex = _transactions.indexWhere((e) => e.id == transaction.id);
+        // Имитация микро-задержки
+        await Future<void>.delayed(const Duration(milliseconds: 10));
         if (overlapIndex != -1) {
           _transactions[overlapIndex] = transaction;
         } else {
@@ -70,6 +77,8 @@ base class TransactionsLocalDataSource {
   Future<bool> deleteTransaction(int id) async => _queueOp(() async {
         final overlapIndex = _transactions.indexWhere((e) => e.id == id);
         if (overlapIndex == -1) return false;
+        // Имитация микро-задержки
+        await Future<void>.delayed(const Duration(milliseconds: 10));
         _transactions.removeAt(overlapIndex);
         _transactionChangesController.add(MapEntry(id, null));
         return true;
@@ -85,4 +94,7 @@ base class TransactionsLocalDataSource {
 
     return completer.future;
   }
+
+  Future<Iterable<TransactionCategory>> getTransactionCategories() async =>
+      transactionCategoriesJson.map(TransactionCategory.fromJson);
 }

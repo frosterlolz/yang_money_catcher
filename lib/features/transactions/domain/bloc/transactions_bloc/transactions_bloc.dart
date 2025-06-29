@@ -36,7 +36,9 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
         startDate: event.range?.start,
         endDate: event.range?.end,
       );
-      emitter(TransactionsState.idle(UnmodifiableListView(transactions)));
+      debugPrint('transactions length: ${transactions.length}');
+      debugPrint('other filtered: ${state.expensesFiltered(transactions).length}');
+      emitter(TransactionsState.idle(UnmodifiableListView(transactions.toList())));
     } on Object catch (e, s) {
       emitter(TransactionsState.error(state.transactions, error: e));
       onError(e, s);

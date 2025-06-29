@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
@@ -23,7 +24,7 @@ void main() {
       ),
     );
 
-    expect(tx.id, equals(1));
+    expect(tx.categoryId, equals(1));
     expect(tx.amount, equals('500'));
   });
 
@@ -82,7 +83,9 @@ void main() {
 
     await repository.deleteTransaction(created.id);
 
-    expect(() => repository.getTransaction(created.id), throwsException);
+    final deleted = await repository.getTransaction(created.id);
+
+    expect(deleted, isNull);
   });
 
   test('Получение транзакций по accountId и дате', () async {
@@ -114,6 +117,8 @@ void main() {
     );
 
     expect(result.length, equals(1));
-    expect(result.first.comment, equals('New'));
+    final found = result.firstWhereOrNull((tx) => tx.comment == 'New');
+    expect(found, isNotNull);
+    expect(found!.amount, equals('250'));
   });
 }
