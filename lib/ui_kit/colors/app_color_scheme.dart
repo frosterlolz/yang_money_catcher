@@ -21,8 +21,8 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         onSurface = ColorPalette.eerieBlack,
         background = ColorPalette.scaffoldBgGrey,
         onBackground = ColorPalette.eerieBlack,
-        error = ColorPalette.freeSpeechRed,
-        onError = ColorPalette.alarmRed,
+        error = ColorPalette.terraCotta,
+        onError = ColorPalette.white,
         selectedItem = ColorPalette.ufoGreen,
         unselectedItem = ColorPalette.eerieBlack,
         labelTertiary = ColorPalette.arsenic;
@@ -42,8 +42,8 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         onSurface = ColorPalette.darkGrey,
         background = ColorPalette.jaguar,
         onBackground = ColorPalette.darkGrey,
-        error = ColorPalette.freeSpeechRed,
-        onError = ColorPalette.darkGrey,
+        error = ColorPalette.terraCotta,
+        onError = ColorPalette.white,
         selectedItem = ColorPalette.white,
         unselectedItem = ColorPalette.subtitleGrey,
         labelTertiary = ColorPalette.arsenic;

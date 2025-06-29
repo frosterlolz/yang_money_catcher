@@ -83,7 +83,13 @@ abstract class AppThemeData {
       labelStyle: _textTheme.regular14.copyWith(
         color: _lightColorScheme.inactiveSecondary,
       ),
-      border: InputBorder.none,
+      border: const OutlineInputBorder(),
+    ),
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: _lightColorScheme.secondary,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16))),
+      cancelButtonStyle: TextButton.styleFrom(foregroundColor: _lightColorScheme.onSurface),
+      confirmButtonStyle: TextButton.styleFrom(foregroundColor: _lightColorScheme.onSurface),
     ),
     listTileTheme: ListTileThemeData(
       iconColor: _lightColorScheme.unselectedItem,

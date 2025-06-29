@@ -38,7 +38,7 @@ abstract class ColorPalette {
   static const oxfordBlue = Color(0xFF263238);
   static const horizon = Color(0xFF428989);
   static const purple = Color(0xFF7A3E93);
-  static const freeSpeechRed = Color(0xFFB00000);
+  static const terraCotta = Color(0xFFE46962);
   static const pastelWhite = Color(0xFFFAFAFA);
   static const solitude = Color(0xFFE5E8EB);
 }

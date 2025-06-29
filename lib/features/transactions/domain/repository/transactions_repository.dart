@@ -1,3 +1,4 @@
+import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
@@ -70,4 +71,10 @@ abstract interface class TransactionsRepository {
     DateTime? startDate,
     DateTime? endDate,
   });
+
+  /// Получить список категорий транзакций
+  ///
+  /// Returns:
+  ///   Iterable<TransactionCategory> — список категорий
+  Future<Iterable<TransactionCategory>> getTransactionCategories();
 }

@@ -1,8 +1,10 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
+import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
@@ -77,8 +79,8 @@ class _TransactionsListView extends StatelessWidget {
 
   num get total => transactions.fold(0, (a, b) => a + (num.tryParse(b.amount) ?? 0.0));
 
-  void _onTransactionTap(TransactionDetailEntity transaction) {
-    // TODO(frosterlolz): реализовать переход на экран транзакции
+  void _onTransactionTap(BuildContext context, TransactionDetailEntity transaction) {
+    context.pushRoute(TransactionRoute(isIncome: isIncome, initialTransaction: transaction));
   }
 
   @override
@@ -115,7 +117,7 @@ class _TransactionsListView extends StatelessWidget {
                             .amountToNum()
                             .thousandsSeparated(fractionalLength: null)
                             .withCurrency(transaction.account.currency.symbol, 1),
-                        onTap: () => _onTransactionTap(transaction),
+                        onTap: () => _onTransactionTap(context, transaction),
                       ),
                       if (index == transactions.length - 1) const Divider(),
                     ],

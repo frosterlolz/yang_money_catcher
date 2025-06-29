@@ -27,6 +27,12 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
   final TransactionsRepository _transactionsRepository;
   StreamSubscription<TransactionChangeEntry>? _transactionChangesSubscription;
 
+  @override
+  Future<void> close() {
+    _transactionChangesSubscription?.cancel();
+    return super.close();
+  }
+
   Future<void> _loadTransactions(_Load event, _Emitter emitter) async {
     _updateTransactionChangesSubscription(event.range);
     emitter(TransactionsState.processing(state.transactions));

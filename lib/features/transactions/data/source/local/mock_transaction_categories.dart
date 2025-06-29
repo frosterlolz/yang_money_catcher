@@ -22,5 +22,5 @@ final transactionCategoriesJson = [
   {'id': 21, 'name': 'Спорт', 'emoji': '🏋️', 'isIncome': false},
   {'id': 22, 'name': 'Домашние животные', 'emoji': '🐾', 'isIncome': false},
   {'id': 23, 'name': 'Хобби', 'emoji': '🎨', 'isIncome': false},
-  {'id': 24, 'name': 'Кредиты', 'emoji': '💳', 'isIncome': false}
+  {'id': 24, 'name': 'Кредиты', 'emoji': '💳', 'isIncome': false},
 ];

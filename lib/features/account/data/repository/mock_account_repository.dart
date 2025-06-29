@@ -103,7 +103,7 @@ final class MockAccountRepository implements AccountRepository {
     final requests = List.generate(
       10,
       (index) => AccountRequest.create(
-        name: 'Transaction $index',
+        name: 'Account $index',
         balance: '100$index.00',
         currency: Currency.rub,
       ),

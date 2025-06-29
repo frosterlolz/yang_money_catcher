@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:async/async.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_brief.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
+import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
@@ -88,7 +89,7 @@ final class MockTransactionsRepository implements TransactionsRepository {
     final random = Random();
     final categories = await _transactionsLocalDataSource.getTransactionCategories();
     final requests = List.generate(
-      50,
+      5,
       (index) {
         final categoryIndex = random.nextInt(categories.length);
         final amountFractionalPart = random.nextInt(2) > 0 ? '00' : '50';
@@ -106,4 +107,8 @@ final class MockTransactionsRepository implements TransactionsRepository {
       await createTransaction(request);
     }
   }
+
+  @override
+  Future<Iterable<TransactionCategory>> getTransactionCategories() async =>
+      _transactionsLocalDataSource.getTransactionCategories();
 }

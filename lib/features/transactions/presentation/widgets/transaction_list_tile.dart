@@ -24,6 +24,7 @@ class TransactionListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
+        onTap: onTap,
         leading: Text(leadingEmoji),
         title: Row(
           children: [

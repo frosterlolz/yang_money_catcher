@@ -1,8 +1,10 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
 import 'package:yang_money_catcher/features/account/presentation/widgets/account_selected_wrapper.dart';
 import 'package:yang_money_catcher/features/account/presentation/widgets/accounts_loader_wrapper.dart';
+import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transactions_body_view.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 
@@ -15,8 +17,8 @@ class TransactionsScreen extends StatelessWidget {
 
   final bool isIncome;
 
-  void _onAddTransactionTap() {
-    // TODO(frosterlolz): реализовать переход на экран добавления транзакции
+  void _onAddTransactionTap(BuildContext context) {
+    context.pushRoute(TransactionRoute(isIncome: isIncome));
   }
 
   @override
@@ -32,7 +34,8 @@ class TransactionsScreen extends StatelessWidget {
           builder: (context, accountState) => accountState.account == null
               ? const SizedBox.shrink()
               : FloatingActionButton(
-                  onPressed: _onAddTransactionTap,
+                  heroTag: 'TransactionsScreen with isIncome flag = $isIncome',
+                  onPressed: () => _onAddTransactionTap(context),
                   child: const Icon(Icons.add),
                 ),
         ),
