@@ -44,6 +44,11 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
   @override
   void initState() {
     super.initState();
+    _loadTransactions();
+  }
+
+  void _loadTransactions() {
+    if (!mounted) return;
     final filters = TransactionFilters(
       accountId: widget.accountId,
       isIncome: widget.isIncome,
@@ -61,18 +66,16 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     final resDate = await _showDateSelector(_dateTimeRange.start);
     if (resDate == null) return;
     final isChanged = _changeDateRange(start: resDate);
-    if (!isChanged || !mounted) return;
-    final filters = TransactionFilters(accountId: widget.accountId, startDate: _dateTimeRange.start, endDate: _dateTimeRange.end);
-    context.read<TransactionsBloc>().add(TransactionsEvent.load(filters));
+    if (!isChanged) return;
+    _loadTransactions();
   }
 
   Future<void> _onSelectEndDate() async {
     final resDate = await _showDateSelector(_dateTimeRange.end);
     if (resDate == null) return;
     final isChanged = _changeDateRange(end: resDate);
-    if (!isChanged || !mounted) return;
-    final filters = TransactionFilters(accountId: widget.accountId, startDate: _dateTimeRange.start, endDate: _dateTimeRange.end);
-    context.read<TransactionsBloc>().add(TransactionsEvent.load(filters));
+    if (!isChanged) return;
+    _loadTransactions();
   }
 
   Future<DateTime?> _showDateSelector(DateTime? initialDate) async {
@@ -168,8 +171,8 @@ mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
     super.initState();
     final dtNow = DateTime.now();
     final fallbackDateRange = DateTimeRange(
-      start: dtNow.copyWith(month: dtNow.month - 1, hour: 0, minute: 0, second: 0),
-      end: dtNow.copyWith(hour: 23, minute: 59, second: 59),
+      start: dtNow.endOfDay.copyWith(month: dtNow.month - 1),
+      end: dtNow.endOfDay,
     );
     final effectiveDateRange = widget.initialRange ?? fallbackDateRange;
     _dateTimeRange = effectiveDateRange;
@@ -185,8 +188,8 @@ mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
     final normalizedStart = start == null ? _normalizeStartRange(start: rawStart, end: rawEnd) : rawStart;
     final normalizedEnd = end == null ? _normalizeEndRange(end: rawEnd, start: rawStart) : rawEnd;
 
-    final withTimeStart = normalizedStart.copyWith(hour: 0, minute: 0, second: 0);
-    final withTimeEnd = normalizedEnd.copyWith(hour: 23, minute: 59, second: 59);
+    final withTimeStart = normalizedStart.startOfDay;
+    final withTimeEnd = normalizedEnd.startOfDay;
 
     final isSameStart = withTimeStart.isSameDateTime(_dateTimeRange.start);
     final isSameEnd = withTimeEnd.isSameDateTime(_dateTimeRange.end);
@@ -199,10 +202,7 @@ mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
     return true;
   }
 
-  DateTime _normalizeStartRange({required DateTime start, required DateTime end}) {
-    final isStartBeforeEnd = start.isBefore(end);
-    return isStartBeforeEnd ? start : end;
-  }
+  DateTime _normalizeStartRange({required DateTime start, required DateTime end}) => start.isBefore(end) ? start : end;
 
   DateTime _normalizeEndRange({required DateTime start, required DateTime end}) => end.isAfter(start) ? end : start;
 }
