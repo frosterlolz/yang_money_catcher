@@ -6,8 +6,16 @@ final expensesRoute = AutoRoute(
   children: [
     AutoRoute(page: ExpensesRoute.page, initial: true),
     AutoRoute(page: TransactionRoute.page),
+    AutoRoute(page: TransactionsHistoryRoute.page),
   ],
   initial: true,
 );
 
-final incomeRoute = AutoRoute(page: IncomeRoute.page);
+final incomeRoute = AutoRoute(
+  page: const EmptyShellRoute('IncomeTabRoute').page,
+  children: [
+    AutoRoute(page: IncomeRoute.page, initial: true),
+    AutoRoute(page: TransactionRoute.page),
+    AutoRoute(page: TransactionsHistoryRoute.page),
+  ],
+);

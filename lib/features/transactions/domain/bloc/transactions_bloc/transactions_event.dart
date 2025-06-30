@@ -4,7 +4,7 @@ part of 'transactions_bloc.dart';
 sealed class TransactionsEvent with _$TransactionsEvent {
   const TransactionsEvent._();
 
-  const factory TransactionsEvent.load(int accountId, {DateTimeRange? range}) = _Load;
+  const factory TransactionsEvent.load(TransactionFilters filters) = _Load;
 }
 
 final class _Update extends TransactionsEvent {

@@ -2,6 +2,7 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
 /// Репозиторий для работы с транзакциями пользователя.
 abstract interface class TransactionsRepository {
@@ -41,36 +42,18 @@ abstract interface class TransactionsRepository {
   /// Получить список транзакций для указанного счёта в заданном диапазоне дат.
   ///
   /// Parameters:
-  ///   [accountId] — ID счёта.
-  ///   [startDate] — начальная дата (включительно).
-  ///   Если не указана, используется начало текущего месяца.
-  ///   [endDate] — конечная дата (включительно).
-  ///   Если не указана, используется конец текущего месяца.
-  ///
+  ///  [filters] — фильтры для выборки транзакций.
   /// Returns:
   ///   Iterable<TransactionDetailEntity> — список транзакций.
-  Future<Iterable<TransactionDetailEntity>> getTransactions({
-    required int accountId,
-    DateTime? startDate,
-    DateTime? endDate,
-  });
+  Future<Iterable<TransactionDetailEntity>> getTransactions(TransactionFilters filters);
 
   /// Получить поток изменений транзакций.
   ///
   /// Parameters:
-  ///   [id] — идентификатор транзакции. Если он указан- диапазон дат игнорируется.
-  ///   [startDate] — начальная дата (включительно).
-  ///   Если не указана, все считаются подходящими.
-  ///   [endDate] — конечная дата (включительно).
-  ///   Если не указана, все считаются подходящими.
-  ///
+  ///   [filters] — фильтры для выборки транзакций.
   /// Returns:
   ///   Stream<TransactionChangeEntry> — поток изменений транзакций.
-  Stream<TransactionChangeEntry> transactionChangesStream({
-    int? id,
-    DateTime? startDate,
-    DateTime? endDate,
-  });
+  Stream<TransactionChangeEntry> transactionChangesStream({int? id, TransactionFilters? filters});
 
   /// Получить список категорий транзакций
   ///

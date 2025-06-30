@@ -13,20 +13,6 @@ sealed class TransactionsState with _$TransactionsState {
     required Object error,
   }) = TransactionsState$Error;
 
-  Iterable<TransactionDetailEntity> filtered(
-    Iterable<TransactionDetailEntity> transactions, {
-    required bool isIncome,
-  }) =>
-      isIncome ? incomeFiltered(transactions) : expensesFiltered(transactions);
-  Iterable<TransactionDetailEntity> expensesFiltered(Iterable<TransactionDetailEntity> transactions) {
-    final res = transactions.where((transaction) => !transaction.category.isIncome);
-    debugPrint('expensesFiltered: ${res.length}');
-    return res;
-  }
-
-  Iterable<TransactionDetailEntity> incomeFiltered(Iterable<TransactionDetailEntity> transactions) {
-    final res = transactions.where((transaction) => transaction.category.isIncome);
-    debugPrint('incomeFiltered: ${res.length}');
-    return res;
-  }
+  num get totalAmount =>
+      transactions?.fold(0.0, (sum, transaction) => (sum ?? 0.0) + transaction.amount.amountToNum()) ?? 0.0;
 }

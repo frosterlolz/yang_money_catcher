@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/features/transactions/domain/repository/transactions_repository.dart';
 
 part 'transactions_event.dart';
@@ -34,16 +35,10 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
   }
 
   Future<void> _loadTransactions(_Load event, _Emitter emitter) async {
-    _updateTransactionChangesSubscription(event.range);
+    _updateTransactionChangesSubscription(event.filters);
     emitter(TransactionsState.processing(state.transactions));
     try {
-      final transactions = await _transactionsRepository.getTransactions(
-        accountId: event.accountId,
-        startDate: event.range?.start,
-        endDate: event.range?.end,
-      );
-      debugPrint('transactions length: ${transactions.length}');
-      debugPrint('other filtered: ${state.expensesFiltered(transactions).length}');
+      final transactions = await _transactionsRepository.getTransactions(event.filters);
       emitter(TransactionsState.idle(UnmodifiableListView(transactions.toList())));
     } on Object catch (e, s) {
       emitter(TransactionsState.error(state.transactions, error: e));
@@ -73,11 +68,9 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     emitter(TransactionsState.idle(UnmodifiableListView(mutableTransactions)));
   }
 
-  void _updateTransactionChangesSubscription(DateTimeRange? dateTimeRange) {
+  void _updateTransactionChangesSubscription(TransactionFilters filters) {
     _transactionChangesSubscription?.cancel();
-    _transactionChangesSubscription = _transactionsRepository
-        .transactionChangesStream(startDate: dateTimeRange?.start, endDate: dateTimeRange?.end)
-        .listen(
+    _transactionChangesSubscription = _transactionsRepository.transactionChangesStream(filters: filters).listen(
           (transactionChangeEntry) =>
               add(_Update(transactionId: transactionChangeEntry.key, transaction: transactionChangeEntry.value)),
         );

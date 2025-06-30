@@ -21,9 +21,26 @@ class TransactionsScreen extends StatelessWidget {
     context.pushRoute(TransactionRoute(isIncome: isIncome));
   }
 
+  void _onTransactionsHistoryTap(BuildContext context, {required int accountId}) {
+    context.pushRoute(TransactionsHistoryRoute(isIncome: isIncome, accountId: accountId));
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(isIncome ? context.l10n.incomesToday : context.l10n.expensesToday)),
+        appBar: AppBar(
+          title: Text(isIncome ? context.l10n.incomesToday : context.l10n.expensesToday),
+          actions: [
+            BlocSelector<AccountBloc, AccountState, int?>(
+              selector: (state) => state.account?.id,
+              builder: (context, accountId) => accountId == null
+                  ? const SizedBox.shrink()
+                  : IconButton(
+                      onPressed: () => _onTransactionsHistoryTap(context, accountId: accountId),
+                      icon: const Icon(Icons.history),
+                    ),
+            ),
+          ],
+        ),
         body: AccountsLoaderWrapper(
           (accounts) => AccountSelectedWrapper(
             (account) => TransactionsBodyView(accountId: account.id, isIncome: isIncome),

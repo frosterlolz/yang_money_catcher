@@ -110,6 +110,11 @@ abstract class AppThemeData {
       selectedIconTheme: const IconThemeData(size: AppSizes.double24),
       unselectedIconTheme: const IconThemeData(size: AppSizes.double24),
     ),
+    textTheme: TextTheme(
+      bodyMedium: _textTheme.regular14,
+      bodyLarge: _textTheme.regular16,
+      labelSmall: _textTheme.medium12,
+    ),
     dividerTheme:
         DividerThemeData(color: _lightColorScheme.dividerColor, space: AppSizes.double1, thickness: AppSizes.double1),
     extensions: [_lightColorScheme, _textTheme],

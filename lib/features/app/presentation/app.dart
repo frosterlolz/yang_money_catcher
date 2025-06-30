@@ -6,7 +6,6 @@ import 'package:yang_money_catcher/features/app/presentation/app_material.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
 import 'package:yang_money_catcher/features/initialization/presentation/dependencies_scope.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/bloc/transaction_categories_bloc/transaction_categories_bloc.dart';
-import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 
 class App extends StatelessWidget {
   const App(this.result, {super.key});
@@ -26,7 +25,6 @@ class App extends StatelessWidget {
               create: (_) => TransactionCategoriesBloc(result.dependencies.transactionsRepository)
                 ..add(const TransactionCategoriesEvent.load()),
             ),
-            BlocProvider(create: (_) => TransactionsBloc(result.dependencies.transactionsRepository)),
           ],
           child: const AppMaterial(),
         ),

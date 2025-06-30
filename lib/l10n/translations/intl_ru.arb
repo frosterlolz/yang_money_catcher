@@ -41,5 +41,9 @@
   "cancel": "Отменить",
   "save": "Сохранить",
   "inputAmount": "Введите сумму",
-  "inputComment": "Введите комментарий"
+  "inputComment": "Введите комментарий",
+  "myHistory": "Моя история",
+  "beginning": "Начало",
+  "end": "Конец",
+  "nothingFound": "Ничего не нашлось"
 }

@@ -7,41 +7,39 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/features/transactions/domain/repository/transactions_repository.dart';
 
 final class MockTransactionsRepository implements TransactionsRepository {
   MockTransactionsRepository(this._transactionsLocalDataSource) : _transactionsLoaderCache = AsyncCache.ephemeral();
 
   final TransactionsLocalDataSource _transactionsLocalDataSource;
-  final AsyncCache<Iterable<TransactionDetailEntity>> _transactionsLoaderCache;
+  final AsyncCache<List<TransactionDetailEntity>> _transactionsLoaderCache;
 
   @override
-  Stream<TransactionChangeEntry> transactionChangesStream({
-    int? id,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) =>
-      _transactionsLocalDataSource.transactionChangesStream().where((entry) {
-        final transaction = entry.value;
-        // фетчим только по id
-        if (id != null && entry.key == id) return true;
-        // фильтр по дате не распространяется на удаление транзакции
-        if (transaction == null) return true;
-        // фильтр по дате
-        final startIsCorrect = startDate == null || !transaction.transactionDate.isBefore(startDate);
-        final endIsCorrect = endDate == null || !transaction.transactionDate.isAfter(endDate);
-        return startIsCorrect && endIsCorrect;
-      });
+  Stream<TransactionChangeEntry> transactionChangesStream({int? id, TransactionFilters? filters}) {
+    // фетчим только по id, игнорируя фильтры
+    if (id != null) return _transactionsLocalDataSource.transactionChangesStream().where((entry) => entry.key == id);
+    if (filters == null) return _transactionsLocalDataSource.transactionChangesStream();
+    return _transactionsLocalDataSource.transactionChangesStream().where((entry) {
+      final transaction = entry.value;
+      // фильтры не распространяются на удаление транзакции
+      if (transaction == null) return true;
+      // фильтр по дате
+      final startMatchesFilter = filters.startDate == null || !transaction.transactionDate.isBefore(filters.startDate!);
+      final endMatchesFilter = filters.endDate == null || !transaction.transactionDate.isAfter(filters.endDate!);
+      final isIncomeMatchesFilter = filters.isIncome == null || transaction.category.isIncome == filters.isIncome;
+      return startMatchesFilter && endMatchesFilter && isIncomeMatchesFilter;
+    });
+  }
 
   @override
-  Future<Iterable<TransactionDetailEntity>> getTransactions({
-    required int accountId,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
+  Future<Iterable<TransactionDetailEntity>> getTransactions(TransactionFilters filters) async {
     final transactions = await _transactionsLoaderCache.fetch(
-      () async =>
-          _transactionsLocalDataSource.getTransactions(accountId: accountId, endDate: endDate, startDate: startDate),
+      () async {
+        final transactions = await _transactionsLocalDataSource.getTransactions(filters);
+        return transactions.toList();
+      },
     );
     return transactions;
   }
@@ -89,11 +87,15 @@ final class MockTransactionsRepository implements TransactionsRepository {
     final random = Random();
     final categories = await _transactionsLocalDataSource.getTransactionCategories();
     final requests = List.generate(
-      5,
+      20,
       (index) {
         final categoryIndex = random.nextInt(categories.length);
         final amountFractionalPart = random.nextInt(2) > 0 ? '00' : '50';
-        final transactionDate = DateTime.now().subtract(Duration(days: random.nextInt(2)));
+        final transactionHour = random.nextInt(24);
+        final transactionMinute = random.nextInt(60);
+        final transactionDate = DateTime.now()
+            .copyWith(hour: transactionHour, minute: transactionMinute)
+            .subtract(Duration(days: random.nextInt(2)));
         return TransactionRequest.create(
           accountId: 1,
           amount: '10000.$amountFractionalPart',

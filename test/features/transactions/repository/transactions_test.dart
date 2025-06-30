@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
 void main() {
   late TransactionsLocalDataSource transactionsLocalDataSource;
@@ -111,10 +112,8 @@ void main() {
       ),
     );
 
-    final result = await repository.getTransactions(
-      accountId: 1,
-      startDate: now.subtract(const Duration(days: 1)),
-    );
+    final filters = TransactionFilters(accountId: 1, startDate: now.subtract(const Duration(days: 1)));
+    final result = await repository.getTransactions(filters);
 
     expect(result.length, equals(1));
     final found = result.firstWhereOrNull((tx) => tx.comment == 'New');

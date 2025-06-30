@@ -9,45 +9,71 @@ class TransactionListTile extends StatelessWidget {
   /// {@macro TransactionListTile.class}
   const TransactionListTile({
     super.key,
-    required this.leadingEmoji,
     required this.title,
+    this.comment,
+    this.commentStyle,
+    required this.emoji,
     required this.amount,
-    this.subtitle,
+    this.transactionDateTime,
+    this.enableTopDivider = false,
+    this.enableBottomDivider = false,
     required this.onTap,
   });
 
-  final String leadingEmoji;
   final String title;
+  final String? comment;
+  final TextStyle? commentStyle;
+  final String emoji;
   final String amount;
-  final String? subtitle;
+  final String? transactionDateTime;
+  final bool enableTopDivider;
+  final bool enableBottomDivider;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-        onTap: onTap,
-        leading: Text(leadingEmoji),
-        title: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, maxLines: 3),
-                  if (subtitle?.trim().isNotEmpty ?? false)
-                    Text(
-                      subtitle!,
-                      maxLines: 3,
-                      style: Theme.of(context).listTileTheme.subtitleTextStyle,
-                    ),
-                ],
-              ),
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (enableTopDivider) const Divider(),
+          ListTile(
+            onTap: onTap,
+            leading: Text(emoji),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, maxLines: 3),
+                      if (comment?.trim().isNotEmpty ?? false)
+                        Text(
+                          comment!,
+                          maxLines: 3,
+                          style: commentStyle ?? Theme.of(context).listTileTheme.subtitleTextStyle,
+                        ),
+                    ],
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(amount),
+                    if (transactionDateTime != null)
+                      Text(
+                        transactionDateTime!,
+                        style: Theme.of(context).listTileTheme.titleTextStyle,
+                      ),
+                  ],
+                ),
+              ],
             ),
-            Text(amount),
-          ],
-        ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: AppColorScheme.of(context).labelTertiary.withValues(alpha: AppSizes.double03),
-        ),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: AppColorScheme.of(context).labelTertiary.withValues(alpha: AppSizes.double03),
+            ),
+          ),
+          if (enableBottomDivider) const Divider(),
+        ],
       );
 }

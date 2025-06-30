@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
 /// [int] -> id транзакции, [TransactionDetailEntity] -> измененная/новая транзакция. Если Null- значит транзакция удалена
 typedef TransactionChangeEntry = MapEntry<int, TransactionDetailEntity?>;
@@ -19,18 +20,15 @@ base class TransactionsLocalDataSource {
 
   Stream<TransactionChangeEntry> transactionChangesStream() => _transactionChangesController.stream;
 
-  Future<Iterable<TransactionDetailEntity>> getTransactions({
-    required int accountId,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
+  Future<List<TransactionDetailEntity>> getTransactions(TransactionFilters filters) async {
     final result = _transactions.where((tx) {
-      final matchesAccount = tx.account.id == accountId;
-      final matchesStart = startDate == null || !tx.transactionDate.isBefore(startDate);
-      final matchesEnd = endDate == null || !tx.transactionDate.isAfter(endDate);
-      return matchesAccount && matchesStart && matchesEnd;
+      final matchesAccount = tx.account.id == filters.accountId;
+      final matchesStart = filters.startDate == null || !tx.transactionDate.isBefore(filters.startDate!);
+      final matchesEnd = filters.endDate == null || !tx.transactionDate.isAfter(filters.endDate!);
+      final matchesIncomeFlag = filters.isIncome == null || tx.category.isIncome == filters.isIncome;
+      return matchesAccount && matchesStart && matchesEnd && matchesIncomeFlag;
     });
-    return result;
+    return result.toList();
   }
 
   Future<TransactionDetailEntity?> getTransaction(int id) async => _queueOp(() async {
