@@ -425,7 +425,7 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Введите сумму'),
+        title: Text(context.l10n.inputAmount),
         content: TextFormField(
           onChanged: _onChanged,
           initialValue: _amount.toStringAsFixed(2),
@@ -474,7 +474,7 @@ class _SelectCommentDialogState extends State<_SelectCommentDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Введите комментарий'),
+        title: Text(context.l10n.inputComment),
         content: TextFormField(onChanged: _onChanged, initialValue: _comment),
         actions: [
           TextButton(

@@ -39,5 +39,7 @@
   "expenseSavedSuccessfully": "Расход сохранен",
   "balance": "Баланс",
   "cancel": "Отменить",
-  "save": "Сохранить"
+  "save": "Сохранить",
+  "inputAmount": "Введите сумму",
+  "inputComment": "Введите комментарий"
 }
