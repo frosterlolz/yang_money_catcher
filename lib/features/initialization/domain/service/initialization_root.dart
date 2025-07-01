@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:database/database.dart';
 import 'package:pretty_logger/pretty_logger.dart';
-import 'package:yang_money_catcher/features/account/data/repository/mock_account_repository.dart';
+import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/acounts_drift_storage.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_drift_storage.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 
 typedef InitializationStep = FutureOr<void> Function(Mutable$Dependencies dependencies);
@@ -29,10 +32,16 @@ final class InitializationRoot {
   Map<String, InitializationStep> _prepareInitializationSteps() => {
         'Init logger': (d) async => d.logger = logger,
         'Init root repositories': (d) async {
-          final accountsRepository = MockAccountRepository();
+          final database = AppDatabase.defaults(name: 'yang_money_catcher_database');
+          final accountsLocalDataSource = AccountsDriftStorage(database);
+          final transactionsLocalDataSource = TransactionsDriftStorage(database);
+          final accountsRepository = AccountRepositoryImpl(
+            accountsLocalStorage: accountsLocalDataSource,
+            transactionsLocalStorage: transactionsLocalDataSource,
+          );
           await accountsRepository.generateMockData();
-          final transactionsLocalDataSource = TransactionsLocalDataSource();
-          final transactionsRepository = MockTransactionsRepository(transactionsLocalDataSource);
+          final transactionsMockDataSource = TransactionsLocalDataSource();
+          final transactionsRepository = MockTransactionsRepository(transactionsMockDataSource);
           await transactionsRepository.generateMockData();
           d
             ..accountRepository = accountsRepository

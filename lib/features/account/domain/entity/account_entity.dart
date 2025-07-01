@@ -1,3 +1,4 @@
+import 'package:database/database.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
@@ -24,6 +25,16 @@ class AccountEntity with _$AccountEntity {
   }) = _AccountEntity;
 
   factory AccountEntity.fromJson(JsonMap json) => _$AccountEntityFromJson(json);
+
+  factory AccountEntity.fromTableItem(AccountItem item) => AccountEntity(
+        id: item.id,
+        userId: item.userId,
+        name: item.name,
+        balance: item.balance,
+        currency: Currency.fromKey(item.currency),
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      );
 }
 
 // AccountResponse (swagger)
@@ -41,4 +52,20 @@ class AccountDetailEntity with _$AccountDetailEntity {
   }) = _AccountDetailEntity;
 
   factory AccountDetailEntity.fromJson(JsonMap json) => _$AccountDetailEntityFromJson(json);
+
+  factory AccountDetailEntity.fromTableItem(
+    AccountItem item, {
+    required List<TransactionCategoryStat> incomeStats,
+    required List<TransactionCategoryStat> expenseStats,
+  }) =>
+      AccountDetailEntity(
+        id: item.id,
+        name: item.name,
+        balance: item.balance,
+        currency: Currency.fromKey(item.currency),
+        incomeStats: incomeStats,
+        expenseStats: expenseStats,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      );
 }

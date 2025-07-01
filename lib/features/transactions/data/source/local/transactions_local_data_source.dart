@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
-import 'package:yang_money_catcher/features/transactions/data/source/local/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
