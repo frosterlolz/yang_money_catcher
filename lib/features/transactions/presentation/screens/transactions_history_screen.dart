@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
 import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
+import 'package:yang_money_catcher/core/utils/extensions/key_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
+import 'package:yang_money_catcher/core/utils/models/sort_types.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/initialization/presentation/dependencies_scope.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
@@ -41,9 +43,12 @@ class TransactionsHistoryScreen extends StatefulWidget implements AutoRouteWrapp
 }
 
 class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> with _TransactionHistoryFormMixin {
+  late final GlobalKey _sortTileKey;
+
   @override
   void initState() {
     super.initState();
+    _sortTileKey = GlobalKey();
     _loadTransactions();
   }
 
@@ -89,7 +94,25 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     return resDate;
   }
 
-  void _onRetryTap() {}
+  Future<void> _onSortTap() async {
+    final tileRect = _sortTileKey.getRect();
+    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final top = tileRect.bottom;
+    final res = await showMenu<SortTypes>(
+      context: context,
+      position: RelativeRect.fromLTRB(overlay.size.width, top, tileRect.left, 0),
+      items: SortTypes.values
+          .map(
+            (type) => PopupMenuItem<SortTypes>(
+              value: type,
+              child: Text(context.l10n.sortingValue(type.name)),
+            ),
+          )
+          .toList(),
+    );
+    if (res == null) return;
+    _changeSortType(res);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +147,23 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
                     title: Text(context.l10n.end),
                     trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
                   ),
+                  // sort
+                  ListTile(
+                    key: _sortTileKey,
+                    onTap: _onSortTap,
+                    tileColor: colorScheme.secondary,
+                    title: Text(context.l10n.sorting),
+                    trailing: Text(context.l10n.sortingValue(_sortType.name)),
+                    // DropdownButton<SortTypes>(
+                    //   value: _sortType,
+                    //   items: SortTypes.values
+                    //       .map((type) => DropdownMenuItem<SortTypes>(
+                    //     value: type,
+                    //       child: Text(context.l10n.sortingValue(type.name))))
+                    //       .toList(),
+                    //   onChanged: _onSortTap,
+                    // ),
+                  ),
                   // amount
                   BlocBuilder<TransactionsBloc, TransactionsState>(
                     builder: (context, transitionsState) => ListTile(
@@ -149,10 +189,11 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
           // list with transactions
           BlocBuilder<TransactionsBloc, TransactionsState>(
             builder: (context, transactionsState) => switch (transactionsState) {
-              _ when transactionsState.transactions != null => _TransactionsSliverList(transactionsState.transactions!),
+              _ when transactionsState.transactions != null =>
+                _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
               TransactionsState$Error(:final error) => SliverFillRemaining(
                   hasScrollBody: false,
-                  child: ErrorBodyView.fromError(error, onRetryTap: _onRetryTap),
+                  child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
                 ),
               _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
             },
@@ -165,10 +206,16 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
 
 mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
   late DateTimeRange _dateTimeRange;
+  late SortTypes _sortType;
 
   @override
   void initState() {
     super.initState();
+    _initDateTimeRange();
+    _sortType = SortTypes.byDefault;
+  }
+
+  void _initDateTimeRange() {
     final dtNow = DateTime.now();
     final fallbackDateRange = DateTimeRange(
       start: dtNow.endOfDay.copyWith(month: dtNow.month - 1),
@@ -205,16 +252,60 @@ mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
   DateTime _normalizeStartRange({required DateTime start, required DateTime end}) => start.isBefore(end) ? start : end;
 
   DateTime _normalizeEndRange({required DateTime start, required DateTime end}) => end.isAfter(start) ? end : start;
+
+  bool _changeSortType(SortTypes type) {
+    if (type == _sortType || !mounted) return false;
+    setState(() => _sortType = type);
+    return true;
+  }
 }
 
 /// {@template _TransactionsSliverList.class}
 /// _TransactionsSliverList widget.
 /// {@endtemplate}
-class _TransactionsSliverList extends StatelessWidget {
+class _TransactionsSliverList extends StatefulWidget {
   /// {@macro _TransactionsSliverList.class}
-  const _TransactionsSliverList(this.transactions);
+  const _TransactionsSliverList(this.transactions, {required this.sortType});
 
   final List<TransactionDetailEntity> transactions;
+  final SortTypes sortType;
+
+  @override
+  State<_TransactionsSliverList> createState() => _TransactionsSliverListState();
+}
+
+class _TransactionsSliverListState extends State<_TransactionsSliverList> {
+  late List<TransactionDetailEntity> _transactions;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSortedTransactions();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TransactionsSliverList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.sortType != oldWidget.sortType) {
+      setState(_initSortedTransactions);
+    }
+  }
+
+  void _initSortedTransactions() {
+    _transactions = widget.transactions.toList();
+    switch (widget.sortType) {
+      case SortTypes.byDefault:
+        _transactions.sort((a, b) => a.compareTo(b));
+      case SortTypes.byDateAsc:
+        _transactions.sort((a, b) => a.transactionDate.compareTo(b.transactionDate));
+      case SortTypes.byDateDesc:
+        _transactions.sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
+      case SortTypes.byAmountAsc:
+        _transactions.sort((a, b) => a.amount.compareTo(b.amount));
+      case SortTypes.byAmountDesc:
+        _transactions.sort((a, b) => b.amount.compareTo(a.amount));
+    }
+  }
 
   void _onTransactionTap(BuildContext context, TransactionDetailEntity transaction) {
     context.pushRoute(TransactionRoute(isIncome: transaction.category.isIncome, initialTransaction: transaction));
@@ -222,7 +313,7 @@ class _TransactionsSliverList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (transactions.isEmpty) {
+    if (_transactions.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
         child: Center(
@@ -235,9 +326,9 @@ class _TransactionsSliverList extends StatelessWidget {
       );
     }
     return SliverList.builder(
-      itemCount: transactions.length,
+      itemCount: _transactions.length,
       itemBuilder: (context, index) {
-        final transaction = transactions[index];
+        final transaction = _transactions[index];
         return TransactionListTile(
           title: transaction.category.name,
           comment: transaction.comment,
@@ -245,7 +336,7 @@ class _TransactionsSliverList extends StatelessWidget {
           emoji: transaction.category.emoji,
           transactionDateTime: transaction.transactionDate.hhmm,
           enableTopDivider: true,
-          enableBottomDivider: index == transactions.length - 1,
+          enableBottomDivider: index == _transactions.length - 1,
           amount: transaction.amount
               .amountToNum()
               .thousandsSeparated(fractionalLength: null)

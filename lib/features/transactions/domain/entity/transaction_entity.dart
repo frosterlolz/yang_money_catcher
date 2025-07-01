@@ -23,7 +23,7 @@ class TransactionEntity with _$TransactionEntity {
 }
 
 @freezed
-class TransactionDetailEntity with _$TransactionDetailEntity {
+class TransactionDetailEntity with _$TransactionDetailEntity implements Comparable<TransactionDetailEntity> {
   const factory TransactionDetailEntity({
     required int id,
     required AccountBrief account,
@@ -35,5 +35,10 @@ class TransactionDetailEntity with _$TransactionDetailEntity {
     required DateTime updatedAt,
   }) = _TransactionDetailEntity;
 
+  const TransactionDetailEntity._();
+
   factory TransactionDetailEntity.fromJson(JsonMap json) => _$TransactionDetailEntityFromJson(json);
+
+  @override
+  int compareTo(TransactionDetailEntity other) => id.compareTo(other.id);
 }

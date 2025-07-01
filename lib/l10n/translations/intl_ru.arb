@@ -45,5 +45,15 @@
   "myHistory": "Моя история",
   "beginning": "Начало",
   "end": "Конец",
-  "nothingFound": "Ничего не нашлось"
+  "nothingFound": "Ничего не нашлось",
+  "sorting": "Сортировка",
+  "sortingValue": "{value, select, byDateAsc{Cначала новые} byDateDesc{Cначала старые} byAmountAsc{По сумме (Возрастание)} byAmountDesc{По сумме (Убывание)} other{По умолчанию}}",
+  "@sortingValue": {
+    "description": "Значение, по которому будет происходить сортировка",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }
