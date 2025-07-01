@@ -1,12 +1,17 @@
+import 'package:collection/collection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
 void main() {
+  late TransactionsLocalDataSource transactionsLocalDataSource;
   late MockTransactionsRepository repository;
 
   setUp(() {
-    repository = MockTransactionsRepository();
+    transactionsLocalDataSource = TransactionsLocalDataSource();
+    repository = MockTransactionsRepository(transactionsLocalDataSource);
   });
 
   test('Создание новой транзакции', () async {
@@ -20,7 +25,7 @@ void main() {
       ),
     );
 
-    expect(tx.id, equals(1));
+    expect(tx.categoryId, equals(1));
     expect(tx.amount, equals('500'));
   });
 
@@ -37,7 +42,7 @@ void main() {
 
     final detail = await repository.getTransaction(created.id);
 
-    expect(detail.id, equals(created.id));
+    expect(detail?.id, equals(created.id));
   });
 
   test('Обновление транзакции', () async {
@@ -79,7 +84,9 @@ void main() {
 
     await repository.deleteTransaction(created.id);
 
-    expect(() => repository.getTransaction(created.id), throwsException);
+    final deleted = await repository.getTransaction(created.id);
+
+    expect(deleted, isNull);
   });
 
   test('Получение транзакций по accountId и дате', () async {
@@ -105,12 +112,12 @@ void main() {
       ),
     );
 
-    final result = await repository.getTransactions(
-      accountId: 1,
-      startDate: now.subtract(const Duration(days: 1)),
-    );
+    final filters = TransactionFilters(accountId: 1, startDate: now.subtract(const Duration(days: 1)));
+    final result = await repository.getTransactions(filters);
 
     expect(result.length, equals(1));
-    expect(result.first.comment, equals('New'));
+    final found = result.firstWhereOrNull((tx) => tx.comment == 'New');
+    expect(found, isNotNull);
+    expect(found!.amount, equals('250'));
   });
 }

@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:pretty_logger/pretty_logger.dart';
+import 'package:yang_money_catcher/features/account/data/repository/mock_account_repository.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
+import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 
 typedef InitializationStep = FutureOr<void> Function(Mutable$Dependencies dependencies);
 
@@ -25,8 +28,15 @@ final class InitializationRoot {
   /// Preparing initialization steps [InitializationStep]
   Map<String, InitializationStep> _prepareInitializationSteps() => {
         'Init logger': (d) async => d.logger = logger,
-        'Init root repositories': (d) {
-          // TODO(frosterlolz): Init root repositories
+        'Init root repositories': (d) async {
+          final accountsRepository = MockAccountRepository();
+          await accountsRepository.generateMockData();
+          final transactionsLocalDataSource = TransactionsLocalDataSource();
+          final transactionsRepository = MockTransactionsRepository(transactionsLocalDataSource);
+          await transactionsRepository.generateMockData();
+          d
+            ..accountRepository = accountsRepository
+            ..transactionsRepository = transactionsRepository;
         },
       };
 

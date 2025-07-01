@@ -6,7 +6,7 @@ part 'transaction_change_request.g.dart';
 // ignore_for_file: invalid_annotation_target
 
 @Freezed(fromJson: false, toJson: true)
-class TransactionRequest with _$TransactionRequest {
+sealed class TransactionRequest with _$TransactionRequest {
   const factory TransactionRequest.create({
     required int accountId,
     required int categoryId,

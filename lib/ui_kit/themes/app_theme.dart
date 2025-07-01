@@ -48,6 +48,14 @@ abstract class AppThemeData {
       backgroundColor: _lightColorScheme.primary,
       titleTextStyle: _textTheme.regular20.copyWith(color: _lightColorScheme.onSecondary),
     ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      elevation: 0,
+      backgroundColor: _lightColorScheme.primary,
+      foregroundColor: _lightColorScheme.onPrimary,
+      iconSize: 15.56 * 2,
+      sizeConstraints: BoxConstraints.tight(const Size.square(AppSizes.double56)),
+      shape: const CircleBorder(),
+    ),
     applyElevationOverlayColor: false,
     badgeTheme: BadgeThemeData(
       backgroundColor: _lightColorScheme.onError,
@@ -63,6 +71,8 @@ abstract class AppThemeData {
         textStyle: _textTheme.medium16,
         shadowColor: Colors.transparent,
         elevation: 0,
+        backgroundColor: _lightColorScheme.primary,
+        foregroundColor: _lightColorScheme.onPrimary,
       ),
     ),
     iconTheme: IconThemeData(
@@ -73,12 +83,21 @@ abstract class AppThemeData {
       labelStyle: _textTheme.regular14.copyWith(
         color: _lightColorScheme.inactiveSecondary,
       ),
-      border: InputBorder.none,
+      border: const OutlineInputBorder(),
+    ),
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: _lightColorScheme.secondary,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16))),
+      cancelButtonStyle: TextButton.styleFrom(foregroundColor: _lightColorScheme.onSurface),
+      confirmButtonStyle: TextButton.styleFrom(foregroundColor: _lightColorScheme.onSurface),
     ),
     listTileTheme: ListTileThemeData(
       iconColor: _lightColorScheme.unselectedItem,
       textColor: _lightColorScheme.unselectedItem,
       contentPadding: const HorizontalSpacing.compact(),
+      titleTextStyle: _textTheme.regular16,
+      subtitleTextStyle: _textTheme.regular14,
+      leadingAndTrailingTextStyle: _textTheme.regular16,
     ),
     fontFamily: 'NunitoSans',
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -91,6 +110,13 @@ abstract class AppThemeData {
       selectedIconTheme: const IconThemeData(size: AppSizes.double24),
       unselectedIconTheme: const IconThemeData(size: AppSizes.double24),
     ),
+    textTheme: TextTheme(
+      bodyMedium: _textTheme.regular14,
+      bodyLarge: _textTheme.regular16,
+      labelSmall: _textTheme.medium12,
+    ),
+    dividerTheme:
+        DividerThemeData(color: _lightColorScheme.dividerColor, space: AppSizes.double1, thickness: AppSizes.double1),
     extensions: [_lightColorScheme, _textTheme],
   );
 
@@ -128,6 +154,7 @@ abstract class AppThemeData {
     ),
     scaffoldBackgroundColor: _darkColorScheme.background,
     fontFamily: 'NunitoSans',
+    dividerColor: _lightColorScheme.dividerColor,
     extensions: [_darkColorScheme, _textTheme],
   );
 

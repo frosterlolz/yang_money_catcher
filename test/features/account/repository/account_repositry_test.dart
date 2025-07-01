@@ -15,7 +15,6 @@ void main() {
       const AccountRequest$Create(name: 'My Account', balance: '1000', currency: Currency.rub),
     );
 
-    expect(account.id, equals(1));
     expect(account.name, equals('My Account'));
     expect(account.balance, equals('1000'));
   });

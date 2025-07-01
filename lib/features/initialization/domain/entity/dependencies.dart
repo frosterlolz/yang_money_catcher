@@ -1,9 +1,17 @@
 import 'package:meta/meta.dart';
 import 'package:pretty_logger/pretty_logger.dart';
+import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
+import 'package:yang_money_catcher/features/transactions/domain/repository/transactions_repository.dart';
 
 abstract interface class Dependencies {
   /// [PrettyLogger] instance, used to log messages.
   abstract final PrettyLogger logger;
+
+  /// [AccountRepository] instance, used to work with accounts.
+  abstract final AccountRepository accountRepository;
+
+  /// [TransactionsRepository] instance, used to work with transactions.
+  abstract final TransactionsRepository transactionsRepository;
 }
 
 final class Mutable$Dependencies implements Dependencies {
@@ -13,18 +21,32 @@ final class Mutable$Dependencies implements Dependencies {
   final Map<String, Object?> context;
   @override
   late PrettyLogger logger;
+  @override
+  late TransactionsRepository transactionsRepository;
+  @override
+  late AccountRepository accountRepository;
 
-  Dependencies freeze() => _Immutable$Dependencies(logger: logger);
+  Dependencies freeze() => _Immutable$Dependencies(
+        logger: logger,
+        transactionsRepository: transactionsRepository,
+        accountRepository: accountRepository,
+      );
 }
 
 @immutable
 final class _Immutable$Dependencies implements Dependencies {
   const _Immutable$Dependencies({
     required this.logger,
+    required this.transactionsRepository,
+    required this.accountRepository,
   });
 
   @override
   final PrettyLogger logger;
+  @override
+  final TransactionsRepository transactionsRepository;
+  @override
+  final AccountRepository accountRepository;
 }
 
 final class InitializationResult {

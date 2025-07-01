@@ -16,14 +16,16 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         subtitle = ColorPalette.subtitleGrey,
         onSubtitle = ColorPalette.bodyTextGrey,
         grabber = ColorPalette.grabberGrey,
+        dividerColor = ColorPalette.lavenderGray,
         surface = ColorPalette.antiFlashWhite,
         onSurface = ColorPalette.eerieBlack,
         background = ColorPalette.scaffoldBgGrey,
         onBackground = ColorPalette.eerieBlack,
-        error = ColorPalette.freeSpeechRed,
-        onError = ColorPalette.alarmRed,
+        error = ColorPalette.terraCotta,
+        onError = ColorPalette.white,
         selectedItem = ColorPalette.ufoGreen,
-        unselectedItem = ColorPalette.eerieBlack;
+        unselectedItem = ColorPalette.eerieBlack,
+        labelTertiary = ColorPalette.arsenic;
 
   /// Dark theme of the app.
   const AppColorScheme.dark()
@@ -35,14 +37,16 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         subtitle = ColorPalette.labelGrey,
         onSubtitle = ColorPalette.bodyTextGrey,
         grabber = ColorPalette.grabberGrey,
+        dividerColor = ColorPalette.lavenderGray,
         surface = ColorPalette.oxfordBlue,
         onSurface = ColorPalette.darkGrey,
         background = ColorPalette.jaguar,
         onBackground = ColorPalette.darkGrey,
-        error = ColorPalette.freeSpeechRed,
-        onError = ColorPalette.darkGrey,
+        error = ColorPalette.terraCotta,
+        onError = ColorPalette.white,
         selectedItem = ColorPalette.white,
-        unselectedItem = ColorPalette.subtitleGrey;
+        unselectedItem = ColorPalette.subtitleGrey,
+        labelTertiary = ColorPalette.arsenic;
 
   const AppColorScheme._({
     required this.primary,
@@ -53,6 +57,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     required this.subtitle,
     required this.onSubtitle,
     required this.grabber,
+    required this.dividerColor,
     required this.surface,
     required this.onSurface,
     required this.background,
@@ -61,6 +66,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     required this.onError,
     required this.selectedItem,
     required this.unselectedItem,
+    required this.labelTertiary,
   });
 
   /// The base color for app.
@@ -82,6 +88,9 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
 
   /// The color of grabber and rating bar
   final Color grabber;
+
+  /// The color of divider
+  final Color dividerColor;
 
   /// The color of subtitle body text
   final Color subtitle;
@@ -113,6 +122,9 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
   /// Color for show unselected items.
   final Color unselectedItem;
 
+  /// Color for some icons and labels
+  final Color labelTertiary;
+
   @override
   ThemeExtension<AppColorScheme> lerp(
     ThemeExtension<AppColorScheme>? other,
@@ -129,6 +141,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
       subtitle: Color.lerp(subtitle, other.subtitle, t),
       onSubtitle: Color.lerp(onSubtitle, other.onSubtitle, t),
       grabber: Color.lerp(grabber, other.grabber, t),
+      dividerColor: Color.lerp(dividerColor, other.dividerColor, t),
       surface: Color.lerp(surface, other.surface, t),
       onSurface: Color.lerp(onSurface, other.onSurface, t),
       background: Color.lerp(background, other.background, t),
@@ -137,6 +150,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
       onError: Color.lerp(onError, other.onError, t),
       selectedItem: Color.lerp(selectedItem, other.selectedItem, t),
       unselectedItem: Color.lerp(unselectedItem, other.unselectedItem, t),
+      labelTertiary: Color.lerp(labelTertiary, other.labelTertiary, t),
     );
   }
 
@@ -155,6 +169,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     Color? subtitle,
     Color? onSubtitle,
     Color? grabber,
+    Color? dividerColor,
     Color? surface,
     Color? onSurface,
     Color? background,
@@ -163,6 +178,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     Color? onError,
     Color? selectedItem,
     Color? unselectedItem,
+    Color? labelTertiary,
   }) =>
       AppColorScheme._(
         primary: primary ?? this.primary,
@@ -173,6 +189,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         subtitle: subtitle ?? this.subtitle,
         onSubtitle: onSubtitle ?? this.onSubtitle,
         grabber: grabber ?? this.grabber,
+        dividerColor: dividerColor ?? this.dividerColor,
         surface: surface ?? this.surface,
         onSurface: onSurface ?? this.onSurface,
         background: background ?? this.background,
@@ -181,6 +198,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         onError: onError ?? this.onError,
         selectedItem: selectedItem ?? this.selectedItem,
         unselectedItem: unselectedItem ?? this.unselectedItem,
+        labelTertiary: labelTertiary ?? this.labelTertiary,
       );
 }
 
