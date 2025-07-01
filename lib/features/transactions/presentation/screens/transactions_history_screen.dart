@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -154,15 +155,6 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
                     tileColor: colorScheme.secondary,
                     title: Text(context.l10n.sorting),
                     trailing: Text(context.l10n.sortingValue(_sortType.name)),
-                    // DropdownButton<SortTypes>(
-                    //   value: _sortType,
-                    //   items: SortTypes.values
-                    //       .map((type) => DropdownMenuItem<SortTypes>(
-                    //     value: type,
-                    //       child: Text(context.l10n.sortingValue(type.name))))
-                    //       .toList(),
-                    //   onChanged: _onSortTap,
-                    // ),
                   ),
                   // amount
                   BlocBuilder<TransactionsBloc, TransactionsState>(
@@ -286,7 +278,8 @@ class _TransactionsSliverListState extends State<_TransactionsSliverList> {
   @override
   void didUpdateWidget(covariant _TransactionsSliverList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.sortType != oldWidget.sortType) {
+    if (widget.sortType != oldWidget.sortType ||
+        !const ListEquality<TransactionDetailEntity>().equals(oldWidget.transactions, widget.transactions)) {
       setState(_initSortedTransactions);
     }
   }
