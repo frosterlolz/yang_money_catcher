@@ -60,13 +60,16 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
     );
   }
 
-  Future<TransactionItem> updateTransaction(TransactionItemsCompanion companion) async =>
-      transaction<TransactionItem>(() async {
-        final insertedId = await into(transactionItems).insertOnConflictUpdate(companion);
-        final updatedTransaction = select(transactionItems)..where((tx) => tx.id.equals(insertedId));
+  Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion) async => companion.id.present ? _updateTransaction(companion) : _insertTransaction(companion);
 
-        return updatedTransaction.getSingle();
-      });
+  Future<TransactionItem> _insertTransaction(TransactionItemsCompanion companion) async => into(transactionItems).insertReturning(companion);
+
+  Future<TransactionItem> _updateTransaction(TransactionItemsCompanion companion) async => transaction(() async {
+    final statement = update(transactionItems)..where((tx) => tx.id.equals(companion.id.value));
+    final updatedRowId = await statement.write(companion);
+    final updatedTransaction = select(transactionItems)..where((tx) => tx.rowId.equals(updatedRowId));
+    return updatedTransaction.getSingle();
+  });
 
   Future<int> deleteTransaction(int id) => (delete(transactionItems)..where((t) => t.id.equals(id))).go();
 

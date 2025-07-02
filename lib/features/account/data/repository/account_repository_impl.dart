@@ -34,8 +34,8 @@ final class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<AccountEntity> updateAccount(AccountRequest$Update request) async {
-    final updatedId = await _accountsLocalStorage.updateAccount(request);
-    final updated = await _accountsLocalStorage.fetchAccount(updatedId);
+    await _accountsLocalStorage.updateAccount(request);
+    final updated = await _accountsLocalStorage.fetchAccount(request.id);
     if (updated == null) {
       throw Exception('Error while fetching fresh updated account');
     }

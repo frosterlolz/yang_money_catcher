@@ -24,6 +24,7 @@ import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/bottom_sheets/item_selector_sheet.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
+import 'package:yang_money_catcher/ui_kit/dialogs/text_confirm_dialog.dart';
 import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
 import 'package:yang_money_catcher/ui_kit/snacks/topside_snack_bars.dart';
@@ -117,7 +118,11 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
   Future<void> _selectComment() async {
     final comment = await showDialog<String>(
       context: context,
-      builder: (context) => _SelectCommentDialog(initialComment: _comment),
+      builder: (context) => TextConfirmDialog(
+          initialValue: _comment,
+          onConfirmTap: context.maybePop,
+          title: context.l10n.inputComment,
+      ),
     );
     if (comment == null) return;
     _changeComment(comment);
@@ -442,45 +447,6 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
         actions: [
           TextButton(
             onPressed: _amount == widget.inputAmount ? null : () => context.maybePop(_amount),
-            child: Text(context.l10n.save),
-          ),
-          TextButton(onPressed: () => context.maybePop(), child: Text(context.l10n.cancel)),
-        ],
-      );
-}
-
-/// {@template _SelectCommentDialog.class}
-/// _SelectCommentDialog widget.
-/// {@endtemplate}
-class _SelectCommentDialog extends StatefulWidget {
-  /// {@macro _SelectCommentDialog.class}
-  const _SelectCommentDialog({this.initialComment});
-
-  final String? initialComment;
-
-  @override
-  State<_SelectCommentDialog> createState() => _SelectCommentDialogState();
-}
-
-class _SelectCommentDialogState extends State<_SelectCommentDialog> {
-  late String _comment;
-
-  @override
-  void initState() {
-    super.initState();
-    _comment = widget.initialComment ?? '';
-  }
-
-  void _onChanged(String v) => setState(() => _comment = v);
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-        title: Text(context.l10n.inputComment),
-        content: TextFormField(onChanged: _onChanged, initialValue: _comment),
-        actions: [
-          TextButton(
-            onPressed:
-                _comment.trim() == (widget.initialComment?.trim() ?? '') ? null : () => context.maybePop(_comment),
             child: Text(context.l10n.save),
           ),
           TextButton(onPressed: () => context.maybePop(), child: Text(context.l10n.cancel)),

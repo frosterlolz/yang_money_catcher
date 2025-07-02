@@ -71,7 +71,7 @@ final class TransactionsDriftStorage implements TransactionsLocalDataSource {
       comment: Value(request.comment),
       updatedAt: Value(now),
     );
-    final updatedTransaction = await transactionsDao.updateTransaction(companion);
+    final updatedTransaction = await transactionsDao.upsertTransaction(companion);
 
     return TransactionEntity.fromTableItem(updatedTransaction);
   }
