@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
+import 'package:yang_money_catcher/core/presentation/common/visibility_by_tilt_mixin.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
@@ -13,6 +14,7 @@ import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
 import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
+import 'package:yang_money_catcher/ui_kit/placeholders/noise_placeholder.dart';
 
 /// {@template AccountScreen.class}
 /// Экран отображения баланса, валюты, а также движений по счету
@@ -78,7 +80,7 @@ class _AccountSuccessView extends StatelessWidget {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerRight,
-                      child: Text(
+                      child: _BalanceAnimatedWidget(
                         account.balance.amountToNum().thousandsSeparated().withCurrency(account.currency.symbol, 1),
                       ),
                     ),
@@ -108,4 +110,35 @@ class _AccountSuccessView extends StatelessWidget {
       ],
     );
   }
+}
+
+/// {@template _BalanceAnimatedWidget.class}
+/// _BalanceAnimatedWidget widget.
+/// {@endtemplate}
+class _BalanceAnimatedWidget extends StatefulWidget {
+  /// {@macro _BalanceAnimatedWidget.class}
+  const _BalanceAnimatedWidget(this.balance);
+
+  final String balance;
+
+  @override
+  State<_BalanceAnimatedWidget> createState() => _BalanceAnimatedWidgetState();
+}
+
+class _BalanceAnimatedWidgetState extends State<_BalanceAnimatedWidget> with VisibilityByTiltMixin {
+  @override
+  Widget build(BuildContext context) => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeIn,
+        switchOutCurve: Curves.easeOut,
+        child: isVisible
+            ? Text(
+                widget.balance,
+                key: const ValueKey('balance'),
+              )
+            : const NoisePlaceholder(
+                key: ValueKey('placeholder'),
+                size: Size(70, 30),
+              ),
+      );
 }
