@@ -3,8 +3,8 @@ import 'dart:collection';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
-import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/features/transactions/domain/repository/transactions_repository.dart';
@@ -20,17 +20,17 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     on<TransactionsEvent>(
       (event, emitter) => switch (event) {
         _Load() => _loadTransactions(event, emitter),
-        _Update() => _updateTransaction(event, emitter),
+        _Update() => _updateTransactions(event, emitter),
       },
     );
   }
 
   final TransactionsRepository _transactionsRepository;
-  StreamSubscription<TransactionChangeEntry>? _transactionChangesSubscription;
+  StreamSubscription<List<TransactionDetailEntity>>? _transactionsListChangesSubscription;
 
   @override
   Future<void> close() {
-    _transactionChangesSubscription?.cancel();
+    _transactionsListChangesSubscription?.cancel();
     return super.close();
   }
 
@@ -46,33 +46,14 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     }
   }
 
-  void _updateTransaction(_Update event, _Emitter emitter) {
-    final mutableTransactions = List<TransactionDetailEntity>.of(state.transactions ?? []);
-    final newTransaction = event.transaction;
-    if (mutableTransactions.isEmpty && newTransaction == null) return;
-    final overlapIndex = mutableTransactions.indexWhere((transaction) => transaction.id == event.transactionId);
-    // Удаляем транзакцию, если она найдена
-    if (newTransaction == null && overlapIndex >= 0) {
-      mutableTransactions.removeAt(overlapIndex);
-      return emitter(TransactionsState.idle(UnmodifiableListView(mutableTransactions)));
-    }
-    // Нечего удалять, если транзакция не нашлась
-    if (newTransaction == null) return;
-    // Транзакция не найдена - добавляем
-    if (overlapIndex == -1) {
-      mutableTransactions.add(newTransaction);
-      // Если транзакция с таким id уже есть, то заменяем ее
-    } else {
-      mutableTransactions[overlapIndex] = newTransaction;
-    }
-    emitter(TransactionsState.idle(UnmodifiableListView(mutableTransactions)));
+  void _updateTransactions(_Update event, _Emitter emitter) {
+    emitter(TransactionsState.idle(UnmodifiableListView(event.transactions.toList())));
   }
 
   void _updateTransactionChangesSubscription(TransactionFilters filters) {
-    _transactionChangesSubscription?.cancel();
-    _transactionChangesSubscription = _transactionsRepository.transactionChangesStream(filters: filters).listen(
-          (transactionChangeEntry) =>
-              add(_Update(transactionId: transactionChangeEntry.key, transaction: transactionChangeEntry.value)),
+    _transactionsListChangesSubscription?.cancel();
+    _transactionsListChangesSubscription = _transactionsRepository.transactionsListChanges(filters).listen(
+          (transactions) => add(_Update(transactions)),
         );
   }
 }

@@ -7,4 +7,5 @@ class SvgIcons {
   static const String graphUp = 'assets/svg_icons/graph_up.svg';
   static const String settings = 'assets/svg_icons/settings.svg';
   static const String calendarPlan = 'assets/svg_icons/calendar_plan.svg';
+  static const String moneyBag = 'assets/svg_icons/money_bag.svg';
 }

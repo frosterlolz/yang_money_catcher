@@ -1,9 +1,15 @@
 import 'dart:async';
 
+import 'package:database/database.dart';
+import 'package:drift/drift.dart';
 import 'package:pretty_logger/pretty_logger.dart';
-import 'package:yang_money_catcher/features/account/data/repository/mock_account_repository.dart';
+import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/acounts_drift_storage.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
+import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
+import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_drift_storage.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 
 typedef InitializationStep = FutureOr<void> Function(Mutable$Dependencies dependencies);
@@ -28,15 +34,46 @@ final class InitializationRoot {
   /// Preparing initialization steps [InitializationStep]
   Map<String, InitializationStep> _prepareInitializationSteps() => {
         'Init logger': (d) async => d.logger = logger,
-        'Init root repositories': (d) async {
-          final accountsRepository = MockAccountRepository();
+        'Prepare database': (d) async {
+          final database = AppDatabase.defaults(name: 'yang_money_catcher_database');
+          d.context['drift_database'] = database;
+        },
+        'Prepare accounts feature': (d) async {
+          final database = d.context['drift_database']! as AppDatabase;
+          final accountsLocalDataSource = AccountsDriftStorage(database);
+          final transactionsDao = TransactionsDao(database);
+          final transactionsLocalDataSource = TransactionsDriftStorage(transactionsDao);
+          d.context['transactions_local_data_source'] = transactionsLocalDataSource;
+          final accountsRepository = AccountRepositoryImpl(
+            accountsLocalStorage: accountsLocalDataSource,
+            transactionsLocalStorage: transactionsLocalDataSource,
+          );
           await accountsRepository.generateMockData();
-          final transactionsLocalDataSource = TransactionsLocalDataSource();
-          final transactionsRepository = MockTransactionsRepository(transactionsLocalDataSource);
+          d.accountRepository = accountsRepository;
+        },
+        'Prepare transactions feature': (d) async {
+          final database = d.context['drift_database']! as AppDatabase;
+          // TODO(frosterlolz): вынести
+          final transactionCategoriesCount = await database.transactionCategoryItems.count().getSingle();
+          // Категории не заполнены
+          if (transactionCategoriesCount == 0) {
+            final transactionCategories = transactionCategoriesJson.map(TransactionCategory.fromJson);
+            final rows = transactionCategories.map(
+              (e) => TransactionCategoryItemsCompanion.insert(
+                id: Value(e.id),
+                name: e.name,
+                emoji: e.emoji,
+                isIncome: e.isIncome,
+              ),
+            );
+            await database.transactionCategoryItems.insertAll(rows);
+          }
+
+          final transactionsLocalDataSource =
+              d.context['transactions_local_data_source']! as TransactionsLocalDataSource;
+          final transactionsRepository = TransactionsRepositoryImpl(transactionsLocalDataSource);
           await transactionsRepository.generateMockData();
-          d
-            ..accountRepository = accountsRepository
-            ..transactionsRepository = transactionsRepository;
+          d.transactionsRepository = transactionsRepository;
         },
       };
 

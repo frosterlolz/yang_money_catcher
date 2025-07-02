@@ -39,6 +39,7 @@
   "expenseSavedSuccessfully": "Расход сохранен",
   "balance": "Баланс",
   "cancel": "Отменить",
+  "cancelAction": "Отмена",
   "save": "Сохранить",
   "inputAmount": "Введите сумму",
   "inputComment": "Введите комментарий",
@@ -55,5 +56,17 @@
         "type": "String"
       }
     }
-  }
+  },
+  "currency": "Валюта",
+  "currencyValue": "{value, select, RUB{Российский рубль ₽} USD{Американский доллар $} EUR{Евро} other{Неизвестно}}",
+  "@currencyValue": {
+    "description": "Название валюты по ключу",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "analyze": "Анализ",
+  "period": "Период"
 }

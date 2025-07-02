@@ -5,7 +5,7 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
 /// Репозиторий для работы с транзакциями пользователя.
-abstract interface class TransactionsRepository {
+abstract interface class TransactionsRepository implements TransactionChangesSource {
   /// Создать новую транзакцию.
   ///
   /// Parameters:
@@ -46,14 +46,6 @@ abstract interface class TransactionsRepository {
   /// Returns:
   ///   Iterable<TransactionDetailEntity> — список транзакций.
   Future<Iterable<TransactionDetailEntity>> getTransactions(TransactionFilters filters);
-
-  /// Получить поток изменений транзакций.
-  ///
-  /// Parameters:
-  ///   [filters] — фильтры для выборки транзакций.
-  /// Returns:
-  ///   Stream<TransactionChangeEntry> — поток изменений транзакций.
-  Stream<TransactionChangeEntry> transactionChangesStream({int? id, TransactionFilters? filters});
 
   /// Получить список категорий транзакций
   ///

@@ -1,3 +1,4 @@
+import 'package:database/database.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
@@ -22,5 +23,12 @@ class AccountBrief with _$AccountBrief {
         name: entity.name,
         balance: entity.balance,
         currency: entity.currency,
+      );
+
+  factory AccountBrief.fromTableItem(AccountItem item) => AccountBrief(
+        id: item.id,
+        name: item.name,
+        balance: item.balance,
+        currency: Currency.fromKey(item.currency),
       );
 }

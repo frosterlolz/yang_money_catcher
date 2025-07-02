@@ -10,11 +10,6 @@ sealed class TransactionEvent with _$TransactionEvent {
 }
 
 final class _InternalUpdate extends TransactionEvent {
-  const _InternalUpdate({
-    required this.transactionId,
-    required this.transaction,
-  }) : super._();
-
-  final int transactionId;
+  const _InternalUpdate(this.transaction) : super._();
   final TransactionDetailEntity? transaction;
 }

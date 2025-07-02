@@ -8,11 +8,7 @@ sealed class TransactionsEvent with _$TransactionsEvent {
 }
 
 final class _Update extends TransactionsEvent {
-  _Update({
-    required this.transactionId,
-    required this.transaction,
-  }) : super._();
+  _Update(this.transactions) : super._();
 
-  final int transactionId;
-  final TransactionDetailEntity? transaction;
+  final List<TransactionDetailEntity> transactions;
 }

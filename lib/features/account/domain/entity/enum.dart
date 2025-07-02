@@ -8,6 +8,9 @@ enum Currency {
 
   const Currency(this.key, this.symbol);
 
+  // TODO(frosterlolz): возможно спавнить "неизвестную" валюту, либо ошибку
+  factory Currency.fromKey(String key) => values.firstWhere((e) => e.key == key, orElse: () => Currency.rub);
+
   final String key;
   final String symbol;
 }

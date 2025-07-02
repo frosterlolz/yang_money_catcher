@@ -10,13 +10,13 @@ import 'package:flutter/material.dart';
 /// App Light colors palette.
 abstract class ColorPalette {
   static const white = Colors.white;
-  static const scaffoldBgGrey = Color(0xFFF2F2F9);
+  static const snow = Color(0xFFFEF7FF);
   static const corpLight = Color(0xFFE8F6F8);
   static const grabberGrey = Color(0xFFD9D9D9);
   static const antiFlashWhite = Color(0xffF3EDF7);
   static const lavenderGray = Color(0xffCAC4D0);
+  static const brightGray = Color(0xFFECE6F0);
   static const spanishGray = Color(0xff999999);
-  static const labelGrey = Color(0xFFA5A7AE);
   static const subtitleGrey = Color(0xFF9D9D9D);
   static const bodyTextGrey = Color(0xFF555555);
   static const arsenic = Color(0xff3C3C43);

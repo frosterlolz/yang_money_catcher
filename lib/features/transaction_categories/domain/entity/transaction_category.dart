@@ -1,3 +1,4 @@
+import 'package:database/database.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
 
@@ -14,4 +15,11 @@ class TransactionCategory with _$TransactionCategory {
   }) = _TransactionCategory;
 
   factory TransactionCategory.fromJson(JsonMap json) => _$TransactionCategoryFromJson(json);
+
+  factory TransactionCategory.fromTableItem(TransactionCategoryItem item) => TransactionCategory(
+        id: item.id,
+        name: item.name,
+        emoji: item.emoji,
+        isIncome: item.isIncome,
+      );
 }
