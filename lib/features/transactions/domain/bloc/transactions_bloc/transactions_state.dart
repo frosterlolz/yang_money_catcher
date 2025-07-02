@@ -14,5 +14,5 @@ sealed class TransactionsState with _$TransactionsState {
   }) = TransactionsState$Error;
 
   num get totalAmount =>
-      transactions?.fold(0.0, (sum, transaction) => (sum ?? 0.0) + transaction.amount.amountToNum()) ?? 0.0;
+      (transactions?.fold(0.0, (sum, transaction) => sum + transaction.amount.amountToNum()) ?? 0.0).smartTruncate();
 }

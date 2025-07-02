@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
@@ -19,7 +20,7 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     on<TransactionsEvent>(
       (event, emitter) => switch (event) {
         _Load() => _loadTransactions(event, emitter),
-        _Update() => _updateTransaction(event, emitter),
+        _Update() => _updateTransactions(event, emitter),
       },
     );
   }
@@ -45,7 +46,7 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     }
   }
 
-  void _updateTransaction(_Update event, _Emitter emitter) {
+  void _updateTransactions(_Update event, _Emitter emitter) {
     emitter(TransactionsState.idle(UnmodifiableListView(event.transactions.toList())));
   }
 

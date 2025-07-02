@@ -65,7 +65,8 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
   }
 
   void _onAnalyzeTap(BuildContext context) {
-    // TODO(frosterlolz): реализовать переход на экран анализа
+    context.pushRoute(TransactionsAnalyzeRoute(
+        initialDtRange: _dateTimeRange, accountId: widget.accountId, isIncome: widget.isIncome));
   }
 
   Future<void> _onSelectStartDate() async {

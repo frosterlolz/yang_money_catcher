@@ -66,5 +66,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "analyze": "Анализ",
+  "period": "Период"
 }

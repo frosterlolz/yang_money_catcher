@@ -119,9 +119,9 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
     final comment = await showDialog<String>(
       context: context,
       builder: (context) => TextConfirmDialog(
-          initialValue: _comment,
-          onConfirmTap: context.maybePop,
-          title: context.l10n.inputComment,
+        initialValue: _comment,
+        onConfirmTap: context.maybePop,
+        title: context.l10n.inputComment,
       ),
     );
     if (comment == null) return;

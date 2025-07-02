@@ -17,7 +17,7 @@ class TransactionListTile extends StatelessWidget {
     this.transactionDateTime,
     this.enableTopDivider = false,
     this.enableBottomDivider = false,
-    required this.onTap,
+    this.onTap,
   });
 
   final String title;
@@ -28,7 +28,7 @@ class TransactionListTile extends StatelessWidget {
   final String? transactionDateTime;
   final bool enableTopDivider;
   final bool enableBottomDivider;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => Column(

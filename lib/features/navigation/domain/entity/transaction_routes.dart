@@ -7,6 +7,7 @@ final expensesRoute = AutoRoute(
     AutoRoute(page: ExpensesRoute.page, initial: true),
     AutoRoute(page: TransactionRoute.page),
     AutoRoute(page: TransactionsHistoryRoute.page),
+    AutoRoute(page: TransactionsAnalyzeRoute.page),
   ],
   initial: true,
 );
@@ -17,5 +18,6 @@ final incomeRoute = AutoRoute(
     AutoRoute(page: IncomeRoute.page, initial: true),
     AutoRoute(page: TransactionRoute.page),
     AutoRoute(page: TransactionsHistoryRoute.page),
+    AutoRoute(page: TransactionsAnalyzeRoute.page),
   ],
 );

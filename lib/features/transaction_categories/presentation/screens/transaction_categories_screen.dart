@@ -64,7 +64,7 @@ class _TransactionCategoriesSuccessViewState extends State<_TransactionCategorie
 
   @override
   void didUpdateWidget(covariant _TransactionCategoriesSuccessView oldWidget) {
-    if (const ListEquality<TransactionCategory>()
+    if (!const ListEquality<TransactionCategory>()
         .equals(widget.transactionCategories, oldWidget.transactionCategories)) {
       _searchUpdate();
     }
