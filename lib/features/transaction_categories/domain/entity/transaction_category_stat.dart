@@ -17,7 +17,7 @@ class TransactionCategoryStat with _$TransactionCategoryStat {
   factory TransactionCategoryStat.fromJson(JsonMap json) => _$TransactionCategoryStatFromJson(json);
 
   factory TransactionCategoryStat.fromTableItem(
-  TransactionCategory category, {
+    TransactionCategory category, {
     required String amount,
   }) =>
       TransactionCategoryStat(

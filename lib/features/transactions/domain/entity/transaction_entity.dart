@@ -23,15 +23,15 @@ class TransactionEntity with _$TransactionEntity {
   factory TransactionEntity.fromJson(JsonMap json) => _$TransactionEntityFromJson(json);
 
   factory TransactionEntity.fromTableItem(TransactionItem item) => TransactionEntity(
-      id: item.id,
-      accountId: item.account,
-      categoryId: item.category,
-      amount: item.amount,
-      transactionDate: item.transactionDate,
-      comment: item.comment,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-  );
+        id: item.id,
+        accountId: item.account,
+        categoryId: item.category,
+        amount: item.amount,
+        transactionDate: item.transactionDate,
+        comment: item.comment,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      );
 }
 
 @freezed
@@ -51,19 +51,21 @@ class TransactionDetailEntity with _$TransactionDetailEntity implements Comparab
 
   factory TransactionDetailEntity.fromJson(JsonMap json) => _$TransactionDetailEntityFromJson(json);
 
-  factory TransactionDetailEntity.fromTableItem(TransactionItem item, {
+  factory TransactionDetailEntity.fromTableItem(
+    TransactionItem item, {
     required AccountBrief accountBrief,
     required TransactionCategory category,
-  }) => TransactionDetailEntity(
-    id: item.id,
-    account: accountBrief,
-    category: category,
-    amount: item.amount,
-    transactionDate: item.transactionDate,
-    comment: item.comment,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-  );
+  }) =>
+      TransactionDetailEntity(
+        id: item.id,
+        account: accountBrief,
+        category: category,
+        amount: item.amount,
+        transactionDate: item.transactionDate,
+        comment: item.comment,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      );
 
   @override
   int compareTo(TransactionDetailEntity other) => id.compareTo(other.id);

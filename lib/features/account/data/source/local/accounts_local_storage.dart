@@ -5,6 +5,7 @@ import 'package:yang_money_catcher/features/account/domain/entity/account_change
 /// Используется для взаимодействия с локальной базой данных (например, через Drift).
 abstract interface class AccountsLocalStorage {
   Future<int> fetchAccountsCount();
+
   /// Загружает список всех аккаунтов из базы данных.
   ///
   /// Возвращает список [AccountItem], включая их `id`, `createdAt`, `updatedAt` и другие поля.

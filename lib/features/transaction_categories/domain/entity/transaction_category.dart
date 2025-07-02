@@ -17,9 +17,9 @@ class TransactionCategory with _$TransactionCategory {
   factory TransactionCategory.fromJson(JsonMap json) => _$TransactionCategoryFromJson(json);
 
   factory TransactionCategory.fromTableItem(TransactionCategoryItem item) => TransactionCategory(
-    id: item.id,
-    name: item.name,
-    emoji: item.emoji,
-    isIncome: item.isIncome,
-  );
+        id: item.id,
+        name: item.name,
+        emoji: item.emoji,
+        isIncome: item.isIncome,
+      );
 }
