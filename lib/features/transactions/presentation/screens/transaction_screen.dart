@@ -150,6 +150,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       debugPrintStack(stackTrace: s);
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(TopSideSnackBars.error(context, error: e));
+      return;
     }
     final nextState = await transactionBloc.stream.firstWhere((state) => state is! TransactionState$Processing);
     if (!context.mounted) return;

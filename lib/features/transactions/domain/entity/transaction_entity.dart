@@ -1,3 +1,4 @@
+import 'package:database/database.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_brief.dart';
@@ -20,6 +21,17 @@ class TransactionEntity with _$TransactionEntity {
   }) = _TransactionEntity;
 
   factory TransactionEntity.fromJson(JsonMap json) => _$TransactionEntityFromJson(json);
+
+  factory TransactionEntity.fromTableItem(TransactionItem item) => TransactionEntity(
+      id: item.id,
+      accountId: item.account,
+      categoryId: item.category,
+      amount: item.amount,
+      transactionDate: item.transactionDate,
+      comment: item.comment,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+  );
 }
 
 @freezed
@@ -38,6 +50,20 @@ class TransactionDetailEntity with _$TransactionDetailEntity implements Comparab
   const TransactionDetailEntity._();
 
   factory TransactionDetailEntity.fromJson(JsonMap json) => _$TransactionDetailEntityFromJson(json);
+
+  factory TransactionDetailEntity.fromTableItem(TransactionItem item, {
+    required AccountBrief accountBrief,
+    required TransactionCategory category,
+  }) => TransactionDetailEntity(
+    id: item.id,
+    account: accountBrief,
+    category: category,
+    amount: item.amount,
+    transactionDate: item.transactionDate,
+    comment: item.comment,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  );
 
   @override
   int compareTo(TransactionDetailEntity other) => id.compareTo(other.id);

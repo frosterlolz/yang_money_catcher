@@ -9,6 +9,9 @@ final class AccountsDriftStorage implements AccountsLocalStorage {
   final AppDatabase database;
 
   @override
+  Future<int> fetchAccountsCount() async => database.accountItems.count().getSingle();
+
+  @override
   Future<int> deleteAccount(int id) => (database.delete(database.accountItems)..where((t) => t.id.equals(id))).go();
 
   @override

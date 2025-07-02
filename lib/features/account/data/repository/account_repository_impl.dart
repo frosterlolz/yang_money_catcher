@@ -1,4 +1,3 @@
-import 'package:database/database.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_storage.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
@@ -10,6 +9,7 @@ import 'package:yang_money_catcher/features/transaction_categories/data/source/m
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category_stat.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_drift_storage.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
 final class AccountRepositoryImpl implements AccountRepository {
   AccountRepositoryImpl({
@@ -79,11 +79,11 @@ final class AccountRepositoryImpl implements AccountRepository {
   // TODO(frosterlolz): временный метод
   Iterable<TransactionCategoryStat> _calculateFromCategories(
     Iterable<TransactionCategory> categories,
-    List<TransactionItem> transactions,
+    List<TransactionEntity> transactions,
   ) {
     final transactionStats = categories.map((category) {
       final amountNum = transactions.fold<num>(0.0, (previousValue, element) {
-        final transactionAmountNum = category.id == element.category ? element.amount.amountToNum() : 0.0;
+        final transactionAmountNum = category.id == element.categoryId ? element.amount.amountToNum() : 0.0;
         return previousValue + transactionAmountNum;
       });
 
@@ -104,6 +104,8 @@ final class AccountRepositoryImpl implements AccountRepository {
   }
 
   Future<void> generateMockData() async {
+    final accountsCount = await _accountsLocalStorage.fetchAccountsCount();
+    if (accountsCount > 0) return;
     final requests = List.generate(
       10,
       (index) => AccountRequest.create(

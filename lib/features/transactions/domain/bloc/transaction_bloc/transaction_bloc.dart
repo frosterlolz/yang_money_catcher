@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/repository/transactions_repository.dart';
@@ -30,7 +29,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   }
 
   final TransactionsRepository _transactionsRepository;
-  StreamSubscription<TransactionChangeEntry>? _transactionChangesSubscription;
+  StreamSubscription<TransactionDetailEntity?>? _transactionChangesSubscription;
 
   @override
   Future<void> close() {
@@ -91,12 +90,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
   void _updateTransactionChangesSubscription(int transactionId) {
     _transactionChangesSubscription?.cancel();
-    _transactionChangesSubscription = _transactionsRepository.transactionChangesStream(id: transactionId).listen(
-          (transactionChangeEntry) => add(
-            _InternalUpdate(transactionId: transactionChangeEntry.key, transaction: transactionChangeEntry.value),
+    _transactionChangesSubscription = _transactionsRepository.transactionChanges(transactionId).listen(
+          (transaction) => add(
+            _InternalUpdate(transaction),
           ),
         );
   }
 
-  void _internalTransactionUpdate(_InternalUpdate event, _Emitter emitter) {}
+  void _internalTransactionUpdate(_InternalUpdate event, _Emitter emitter) {
+    emitter(TransactionState.idle(event.transaction));
+  }
 }
