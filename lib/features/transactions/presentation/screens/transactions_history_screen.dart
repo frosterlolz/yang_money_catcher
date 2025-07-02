@@ -65,8 +65,13 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
   }
 
   void _onAnalyzeTap(BuildContext context) {
-    context.pushRoute(TransactionsAnalyzeRoute(
-        initialDtRange: _dateTimeRange, accountId: widget.accountId, isIncome: widget.isIncome));
+    context.pushRoute(
+      TransactionsAnalyzeRoute(
+        initialDtRange: _dateTimeRange,
+        accountId: widget.accountId,
+        isIncome: widget.isIncome,
+      ),
+    );
   }
 
   Future<void> _onSelectStartDate() async {

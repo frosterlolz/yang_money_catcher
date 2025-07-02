@@ -32,6 +32,7 @@ class _SearchTextFieldState extends State<SearchTextField> {
   void _onClearTap() {
     _controller.clear();
     widget.onChanged.call('');
+    FocusScope.of(context).unfocus();
   }
 
   @override
@@ -44,7 +45,12 @@ class _SearchTextFieldState extends State<SearchTextField> {
       onTapOutside: (_) => FocusScope.of(context).unfocus(),
       decoration: InputDecoration(
         border: const OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.zero),
-        suffixIcon: const Icon(Icons.search),
+        suffixIcon: ValueListenableBuilder(
+          valueListenable: _controller,
+          builder: (context, value, child) =>
+              value.text.isEmpty ? child! : IconButton(onPressed: _onClearTap, icon: const Icon(Icons.cancel_outlined)),
+          child: const Icon(Icons.search),
+        ),
         filled: true,
         fillColor: appColorScheme.inactiveSecondary,
         hintText: 'Найти статью',

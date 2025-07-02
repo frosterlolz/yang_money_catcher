@@ -357,8 +357,11 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
               ),
           transactionDateTime: '${_amountOfCategoryPercentage(transactionAnalysisEntry.key).smartTruncate()} %',
           enableBottomDivider: true,
-          onTap: () => _onTransactionAnalysisTap(context,
-              transactions: transactionAnalysisEntry.value, category: transactionAnalysisEntry.key),
+          onTap: () => _onTransactionAnalysisTap(
+            context,
+            transactions: transactionAnalysisEntry.value,
+            category: transactionAnalysisEntry.key,
+          ),
         );
       },
     );

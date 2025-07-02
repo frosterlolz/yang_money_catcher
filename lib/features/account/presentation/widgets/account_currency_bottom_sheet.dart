@@ -14,7 +14,7 @@ Future<Currency?> showAccountCurrencyBottomSheet(BuildContext context) => showMo
 /// {@endtemplate}
 class _AccountCurrencyBottomSheet extends StatelessWidget {
   /// {@macro _AccountCurrencyBottomSheet.class}
-  const _AccountCurrencyBottomSheet({super.key});
+  const _AccountCurrencyBottomSheet();
 
   void _onCurrencyTap(BuildContext context, Currency? currency) {
     context.maybePop(currency);
