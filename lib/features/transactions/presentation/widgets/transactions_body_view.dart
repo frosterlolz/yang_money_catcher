@@ -9,6 +9,7 @@ import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
+import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
@@ -86,7 +87,8 @@ class _TransactionsListView extends StatelessWidget {
   final Future<void> Function(BuildContext context) onRefresh;
 
   void _onTransactionTap(BuildContext context, TransactionDetailEntity transaction) {
-    context.pushRoute(TransactionRoute(isIncome: isIncome, initialTransaction: transaction));
+    showTransactionScreen(context, isIncome: transaction.category.isIncome, initialTransaction: transaction);
+    // context.pushRoute(TransactionRoute(isIncome: isIncome, initialTransaction: transaction));
   }
 
   @override

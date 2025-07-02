@@ -11,6 +11,9 @@ extension DateTimeX on DateTime {
   bool isSameDate(DateTime other) => year == other.year && month == other.month && day == other.day;
   bool isSameTime(DateTime other) => hour == other.hour && minute == other.minute;
   bool isSameDateTime(DateTime other) => isSameDate(other) && isSameTime(other);
+  bool isFutureYear(DateTime other) => year > other.year;
+  bool isFutureMonth(DateTime other) => year > other.year || month > other.month;
+  bool isFutureDay(DateTime other) => isFutureYear(other) || isFutureMonth(other) || day > other.day;
 }
 
 extension TimeOfDayX on TimeOfDay {

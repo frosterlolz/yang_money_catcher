@@ -15,6 +15,7 @@ import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
+import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
@@ -307,7 +308,8 @@ class _TransactionsSliverListState extends State<_TransactionsSliverList> {
   }
 
   void _onTransactionTap(BuildContext context, TransactionDetailEntity transaction) {
-    context.pushRoute(TransactionRoute(isIncome: transaction.category.isIncome, initialTransaction: transaction));
+    showTransactionScreen(context, isIncome: transaction.category.isIncome, initialTransaction: transaction);
+    // context.pushRoute(TransactionRoute(isIncome: transaction.category.isIncome, initialTransaction: transaction));
   }
 
   @override
