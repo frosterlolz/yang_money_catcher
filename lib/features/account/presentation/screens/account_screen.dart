@@ -97,7 +97,7 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
     }
   }
 
-  void _loadTransactions() {
+  Future<void> _loadTransactions() async {
     final dtNow = DateTime.now();
     final startDate = switch (_fetchCalendarValue) {
       CalendarValues.day => dtNow.copyWith(month: dtNow.month - 1),
@@ -110,7 +110,8 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
       startDate: startDate,
       endDate: dtNow,
     );
-    context.read<TransactionsBloc>().add(TransactionsEvent.load(filters));
+    final transactionsBloc = context.read<TransactionsBloc>()..add(TransactionsEvent.load(filters));
+    await transactionsBloc.stream.firstWhere((state) => state is! TransactionsState$Processing);
   }
 
   void _changeCalendarValue(CalendarValues value) {
@@ -120,51 +121,54 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
   }
 
   @override
-  Widget build(BuildContext context) => ListView(
-        children: [
-          ...ListTile.divideTiles(
-            context: context,
-            tiles: [
-              // balance
-              _AccountBalanceTile(account: widget.account),
-              // currency
-              _AccountCurrencyTile(account: widget.account),
-            ],
-          ),
-          const SizedBox(height: AppSizes.double16),
-          // chart
-          ConstrainedBox(
-            constraints: BoxConstraints.loose(const Size.fromHeight(_chartMaxHeight)),
-            child: BlocBuilder<TransactionsBloc, TransactionsState>(
-              builder: (context, transactionsState) {
-                final errorWithNothingToShow =
-                    transactionsState is TransactionsState$Error && transactionsState.transactions == null
-                        ? transactionsState.error
-                        : null;
-                final showSecond = transactionsState.transactions != null;
-                return AnimatedCrossFade(
-                  firstChild: errorWithNothingToShow == null
-                      ? const TypedProgressIndicator.small()
-                      : ErrorBodyView.fromError(errorWithNothingToShow, onRetryTap: _loadTransactions),
-                  secondChild: _AccountTransactionsAnalyzeChart(
-                    transactions: transactionsState.transactions ?? [],
-                    calendarValues: _fetchCalendarValue,
-                  ),
-                  crossFadeState: showSecond ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 400),
-                );
-              },
+  Widget build(BuildContext context) => RefreshIndicator.adaptive(
+    onRefresh: _loadTransactions,
+    child: ListView(
+          children: [
+            ...ListTile.divideTiles(
+              context: context,
+              tiles: [
+                // balance
+                _AccountBalanceTile(account: widget.account),
+                // currency
+                _AccountCurrencyTile(account: widget.account),
+              ],
             ),
-          ),
-          Center(
-            child: CalendarSegmentedButton(
-              selected: _fetchCalendarValue,
-              values: const [CalendarValues.day, CalendarValues.month],
-              onChanged: _changeCalendarValue,
+            const SizedBox(height: AppSizes.double16),
+            // chart
+            ConstrainedBox(
+              constraints: BoxConstraints.loose(const Size.fromHeight(_chartMaxHeight)),
+              child: BlocBuilder<TransactionsBloc, TransactionsState>(
+                builder: (context, transactionsState) {
+                  final errorWithNothingToShow =
+                      transactionsState is TransactionsState$Error && transactionsState.transactions == null
+                          ? transactionsState.error
+                          : null;
+                  final showSecond = transactionsState.transactions != null;
+                  return AnimatedCrossFade(
+                    firstChild: errorWithNothingToShow == null
+                        ? const TypedProgressIndicator.small()
+                        : ErrorBodyView.fromError(errorWithNothingToShow, onRetryTap: _loadTransactions),
+                    secondChild: _AccountTransactionsAnalyzeChart(
+                      transactions: transactionsState.transactions ?? [],
+                      calendarValues: _fetchCalendarValue,
+                    ),
+                    crossFadeState: showSecond ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 400),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      );
+            Center(
+              child: CalendarSegmentedButton(
+                selected: _fetchCalendarValue,
+                values: const [CalendarValues.day, CalendarValues.month],
+                onChanged: _changeCalendarValue,
+              ),
+            ),
+          ],
+        ),
+  );
 }
 
 /// {@template _AccountBalanceTile.class}
