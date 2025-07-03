@@ -8,26 +8,50 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
 final class TransactionsDriftStorage implements TransactionsLocalDataSource {
-  const TransactionsDriftStorage(this.transactionsDao);
+  const TransactionsDriftStorage(this._transactionsDao);
 
-  final TransactionsDao transactionsDao;
-
-  @override
-  Future<int> getTransactionsCount() => transactionsDao.rowsCount();
+  final TransactionsDao _transactionsDao;
 
   @override
-  Future<int> deleteTransaction(int id) => transactionsDao.deleteTransaction(id);
+  Future<int> transactionCategoriesCount() async => _transactionsDao.transactionCategoryRowsCount();
+
+  @override
+  Future<List<TransactionCategory>> fetchTransactionCategories() async {
+    final transactionCategoryItems = await _transactionsDao.fetchTransactionCategories();
+    return transactionCategoryItems.map(TransactionCategory.fromTableItem).toList();
+  }
+
+  @override
+  Future<void> insertTransactionCategories(List<TransactionCategory> transactionCategories) async {
+    final transactionCategoryCompanions = transactionCategories
+        .map(
+          (e) => TransactionCategoryItemsCompanion.insert(
+            id: Value(e.id),
+            name: e.name,
+            emoji: e.emoji,
+            isIncome: e.isIncome,
+          ),
+        )
+        .toList();
+    await _transactionsDao.insertTransactionCategories(transactionCategoryCompanions);
+  }
+
+  @override
+  Future<int> getTransactionsCount() => _transactionsDao.transactionRowsCount();
+
+  @override
+  Future<int> deleteTransaction(int id) => _transactionsDao.deleteTransaction(id);
 
   @override
   Future<List<TransactionEntity>> fetchTransactions(int accountId) async {
-    final transactionItems = await transactionsDao.fetchTransactions(accountId);
+    final transactionItems = await _transactionsDao.fetchTransactions(accountId);
 
     return transactionItems.map(TransactionEntity.fromTableItem).toList();
   }
 
   @override
   Future<List<TransactionDetailEntity>> fetchTransactionsDetailed(TransactionFilters filters) async {
-    final transactionValueObjects = await transactionsDao.fetchTransactionsDetailed(
+    final transactionValueObjects = await _transactionsDao.fetchTransactionsDetailed(
       filters.accountId,
       startDate: filters.startDate,
       endDate: filters.endDate,
@@ -47,7 +71,7 @@ final class TransactionsDriftStorage implements TransactionsLocalDataSource {
 
   @override
   Future<TransactionDetailEntity?> fetchTransaction(int id) async {
-    final transactionItem = await transactionsDao.fetchTransaction(id);
+    final transactionItem = await _transactionsDao.fetchTransaction(id);
     if (transactionItem == null) return null;
     return TransactionDetailEntity.fromTableItem(
       transactionItem.transaction,
@@ -71,13 +95,13 @@ final class TransactionsDriftStorage implements TransactionsLocalDataSource {
       comment: Value(request.comment),
       updatedAt: Value(now),
     );
-    final updatedTransaction = await transactionsDao.upsertTransaction(companion);
+    final updatedTransaction = await _transactionsDao.upsertTransaction(companion);
 
     return TransactionEntity.fromTableItem(updatedTransaction);
   }
 
   @override
-  Stream<TransactionDetailEntity?> transactionChanges(int id) => transactionsDao.transactionChanges(id).map(
+  Stream<TransactionDetailEntity?> transactionChanges(int id) => _transactionsDao.transactionChanges(id).map(
         (transactionDetailed) => transactionDetailed == null
             ? null
             : TransactionDetailEntity.fromTableItem(
@@ -88,7 +112,7 @@ final class TransactionsDriftStorage implements TransactionsLocalDataSource {
       );
 
   @override
-  Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) => transactionsDao
+  Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) => _transactionsDao
       .transactionDetailedListChanges(
         filters.accountId,
         startDate: filters.startDate,

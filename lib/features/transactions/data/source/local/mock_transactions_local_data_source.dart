@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
@@ -10,6 +9,7 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 typedef TransactionChangeEntry = MapEntry<int, TransactionDetailEntity?>;
 
 base class MockTransactionsLocalDataSource {
+  @Deprecated('Use [TransactionsDriftStorage] instead.')
   MockTransactionsLocalDataSource()
       : _transactions = List.empty(growable: true),
         _transactionChangesController = StreamController.broadcast();
@@ -94,5 +94,5 @@ base class MockTransactionsLocalDataSource {
   }
 
   Future<Iterable<TransactionCategory>> getTransactionCategories() async =>
-      transactionCategoriesJson.map(TransactionCategory.fromJson);
+      throw UnimplementedError('Not actual data source for now, check constructor deprecation comment');
 }

@@ -5,7 +5,6 @@ import 'package:yang_money_catcher/features/account/domain/entity/account_entity
 import 'package:yang_money_catcher/features/account/domain/entity/account_history.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
-import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category_stat.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_drift_storage.dart';
@@ -61,8 +60,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       throw Exception('Account not found');
     }
     final accountTransactions = await _transactionsLocalStorage.fetchTransactions(account.id);
-    // TODO(frosterlolz): вынести
-    final categories = transactionCategoriesJson.map(TransactionCategory.fromJson);
+    final categories = await _transactionsLocalStorage.fetchTransactionCategories();
     final incomeCategories = categories.where((category) => category.isIncome);
     final expenseCategories = categories.where((category) => !category.isIncome);
 

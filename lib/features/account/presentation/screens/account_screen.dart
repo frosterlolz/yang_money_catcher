@@ -23,6 +23,7 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
+import 'package:yang_money_catcher/ui_kit/buttons/calendar_segmented_button.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
 import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
@@ -79,9 +80,12 @@ class _AccountSuccessView extends StatefulWidget {
 }
 
 class _AccountSuccessViewState extends State<_AccountSuccessView> {
+  late CalendarValues _fetchCalendarValue;
+
   @override
   void initState() {
     super.initState();
+    _fetchCalendarValue = CalendarValues.day;
     _loadTransactions();
   }
 
@@ -95,12 +99,24 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
 
   void _loadTransactions() {
     final dtNow = DateTime.now();
+    final startDate = switch (_fetchCalendarValue) {
+      CalendarValues.day => dtNow.copyWith(month: dtNow.month - 1),
+      CalendarValues.month => dtNow.copyWith(year: dtNow.year - 1),
+      CalendarValues.week => throw UnimplementedError(),
+      CalendarValues.year => throw UnimplementedError(),
+    };
     final filters = TransactionFilters(
       accountId: widget.account.id,
-      startDate: dtNow.copyWith(month: dtNow.month - 1),
+      startDate: startDate,
       endDate: dtNow,
     );
     context.read<TransactionsBloc>().add(TransactionsEvent.load(filters));
+  }
+
+  void _changeCalendarValue(CalendarValues value) {
+    if (value == _fetchCalendarValue || !mounted) return;
+    setState(() => _fetchCalendarValue = value);
+    _loadTransactions();
   }
 
   @override
@@ -135,6 +151,13 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
                   duration: const Duration(milliseconds: 400),
                 );
               },
+            ),
+          ),
+          Center(
+            child: CalendarSegmentedButton(
+              selected: _fetchCalendarValue,
+              values: const [CalendarValues.day, CalendarValues.month],
+              onChanged: _changeCalendarValue,
             ),
           ),
         ],
@@ -346,7 +369,7 @@ class _AccountTransactionsAnalyzeChartState extends State<_AccountTransactionsAn
       final clearDate = transaction.transactionDate.toLocal().copyWithStartOfDayTme;
       final oldItem = _chartItemsMap[clearDate] ??
           ChartItemData(id: clearDate.millisecondsSinceEpoch, value: 0.0, label: clearDate.ddMM);
-      final currentTotal = oldItem.value + transaction.amount.amountToNum();
+      final currentTotal = oldItem.value + (transaction.category.isIncome ? transaction.amount.amountToNum() : -transaction.amount.amountToNum());
       _chartItemsMap[clearDate] = oldItem.copyWith(
         value: currentTotal,
         tooltipLabel:

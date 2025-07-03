@@ -68,5 +68,14 @@
     }
   },
   "analyze": "Анализ",
-  "period": "Период"
+  "period": "Период",
+  "selectByCalendarValue": "{value, select, day{По дням} week{По неделям} month{По месяцам} year{По годам} other{Неизвестно}}",
+  "@selectByCalendarValue": {
+    "description": "Значение, по которому будет происходить выборка",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
 }

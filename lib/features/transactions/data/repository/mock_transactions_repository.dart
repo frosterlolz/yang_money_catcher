@@ -44,14 +44,25 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
   @override
   Future<TransactionDetailEntity?> getTransaction(int id) async => _transactionsLocalDataSource.fetchTransaction(id);
 
+  @override
+  Future<Iterable<TransactionCategory>> getTransactionCategories() async => _transactionsLocalDataSource.fetchTransactionCategories();
+
+  @override
+  Stream<TransactionDetailEntity?> transactionChanges(int id) => _transactionsLocalDataSource.transactionChanges(id);
+
+  @override
+  Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
+      _transactionsLocalDataSource.transactionsListChanges(filters);
+
   Future<void> generateMockData() async {
+    await _fillTransactionCategories();
     final transactionsCount = await _transactionsLocalDataSource.getTransactionsCount();
     if (transactionsCount > 0) return;
     final random = Random();
     final categories = await getTransactionCategories();
     final requests = List.generate(
       20,
-      (index) {
+          (index) {
         final categoryIndex = random.nextInt(categories.length);
         final amountFractionalPart = random.nextInt(2) > 0 ? '00' : '50';
         final transactionHour = random.nextInt(24);
@@ -73,14 +84,11 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
     }
   }
 
-  @override
-  Future<Iterable<TransactionCategory>> getTransactionCategories() async =>
-      transactionCategoriesJson.map(TransactionCategory.fromJson);
-
-  @override
-  Stream<TransactionDetailEntity?> transactionChanges(int id) => _transactionsLocalDataSource.transactionChanges(id);
-
-  @override
-  Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
-      _transactionsLocalDataSource.transactionsListChanges(filters);
+  Future<void> _fillTransactionCategories() async {
+    final transactionCategories = await _transactionsLocalDataSource.transactionCategoriesCount();
+    if (transactionCategories == 0) {
+      final mockCategories = transactionCategoriesJson.map(TransactionCategory.fromJson);
+      await _transactionsLocalDataSource.insertTransactionCategories(mockCategories.toList());
+    }
+  }
 }

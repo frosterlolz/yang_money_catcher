@@ -3,11 +3,17 @@ import 'package:drift/drift.dart';
 
 part 'transactions_dao.g.dart';
 
-@DriftAccessor(tables: [TransactionItems])
+@DriftAccessor(tables: [TransactionItems, TransactionCategoryItems])
 class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsDaoMixin {
   TransactionsDao(super.attachedDatabase);
 
-  Future<int> rowsCount() => transactionItems.count().getSingle();
+  Future<int> transactionCategoryRowsCount() => transactionCategoryItems.count().getSingle();
+  Future<List<TransactionCategoryItem>> fetchTransactionCategories() => transactionCategoryItems.select().get();
+
+  Future<void> insertTransactionCategories(List<TransactionCategoryItemsCompanion> transactionCategoryCompanions) =>
+      transactionCategoryItems.insertAll(transactionCategoryCompanions);
+
+  Future<int> transactionRowsCount() => transactionItems.count().getSingle();
 
   Future<List<TransactionItem>> fetchTransactions(int accountId) {
     final transactionsStatement = select(transactionItems)..where((tx) => tx.account.equals(accountId));
@@ -60,16 +66,18 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
     );
   }
 
-  Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion) async => companion.id.present ? _updateTransaction(companion) : _insertTransaction(companion);
+  Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion) async =>
+      companion.id.present ? _updateTransaction(companion) : _insertTransaction(companion);
 
-  Future<TransactionItem> _insertTransaction(TransactionItemsCompanion companion) async => into(transactionItems).insertReturning(companion);
+  Future<TransactionItem> _insertTransaction(TransactionItemsCompanion companion) async =>
+      into(transactionItems).insertReturning(companion);
 
   Future<TransactionItem> _updateTransaction(TransactionItemsCompanion companion) async => transaction(() async {
-    final statement = update(transactionItems)..where((tx) => tx.id.equals(companion.id.value));
-    final updatedRowId = await statement.write(companion);
-    final updatedTransaction = select(transactionItems)..where((tx) => tx.rowId.equals(updatedRowId));
-    return updatedTransaction.getSingle();
-  });
+        final statement = update(transactionItems)..where((tx) => tx.id.equals(companion.id.value));
+        final updatedRowId = await statement.write(companion);
+        final updatedTransaction = select(transactionItems)..where((tx) => tx.rowId.equals(updatedRowId));
+        return updatedTransaction.getSingle();
+      });
 
   Future<int> deleteTransaction(int id) => (delete(transactionItems)..where((t) => t.id.equals(id))).go();
 
