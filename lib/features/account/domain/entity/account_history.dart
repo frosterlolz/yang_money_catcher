@@ -1,3 +1,4 @@
+import 'package:database/database.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_state.dart';
@@ -17,6 +18,18 @@ class AccountHistory with _$AccountHistory {
   }) = _AccountHistory;
 
   factory AccountHistory.fromJson(JsonMap json) => _$AccountHistoryFromJson(json);
+
+  factory AccountHistory.fromTableItem(
+    AccountItem item, {
+    required List<AccountHistoryItem> history,
+  }) =>
+      AccountHistory(
+        accountId: item.id,
+        accountName: item.name,
+        currency: Currency.fromKey(item.currency),
+        currencyBalance: item.balance,
+        history: history,
+      );
 }
 
 @freezed

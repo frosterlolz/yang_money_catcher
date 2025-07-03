@@ -7,18 +7,18 @@ import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category_stat.dart';
-import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_drift_storage.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
 final class AccountRepositoryImpl implements AccountRepository {
   AccountRepositoryImpl({
     required AccountsLocalStorage accountsLocalStorage,
-    required TransactionsDriftStorage transactionsLocalStorage,
+    required TransactionsLocalDataSource transactionsLocalStorage,
   })  : _accountsLocalStorage = accountsLocalStorage,
         _transactionsLocalStorage = transactionsLocalStorage;
 
   final AccountsLocalStorage _accountsLocalStorage;
-  final TransactionsDriftStorage _transactionsLocalStorage;
+  final TransactionsLocalDataSource _transactionsLocalStorage;
   final Map<int, AccountHistory> _accountHistories = {};
 
   @override
@@ -93,12 +93,14 @@ final class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<AccountHistory> getAccountHistory(int accountId) async {
+    final account = await _accountsLocalStorage.fetchAccount(accountId);
+    if (account == null) {
+      throw Exception('Account not found');
+    }
     // TODO(frosterlolz): на данном этапе не актульные данные
     final history = _accountHistories[accountId];
-    if (history == null) {
-      throw Exception('Account history not found');
-    }
-    return history;
+
+    return AccountHistory.fromTableItem(account, history: history == null ? [] : history.history);
   }
 
   Future<void> generateMockData() async {

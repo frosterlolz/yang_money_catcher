@@ -83,13 +83,15 @@ final class TransactionsDriftStorage implements TransactionsLocalDataSource {
   @override
   Future<void> insertTransactions(List<TransactionRequest$Create> requests) async {
     final companions = requests
-        .map((e) => TransactionItemsCompanion.insert(
-              account: e.accountId,
-              category: e.categoryId,
-              amount: e.amount,
-              transactionDate: e.transactionDate,
-              comment: Value(e.comment),
-            ))
+        .map(
+          (e) => TransactionItemsCompanion.insert(
+            account: e.accountId,
+            category: e.categoryId,
+            amount: e.amount,
+            transactionDate: e.transactionDate,
+            comment: Value(e.comment),
+          ),
+        )
         .toList();
     await _transactionsDao.insertTransactions(companions);
   }
