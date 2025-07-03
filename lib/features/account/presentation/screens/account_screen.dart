@@ -122,8 +122,8 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
 
   @override
   Widget build(BuildContext context) => RefreshIndicator.adaptive(
-    onRefresh: _loadTransactions,
-    child: ListView(
+        onRefresh: _loadTransactions,
+        child: ListView(
           children: [
             ...ListTile.divideTiles(
               context: context,
@@ -168,7 +168,7 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
             ),
           ],
         ),
-  );
+      );
 }
 
 /// {@template _AccountBalanceTile.class}
