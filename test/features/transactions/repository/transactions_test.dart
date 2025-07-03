@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
+import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
@@ -50,12 +50,12 @@ void main() {
     final created = await repository.createTransaction(txRequest);
 
     final txUpdateRequest = TransactionRequest$Update(
-        id: created.id,
-        accountId: created.accountId,
-        categoryId: 2,
-        amount: '123',
-        transactionDate: DateTime.now().add(const Duration(days: 1)),
-        comment: 'Updated comment',
+      id: created.id,
+      accountId: created.accountId,
+      categoryId: 2,
+      amount: '123',
+      transactionDate: DateTime.now().add(const Duration(days: 1)),
+      comment: 'Updated comment',
     );
     final txUpdatedItem = MockTransactionsEntitiesHelper.entityFromRequest(txUpdateRequest);
     final txDetailedUpdatedItem = MockTransactionsEntitiesHelper.detailedEntityFromRequest(txUpdateRequest);
@@ -84,11 +84,11 @@ void main() {
   test('Получение транзакций по accountId и дате', () async {
     final now = DateTime.now();
     final firstRequest = MockTransactionsEntitiesHelper.sampleCreateRequest();
-    final secondRequest = MockTransactionsEntitiesHelper.sampleCreateRequest().copyWith(transactionDate: now.subtract(const Duration(days: 5)));
+    final secondRequest = MockTransactionsEntitiesHelper.sampleCreateRequest()
+        .copyWith(transactionDate: now.subtract(const Duration(days: 5)));
     final firstEntity = MockTransactionsEntitiesHelper.entityFromRequest(firstRequest);
     final secondEntity = MockTransactionsEntitiesHelper.entityFromRequest(secondRequest, id: 2);
     final firstDetailedEntity = MockTransactionsEntitiesHelper.detailedEntityFromRequest(firstRequest);
-    final secondDetailedEntity = MockTransactionsEntitiesHelper.detailedEntityFromRequest(secondRequest, id: 2);
     when(transactionsLocalDataSource.updateTransaction(firstRequest)).thenAnswer((_) async => firstEntity);
     when(transactionsLocalDataSource.updateTransaction(secondRequest)).thenAnswer((_) async => secondEntity);
 

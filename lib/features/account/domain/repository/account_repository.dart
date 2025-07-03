@@ -8,7 +8,7 @@ abstract interface class AccountRepository {
   ///
   /// Returns:
   ///   Iterable<AccountEntity> — список счетов.
-  Future<Iterable<AccountEntity>> getAccounts();
+  Stream<Iterable<AccountEntity>> getAccounts();
 
   /// Создать новый банковский счет.
   ///
@@ -17,7 +17,16 @@ abstract interface class AccountRepository {
   ///
   /// Returns:
   ///   AccountEntity — созданный счет.
-  Future<AccountEntity> createAccount(AccountRequest$Create request);
+  Stream<AccountEntity> createAccount(AccountRequest$Create request);
+
+  /// Обновить существующий банковский счет.
+  ///
+  /// Parameters:
+  ///   [request] — объект с обновленными данными счета.
+  ///
+  /// Returns:
+  ///   AccountEntity — обновленный счет.
+  Stream<AccountEntity> updateAccount(AccountRequest$Update request);
 
   /// Получить подробную информацию о конкретном счете.
   ///
@@ -27,15 +36,6 @@ abstract interface class AccountRepository {
   /// Returns:
   ///   AccountDetailEntity — полные данные счета.
   Future<AccountDetailEntity> getAccountDetail(int accountId);
-
-  /// Обновить существующий банковский счет.
-  ///
-  /// Parameters:
-  ///   [request] — объект с обновленными данными счета.
-  ///
-  /// Returns:
-  ///   AccountEntity — обновленный счет.
-  Future<AccountEntity> updateAccount(AccountRequest$Update request);
 
   /// Удалить существующий банковский счет.
   ///

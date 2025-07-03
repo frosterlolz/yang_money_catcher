@@ -1,29 +1,29 @@
-import 'package:database/database.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
+import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 
 /// Интерфейс локального хранилища аккаунтов.
 /// Используется для взаимодействия с локальной базой данных (например, через Drift).
-abstract interface class AccountsLocalStorage {
+abstract interface class AccountsLocalDataSource {
   Future<int> fetchAccountsCount();
 
   /// Загружает список всех аккаунтов из базы данных.
   ///
-  /// Возвращает список [AccountItem], включая их `id`, `createdAt`, `updatedAt` и другие поля.
-  Future<List<AccountItem>> fetchAccounts();
+  /// Возвращает список [AccountEntity], включая их `id`, `createdAt`, `updatedAt` и другие поля.
+  Future<List<AccountEntity>> fetchAccounts();
 
   /// Возвращает аккаунт с указанным [id], если он существует.
   ///
   /// Возвращает `null`, если аккаунт не найден.
-  Future<AccountItem?> fetchAccount(int id);
+  Future<AccountEntity?> fetchAccount(int id);
 
   /// Обновляет существующий аккаунт или вставляет новый, если `id` не существует.
   ///
-  /// Использует [AccountRequest] (например, Drift Companion), чтобы указать нужные поля.
+  /// Использует [AccountRequest], чтобы указать нужные поля.
   ///
-  /// Возвращает `id` обновлённого или добавленного аккаунта.
+  /// Возвращает [AccountEntity] обновлённого или добавленного аккаунта.
   ///
   /// Использует поведение `INSERT ON CONFLICT UPDATE`.
-  Future<int> updateAccount(AccountRequest item);
+  Future<AccountEntity> updateAccount(AccountRequest request);
 
   /// Удаляет аккаунт по его идентификатору [accountId].
   ///

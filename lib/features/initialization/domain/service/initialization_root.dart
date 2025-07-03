@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:database/database.dart';
 import 'package:pretty_logger/pretty_logger.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
-import 'package:yang_money_catcher/features/account/data/source/local/acounts_drift_storage.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source_drift.dart';
+import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
-import 'package:yang_money_catcher/features/transactions/data/repository/mock_transactions_repository.dart';
-import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_drift_storage.dart';
+import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source_drift.dart';
 
 typedef InitializationStep = FutureOr<void> Function(Mutable$Dependencies dependencies);
 
@@ -37,11 +38,14 @@ final class InitializationRoot {
         },
         'Prepare accounts feature': (d) async {
           final database = d.context['drift_database']! as AppDatabase;
-          final accountsLocalDataSource = AccountsDriftStorage(database);
+          final accountsDao = AccountsDao(database);
+          final accountsLocalDataSource = AccountsLocalDataSource$Drift(accountsDao);
           final transactionsDao = TransactionsDao(database);
-          final transactionsLocalDataSource = TransactionsDriftStorage(transactionsDao);
+          final transactionsLocalDataSource = TransactionsLocalDataSource$Drift(transactionsDao);
           d.context['transactions_local_data_source'] = transactionsLocalDataSource;
+          final accountsNetworkDataSource = AccountsNetworkDataSource$Rest();
           final accountsRepository = AccountRepositoryImpl(
+            accountsNetworkDataSource: accountsNetworkDataSource,
             accountsLocalStorage: accountsLocalDataSource,
             transactionsLocalStorage: transactionsLocalDataSource,
           );

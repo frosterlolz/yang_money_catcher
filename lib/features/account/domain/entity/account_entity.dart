@@ -53,8 +53,8 @@ class AccountDetailEntity with _$AccountDetailEntity {
 
   factory AccountDetailEntity.fromJson(JsonMap json) => _$AccountDetailEntityFromJson(json);
 
-  factory AccountDetailEntity.fromTableItem(
-    AccountItem item, {
+  factory AccountDetailEntity.fromLocalSource(
+    AccountEntity item, {
     required List<TransactionCategoryStat> incomeStats,
     required List<TransactionCategoryStat> expenseStats,
   }) =>
@@ -62,7 +62,7 @@ class AccountDetailEntity with _$AccountDetailEntity {
         id: item.id,
         name: item.name,
         balance: item.balance,
-        currency: Currency.fromKey(item.currency),
+        currency: item.currency,
         incomeStats: incomeStats,
         expenseStats: expenseStats,
         createdAt: item.createdAt,

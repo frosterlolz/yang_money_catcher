@@ -7,8 +7,8 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 
-final class TransactionsDriftStorage implements TransactionsLocalDataSource {
-  const TransactionsDriftStorage(this._transactionsDao);
+final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSource {
+  const TransactionsLocalDataSource$Drift(this._transactionsDao);
 
   final TransactionsDao _transactionsDao;
 
