@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pretty_chart/pretty_chart.dart';
 import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
@@ -13,7 +14,6 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/models/transactions_analysis_summery.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
-import 'package:yang_money_catcher/features/transactions/presentation/widgets/transactions_analysis_pie_chart.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
@@ -279,14 +279,16 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
       transactionAnalysisMap[transaction.category] =
           currentTransactions == null ? [transaction] : [...currentTransactions, transaction];
     }
-    _transactionCategoryAnalysisList = TransactionsAnalysisSummery(transactionAnalysisMap.entries
-        .map<TransactionAnalysisSummeryItem>(
-          (transactionAnalysisEntry) => TransactionAnalysisSummeryItem(
-            transactionCategory: transactionAnalysisEntry.key,
-            transactions: transactionAnalysisEntry.value,
-          ),
-        )
-        .toList());
+    _transactionCategoryAnalysisList = TransactionsAnalysisSummery(
+      transactionAnalysisMap.entries
+          .map<TransactionAnalysisSummeryItem>(
+            (transactionAnalysisEntry) => TransactionAnalysisSummeryItem(
+              transactionCategory: transactionAnalysisEntry.key,
+              transactions: transactionAnalysisEntry.value,
+            ),
+          )
+          .toList(),
+    );
   }
 
   void _onTransactionAnalysisTap(
@@ -345,7 +347,16 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
-          child: TransactionsAnalyzePieChart(_transactionCategoryAnalysisList),
+          child: AnimatedPieChart(
+            List.generate(_transactionCategoryAnalysisList.items.length, (index) {
+              final item = _transactionCategoryAnalysisList.items[index];
+              return ChartItemData(
+                id: item.transactionCategory.id,
+                label: item.transactionCategory.name,
+                value: _transactionCategoryAnalysisList.amountPercentage(item.transactionCategory),
+              );
+            }),
+          ),
         ),
         SliverList.builder(
           itemCount: _transactionCategoryAnalysisList.items.length,
@@ -360,7 +371,8 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
                     transactionAnalysisItem.transactions.firstOrNull?.account.currency.symbol ?? Currency.rub.symbol,
                     1,
                   ),
-              transactionDateTime: '${_transactionCategoryAnalysisList.amountPercentage(transactionAnalysisItem.transactionCategory).smartTruncate()} %',
+              transactionDateTime:
+                  '${_transactionCategoryAnalysisList.amountPercentage(transactionAnalysisItem.transactionCategory).smartTruncate()} %',
               enableTopDivider: index == 0,
               enableBottomDivider: true,
               onTap: () => _onTransactionAnalysisTap(

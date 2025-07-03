@@ -1,11 +1,11 @@
 import 'dart:math' as math;
+import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
-import 'package:yang_money_catcher/features/transactions/presentation/models/transactions_analysis_summery.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
+import 'package:pretty_chart/src/models/chart_item_data.dart';
 
 const double _chartStrokeWidth = 8.0;
+const double _innerDataPadding = 3.0;
 const _animationDuration = Duration(milliseconds: 1000);
 
 const List<Color> _chartColors = [
@@ -19,37 +19,39 @@ const List<Color> _chartColors = [
   Color(0xFF795548), // коричневый
 ];
 
-/// {@template TransactionsAnalyzePieChart.class}
-/// TransactionsAnalyzePieChart widget.
+/// {@template AnimatedPieChart.class}
+/// Виджет отображает анимированную диаграмму с круглыми секторами.
 /// {@endtemplate}
-class TransactionsAnalyzePieChart extends StatefulWidget {
-  /// {@macro TransactionsAnalyzePieChart.class}
-  const TransactionsAnalyzePieChart(this.transactionAnalysisSummery, {super.key});
+class AnimatedPieChart extends StatefulWidget {
+  /// {@macro AnimatedPieChart.class}
+  const AnimatedPieChart(this.chartItems, {super.key, this.labelStyle, this.indicatorSize});
 
-  final TransactionsAnalysisSummery transactionAnalysisSummery;
+  final List<ChartItemData> chartItems;
+  final double? indicatorSize;
+  final TextStyle? labelStyle;
 
   @override
-  State<TransactionsAnalyzePieChart> createState() => _TransactionsAnalyzePieChartState();
+  State<AnimatedPieChart> createState() => _AnimatedPieChartState();
 }
 
-class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChart>
-    with SingleTickerProviderStateMixin<TransactionsAnalyzePieChart> {
-  late TransactionsAnalysisSummery _currentTransactionAnalysisSummery;
+class _AnimatedPieChartState extends State<AnimatedPieChart> with SingleTickerProviderStateMixin<AnimatedPieChart> {
+  late List<ChartItemData> _currentChartItems;
   late final AnimationController _animationController;
   bool _hasUpdates = false;
 
   @override
   void initState() {
     super.initState();
-    _currentTransactionAnalysisSummery = widget.transactionAnalysisSummery;
+    _currentChartItems = widget.chartItems;
     _animationController = AnimationController(vsync: this, duration: _animationDuration)
       ..addListener(_updateTransactionAnalysisData);
     WidgetsBinding.instance.addPostFrameCallback((_) => _doRotate());
   }
 
   @override
-  void didUpdateWidget(covariant TransactionsAnalyzePieChart oldWidget) {
-    if (oldWidget.transactionAnalysisSummery != widget.transactionAnalysisSummery) {
+  void didUpdateWidget(covariant AnimatedPieChart oldWidget) {
+    final isListEquals = const ListEquality<ChartItemData>().equals(widget.chartItems, oldWidget.chartItems);
+    if (!isListEquals) {
       _hasUpdates = true;
       _doRotate();
     }
@@ -64,8 +66,14 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
 
   void _updateTransactionAnalysisData() {
     final currentValue = _animationController.value;
-    if (currentValue < 0.5 || _currentTransactionAnalysisSummery == widget.transactionAnalysisSummery) return;
-    setState(() => _currentTransactionAnalysisSummery = widget.transactionAnalysisSummery);
+    if (currentValue < 0.5 || _currentChartItems == widget.chartItems) return;
+    setState(() => _currentChartItems = widget.chartItems);
+  }
+
+  double _itemPercentage(ChartItemData item) {
+    if (item.value == 0.0) return 0.0;
+
+    return item.value / _currentChartItems.fold(0.0, (previousValue, element) => previousValue + element.value) * 100;
   }
 
   Color _getColor(int index) => _chartColors[index % _chartColors.length];
@@ -86,7 +94,7 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
     final double squareSize = (circleSize - _chartStrokeWidth * 2) * 0.7071;
     final double offset = (circleSize - squareSize) / 2;
     return Padding(
-      padding: const EdgeInsets.all(AppSizes.double20),
+      padding: const EdgeInsets.all(20.0),
       child: Center(
         child: SizedBox.square(
           dimension: circleSize,
@@ -108,20 +116,20 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
                       sectionsSpace: 0,
                       centerSpaceRadius: null,
                       sections: List.generate(
-                        _currentTransactionAnalysisSummery.items.length,
+                        _currentChartItems.length,
                         (index) {
-                          final summeryItem = _currentTransactionAnalysisSummery.items[index];
+                          final summeryItem = _currentChartItems[index];
 
                           return PieChartSectionData(
                             color: _getColor(index),
-                            value: _currentTransactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory),
+                            value: _itemPercentage(summeryItem),
                             showTitle: false,
                             radius: _chartStrokeWidth,
                           );
                         },
                       ),
                     ),
-                    duration: Duration(milliseconds: (_animationDuration.inMilliseconds/2).toInt()),
+                    duration: Duration(milliseconds: (_animationDuration.inMilliseconds / 2).toInt()),
                   ),
                 ),
               ),
@@ -134,21 +142,23 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
                   animation: _animationController,
                   builder: (context, child) => Opacity(opacity: _getChartOpacity(), child: child),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.double3),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(widget.transactionAnalysisSummery.items.length, (index) {
-                          final summeryItem = widget.transactionAnalysisSummery.items[index];
-                          return Indicator(
-                            color: _getColor(index),
-                            text:
-                                '${widget.transactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory).smartTruncate()}% ${summeryItem.transactionCategory.name}',
-                            textStyle: TextTheme.of(context).labelSmall?.copyWith(fontSize: AppSizes.double7),
-                            size: 5.65,
-                            isSquare: false,
-                          );
-                        }),
+                    padding: const EdgeInsets.symmetric(horizontal: _innerDataPadding),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(_currentChartItems.length, (index) {
+                            final summeryItem = _currentChartItems[index];
+                            return _Indicator(
+                              key: ValueKey('Indicator at $index'),
+                              color: _getColor(index),
+                              text: '${_itemPercentage(summeryItem).toStringAsFixed(2)}% ${summeryItem.label}',
+                              textStyle: widget.labelStyle ?? TextTheme.of(context).labelSmall?.copyWith(fontSize: 7.0),
+                              size: widget.indicatorSize ?? 5.65,
+                              isSquare: false,
+                            );
+                          }),
+                        ),
                       ),
                     ),
                   ),
@@ -162,8 +172,8 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
   }
 }
 
-class Indicator extends StatelessWidget {
-  const Indicator({
+class _Indicator extends StatelessWidget {
+  const _Indicator({
     super.key,
     required this.color,
     required this.text,
