@@ -3,21 +3,11 @@ import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:pretty_chart/src/models/chart_item_data.dart';
+import 'package:pretty_chart/src/utils/color_generator.dart';
 
 const double _chartStrokeWidth = 8.0;
 const double _innerDataPadding = 3.0;
 const _animationDuration = Duration(milliseconds: 1000);
-
-const List<Color> _chartColors = [
-  Color(0xFF4CAF50), // зелёный
-  Color(0xFFFF9800), // оранжевый
-  Color(0xFF2196F3), // синий
-  Color(0xFFE91E63), // розовый
-  Color(0xFFFFEB3B), // жёлтый
-  Color(0xFF9C27B0), // фиолетовый
-  Color(0xFF00BCD4), // бирюзовый
-  Color(0xFF795548), // коричневый
-];
 
 /// {@template AnimatedPieChart.class}
 /// Виджет отображает анимированную диаграмму с круглыми секторами.
@@ -76,7 +66,7 @@ class _AnimatedPieChartState extends State<AnimatedPieChart> with SingleTickerPr
     return item.value / _currentChartItems.fold(0.0, (previousValue, element) => previousValue + element.value) * 100;
   }
 
-  Color _getColor(int index) => _chartColors[index % _chartColors.length];
+  Color _getColor(int index) => ColorGenerator.getFixedColor(index);
 
   double _getChartOpacity() {
     if (!_hasUpdates) return 1.0;

@@ -40,8 +40,8 @@ class _TransactionsBodyViewState extends State<TransactionsBodyView> {
 
   Future<void> _loadTransactions(BuildContext context) async {
     final dtNow = DateTime.now();
-    final start = dtNow.startOfDay;
-    final end = dtNow.endOfDay;
+    final start = dtNow.copyWithStartOfDayTme;
+    final end = dtNow.copyWithEndOfDayTme;
     final filters =
         TransactionFilters(accountId: widget.accountId, startDate: start, endDate: end, isIncome: widget.isIncome);
     final transactionsBloc = context.read<TransactionsBloc>()..add(TransactionsEvent.load(filters));

@@ -25,7 +25,8 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         onError = ColorPalette.white,
         selectedItem = ColorPalette.ufoGreen,
         unselectedItem = ColorPalette.eerieBlack,
-        labelTertiary = ColorPalette.arsenic;
+        labelTertiary = ColorPalette.arsenic,
+        analyzeNegative = ColorPalette.vividOrange;
 
   /// Dark theme of the app.
   const AppColorScheme.dark()
@@ -46,7 +47,8 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         onError = ColorPalette.white,
         selectedItem = ColorPalette.white,
         unselectedItem = ColorPalette.subtitleGrey,
-        labelTertiary = ColorPalette.arsenic;
+        labelTertiary = ColorPalette.arsenic,
+        analyzeNegative = ColorPalette.vividOrange;
 
   const AppColorScheme._({
     required this.primary,
@@ -67,6 +69,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     required this.selectedItem,
     required this.unselectedItem,
     required this.labelTertiary,
+    required this.analyzeNegative,
   });
 
   /// The base color for app.
@@ -125,6 +128,9 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
   /// Color for some icons and labels
   final Color labelTertiary;
 
+  /// Color for analyze negative column
+  final Color analyzeNegative;
+
   @override
   ThemeExtension<AppColorScheme> lerp(
     ThemeExtension<AppColorScheme>? other,
@@ -151,6 +157,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
       selectedItem: Color.lerp(selectedItem, other.selectedItem, t),
       unselectedItem: Color.lerp(unselectedItem, other.unselectedItem, t),
       labelTertiary: Color.lerp(labelTertiary, other.labelTertiary, t),
+      analyzeNegative: Color.lerp(analyzeNegative, other.analyzeNegative, t),
     );
   }
 
@@ -179,6 +186,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     Color? selectedItem,
     Color? unselectedItem,
     Color? labelTertiary,
+    Color? analyzeNegative,
   }) =>
       AppColorScheme._(
         primary: primary ?? this.primary,
@@ -199,6 +207,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         selectedItem: selectedItem ?? this.selectedItem,
         unselectedItem: unselectedItem ?? this.unselectedItem,
         labelTertiary: labelTertiary ?? this.labelTertiary,
+        analyzeNegative: analyzeNegative ?? this.analyzeNegative,
       );
 }
 

@@ -205,8 +205,8 @@ mixin _TransactionAnalyzeFormMixin on State<TransactionsAnalyzeScreen> {
   void _initDateTimeRange() {
     final dtNow = DateTime.now();
     final fallbackDateRange = DateTimeRange(
-      start: dtNow.endOfDay.copyWith(month: dtNow.month - 1),
-      end: dtNow.endOfDay,
+      start: dtNow.copyWithEndOfDayTme.copyWith(month: dtNow.month - 1),
+      end: dtNow.copyWithEndOfDayTme,
     );
     final effectiveDateRange = widget.initialDtRange ?? fallbackDateRange;
     _dateTimeRange = effectiveDateRange;
@@ -222,8 +222,8 @@ mixin _TransactionAnalyzeFormMixin on State<TransactionsAnalyzeScreen> {
     final normalizedStart = start == null ? _normalizeStartRange(start: rawStart, end: rawEnd) : rawStart;
     final normalizedEnd = end == null ? _normalizeEndRange(end: rawEnd, start: rawStart) : rawEnd;
 
-    final withTimeStart = normalizedStart.startOfDay;
-    final withTimeEnd = normalizedEnd.endOfDay;
+    final withTimeStart = normalizedStart.copyWithStartOfDayTme;
+    final withTimeEnd = normalizedEnd.copyWithEndOfDayTme;
 
     final isSameStart = withTimeStart.isSameDateTime(_dateTimeRange.start);
     final isSameEnd = withTimeEnd.isSameDateTime(_dateTimeRange.end);

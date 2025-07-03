@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pretty_chart/pretty_chart.dart';
 import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
 import 'package:yang_money_catcher/core/presentation/common/processing_state_mixin.dart';
 import 'package:yang_money_catcher/core/presentation/common/visibility_by_tilt_mixin.dart';
+import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
@@ -14,6 +17,10 @@ import 'package:yang_money_catcher/features/account/domain/entity/account_change
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 import 'package:yang_money_catcher/features/account/presentation/widgets/account_currency_bottom_sheet.dart';
 import 'package:yang_money_catcher/features/account/presentation/widgets/accounts_loader_wrapper.dart';
+import 'package:yang_money_catcher/features/initialization/presentation/dependencies_scope.dart';
+import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
+import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
@@ -23,13 +30,21 @@ import 'package:yang_money_catcher/ui_kit/dialogs/text_confirm_dialog.dart';
 import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
 import 'package:yang_money_catcher/ui_kit/placeholders/noise_placeholder.dart';
 
+const _chartMaxHeight = 233.0;
+
 /// {@template AccountScreen.class}
 /// Экран отображения баланса, валюты, а также движений по счету
 /// {@endtemplate}
 @RoutePage()
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatelessWidget implements AutoRouteWrapper {
   /// {@macro AccountScreen.class}
   const AccountScreen({super.key});
+
+  @override
+  Widget wrappedRoute(BuildContext context) => BlocProvider(
+        create: (context) => TransactionsBloc(DependenciesScope.of(context).transactionsRepository),
+        child: this,
+      );
 
   void _onRetryTap(BuildContext context, int accountId) =>
       context.read<AccountBloc>().add(AccountEvent.load(accountId));
@@ -53,11 +68,40 @@ class AccountScreen extends StatelessWidget {
 /// {@template _AccountSuccessView.class}
 /// _AccountSuccessView widget.
 /// {@endtemplate}
-class _AccountSuccessView extends StatelessWidget {
+class _AccountSuccessView extends StatefulWidget {
   /// {@macro _AccountSuccessView.class}
   const _AccountSuccessView(this.account);
 
   final AccountDetailEntity account;
+
+  @override
+  State<_AccountSuccessView> createState() => _AccountSuccessViewState();
+}
+
+class _AccountSuccessViewState extends State<_AccountSuccessView> {
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AccountSuccessView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.account.id != oldWidget.account.id) {
+      _loadTransactions();
+    }
+  }
+
+  void _loadTransactions() {
+    final dtNow = DateTime.now();
+    final filters = TransactionFilters(
+      accountId: widget.account.id,
+      startDate: dtNow.copyWith(month: dtNow.month - 1),
+      endDate: dtNow,
+    );
+    context.read<TransactionsBloc>().add(TransactionsEvent.load(filters));
+  }
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -66,10 +110,32 @@ class _AccountSuccessView extends StatelessWidget {
             context: context,
             tiles: [
               // balance
-              _AccountBalanceTile(account: account),
+              _AccountBalanceTile(account: widget.account),
               // currency
-              _AccountCurrencyTile(account: account),
+              _AccountCurrencyTile(account: widget.account),
             ],
+          ),
+          const SizedBox(height: AppSizes.double16),
+          // chart
+          ConstrainedBox(
+            constraints: BoxConstraints.loose(const Size.fromHeight(_chartMaxHeight)),
+            child: BlocBuilder<TransactionsBloc, TransactionsState>(
+              builder: (context, transactionsState) {
+                final errorWithNothingToShow =
+                    transactionsState is TransactionsState$Error && transactionsState.transactions == null
+                        ? transactionsState.error
+                        : null;
+                final showSecond = transactionsState.transactions != null;
+                return AnimatedCrossFade(
+                  firstChild: errorWithNothingToShow == null
+                      ? const TypedProgressIndicator.small()
+                      : ErrorBodyView.fromError(errorWithNothingToShow, onRetryTap: _loadTransactions),
+                  secondChild: _AccountTransactionsAnalyzeChart(transactions: transactionsState.transactions ?? []),
+                  crossFadeState: showSecond ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 400),
+                );
+              },
+            ),
           ),
         ],
       );
@@ -234,4 +300,73 @@ class _BalanceAnimatedWidgetState extends State<_BalanceAnimatedWidget> with Vis
                 size: Size(70, 30),
               ),
       );
+}
+
+/// {@template _AccountTransactionsAnalyzeChart.class}
+/// _AccountTransactionsAnalyzeChart widget.
+/// {@endtemplate}
+class _AccountTransactionsAnalyzeChart extends StatefulWidget {
+  /// {@macro _AccountTransactionsAnalyzeChart.class}
+  const _AccountTransactionsAnalyzeChart({required this.transactions});
+
+  final List<TransactionDetailEntity> transactions;
+
+  @override
+  State<_AccountTransactionsAnalyzeChart> createState() => _AccountTransactionsAnalyzeChartState();
+}
+
+class _AccountTransactionsAnalyzeChartState extends State<_AccountTransactionsAnalyzeChart> {
+  late final Map<DateTime, ChartItemData> _chartItemsMap;
+
+  @override
+  void initState() {
+    super.initState();
+    _chartItemsMap = {};
+  }
+
+  @override
+  void didChangeDependencies() {
+    _updateChartItemsMap();
+    super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AccountTransactionsAnalyzeChart oldWidget) {
+    final areTransactionEqual =
+        const ListEquality<TransactionDetailEntity>().equals(widget.transactions, oldWidget.transactions);
+    if (!areTransactionEqual) {
+      _updateChartItemsMap();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void _updateChartItemsMap() {
+    _chartItemsMap.clear();
+    for (final transaction in widget.transactions) {
+      final clearDate = transaction.transactionDate.toLocal().copyWithStartOfDayTme;
+      final oldItem = _chartItemsMap[clearDate] ??
+          ChartItemData(id: clearDate.millisecondsSinceEpoch, value: 0.0, label: clearDate.ddMM);
+      final currentTotal = oldItem.value + transaction.amount.amountToNum();
+      _chartItemsMap[clearDate] = oldItem.copyWith(
+        value: currentTotal,
+        tooltipLabel:
+            '${context.l10n.total}: ${currentTotal.thousandsSeparated(fractionalLength: null).withCurrency(transaction.account.currency.symbol, 1)}',
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appColorScheme = AppColorScheme.of(context);
+    if (widget.transactions.isEmpty) return Center(child: Text(context.l10n.nothingFound, textAlign: TextAlign.center));
+
+    return AnimatedBarChart(
+      _chartItemsMap.values.mapIndexed((index, e) {
+        final shouldShowLabel =
+            index == 0 || index == _chartItemsMap.values.length ~/ 2 || index == _chartItemsMap.values.length - 1;
+        return shouldShowLabel ? e : e.copyWith(label: '');
+      }).toList(),
+      columnColorBuilder: (item) => item.isNegative ? appColorScheme.analyzeNegative : appColorScheme.primary,
+    );
+  }
 }
