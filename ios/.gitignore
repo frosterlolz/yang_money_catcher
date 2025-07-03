@@ -10,6 +10,7 @@
 **/.vagrant/
 **/DerivedData/
 Icon?
+Podfile.lock
 **/Pods/
 **/.symlinks/
 profile
