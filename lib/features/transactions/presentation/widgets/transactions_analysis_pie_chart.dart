@@ -1,12 +1,10 @@
-import 'dart:math';
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/models/transactions_analysis_summery.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 
-const double _chartWidth = 8.0;
+const double _chartStrokeWidth = 8.0;
 
 const List<Color> _chartColors = [
   Color(0xFF4CAF50), // зелёный
@@ -39,25 +37,16 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
 
   Color _getColor(int index) => _chartColors[index % _chartColors.length];
 
-  List<PieChartSectionData> showingSections() => List.generate(
-        widget.transactionAnalysisSummery.items.length,
-        (index) {
-          final summeryItem = widget.transactionAnalysisSummery.items[index];
-
-          return PieChartSectionData(
-            color: _getColor(index),
-            value: widget.transactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory),
-            showTitle: false,
-            radius: _isTouched(index) ? _chartWidth * 1.2 : _chartWidth,
-          );
-        },
-      );
-
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(AppSizes.double20),
+  Widget build(BuildContext context) {
+    final double circleSize = MediaQuery.sizeOf(context).shortestSide * 0.4;
+    final double squareSize = (circleSize - _chartStrokeWidth * 2) * 0.7071;
+    final double offset = (circleSize - squareSize) / 2;
+    return Padding(
+      padding: const EdgeInsets.all(AppSizes.double20),
+      child: Center(
         child: SizedBox.square(
-          dimension: MediaQuery.sizeOf(context).shortestSide * 0.4,
+          dimension: circleSize,
           child: Stack(
             children: [
               Positioned.fill(
@@ -79,16 +68,29 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
                     borderData: FlBorderData(show: false),
                     sectionsSpace: 0,
                     centerSpaceRadius: null,
-                    sections: showingSections(),
+                    sections: List.generate(
+                      widget.transactionAnalysisSummery.items.length,
+                      (index) {
+                        final summeryItem = widget.transactionAnalysisSummery.items[index];
+
+                        return PieChartSectionData(
+                          color: _getColor(index),
+                          value: widget.transactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory),
+                          showTitle: false,
+                          radius: _isTouched(index) ? _chartStrokeWidth * 1.2 : _chartStrokeWidth,
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
               Positioned(
-                top: _chartWidth,
-                bottom: _chartWidth,
-                left: _chartWidth,
-                right: _chartWidth,
-                child: Center(
+                left: offset,
+                top: offset,
+                width: squareSize,
+                height: squareSize,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.double3),
                   child: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -98,7 +100,7 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
                           color: _getColor(index),
                           text:
                               '${widget.transactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory).smartTruncate()}% ${summeryItem.transactionCategory.name}',
-                          textStyle: TextTheme.of(context).labelSmall,
+                          textStyle: TextTheme.of(context).labelSmall?.copyWith(fontSize: AppSizes.double7),
                           size: 5.65,
                           isSquare: false,
                         );
@@ -110,7 +112,9 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
             ],
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class Indicator extends StatelessWidget {
@@ -142,9 +146,13 @@ class Indicator extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          Text(
-            text,
-            style: textStyle ?? const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textStyle ?? const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       );

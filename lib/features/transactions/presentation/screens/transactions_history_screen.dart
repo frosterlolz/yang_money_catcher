@@ -235,7 +235,7 @@ mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
     final normalizedEnd = end == null ? _normalizeEndRange(end: rawEnd, start: rawStart) : rawEnd;
 
     final withTimeStart = normalizedStart.startOfDay;
-    final withTimeEnd = normalizedEnd.startOfDay;
+    final withTimeEnd = normalizedEnd.endOfDay;
 
     final isSameStart = withTimeStart.isSameDateTime(_dateTimeRange.start);
     final isSameEnd = withTimeEnd.isSameDateTime(_dateTimeRange.end);
