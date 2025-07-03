@@ -13,11 +13,13 @@ abstract interface class TransactionsLocalDataSource implements TransactionChang
   Future<int> transactionCategoriesCount();
   Future<List<TransactionCategory>> fetchTransactionCategories();
   Future<void> insertTransactionCategories(List<TransactionCategory> transactionCategories);
+
   /// <--- end of transaction categories storage --->
   Future<int> getTransactionsCount();
   Future<List<TransactionEntity>> fetchTransactions(int accountId);
   Future<List<TransactionDetailEntity>> fetchTransactionsDetailed(TransactionFilters filters);
   Future<TransactionDetailEntity?> fetchTransaction(int id);
+  Future<void> insertTransactions(List<TransactionRequest$Create> requests);
   Future<TransactionEntity> updateTransaction(TransactionRequest transaction);
   Future<int> deleteTransaction(int id);
 }

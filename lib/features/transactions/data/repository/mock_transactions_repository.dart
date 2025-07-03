@@ -45,7 +45,8 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
   Future<TransactionDetailEntity?> getTransaction(int id) async => _transactionsLocalDataSource.fetchTransaction(id);
 
   @override
-  Future<Iterable<TransactionCategory>> getTransactionCategories() async => _transactionsLocalDataSource.fetchTransactionCategories();
+  Future<Iterable<TransactionCategory>> getTransactionCategories() async =>
+      _transactionsLocalDataSource.fetchTransactionCategories();
 
   @override
   Stream<TransactionDetailEntity?> transactionChanges(int id) => _transactionsLocalDataSource.transactionChanges(id);
@@ -61,15 +62,15 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
     final random = Random();
     final categories = await getTransactionCategories();
     final requests = List.generate(
-      20,
-          (index) {
+      1000,
+      (index) {
         final categoryIndex = random.nextInt(categories.length);
         final amountFractionalPart = random.nextInt(2) > 0 ? '00' : '50';
         final transactionHour = random.nextInt(24);
         final transactionMinute = random.nextInt(60);
         final transactionDate = DateTime.now()
             .copyWith(hour: transactionHour, minute: transactionMinute)
-            .subtract(Duration(days: random.nextInt(2)));
+            .subtract(Duration(days: random.nextInt(100)));
         return TransactionRequest.create(
           accountId: 1,
           amount: '10000.$amountFractionalPart',
@@ -79,9 +80,7 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
         );
       },
     ).cast<TransactionRequest$Create>();
-    for (final request in requests) {
-      await createTransaction(request);
-    }
+    await _transactionsLocalDataSource.insertTransactions(requests);
   }
 
   Future<void> _fillTransactionCategories() async {

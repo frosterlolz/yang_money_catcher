@@ -66,6 +66,8 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
     );
   }
 
+  Future<void> insertTransactions(List<TransactionItemsCompanion> companions) => transactionItems.insertAll(companions);
+
   Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion) async =>
       companion.id.present ? _updateTransaction(companion) : _insertTransaction(companion);
 
