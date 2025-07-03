@@ -56,7 +56,7 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
       _transactionsLocalDataSource.transactionsListChanges(filters);
 
   Future<void> generateMockData() async {
-    await _fillTransactionCategories();
+    await fillTransactionCategories();
     final transactionsCount = await _transactionsLocalDataSource.getTransactionsCount();
     if (transactionsCount > 0) return;
     final random = Random();
@@ -83,7 +83,7 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
     await _transactionsLocalDataSource.insertTransactions(requests);
   }
 
-  Future<void> _fillTransactionCategories() async {
+  Future<void> fillTransactionCategories() async {
     final transactionCategories = await _transactionsLocalDataSource.transactionCategoriesCount();
     if (transactionCategories == 0) {
       final mockCategories = transactionCategoriesJson.map(TransactionCategory.fromJson);

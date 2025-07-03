@@ -52,6 +52,7 @@ final class InitializationRoot {
           final transactionsLocalDataSource =
               d.context['transactions_local_data_source']! as TransactionsLocalDataSource;
           final transactionsRepository = TransactionsRepositoryImpl(transactionsLocalDataSource);
+          await transactionsRepository.fillTransactionCategories();
           await transactionsRepository.generateMockData();
           d.transactionsRepository = transactionsRepository;
         },
