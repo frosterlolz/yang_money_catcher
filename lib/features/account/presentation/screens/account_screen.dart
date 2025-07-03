@@ -146,7 +146,10 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
                   firstChild: errorWithNothingToShow == null
                       ? const TypedProgressIndicator.small()
                       : ErrorBodyView.fromError(errorWithNothingToShow, onRetryTap: _loadTransactions),
-                  secondChild: _AccountTransactionsAnalyzeChart(transactions: transactionsState.transactions ?? []),
+                  secondChild: _AccountTransactionsAnalyzeChart(
+                    transactions: transactionsState.transactions ?? [],
+                    calendarValues: _fetchCalendarValue,
+                  ),
                   crossFadeState: showSecond ? CrossFadeState.showSecond : CrossFadeState.showFirst,
                   duration: const Duration(milliseconds: 400),
                 );
@@ -330,8 +333,9 @@ class _BalanceAnimatedWidgetState extends State<_BalanceAnimatedWidget> with Vis
 /// {@endtemplate}
 class _AccountTransactionsAnalyzeChart extends StatefulWidget {
   /// {@macro _AccountTransactionsAnalyzeChart.class}
-  const _AccountTransactionsAnalyzeChart({required this.transactions});
+  const _AccountTransactionsAnalyzeChart({required this.transactions, required this.calendarValues});
 
+  final CalendarValues calendarValues;
   final List<TransactionDetailEntity> transactions;
 
   @override
@@ -355,9 +359,10 @@ class _AccountTransactionsAnalyzeChartState extends State<_AccountTransactionsAn
 
   @override
   void didUpdateWidget(covariant _AccountTransactionsAnalyzeChart oldWidget) {
-    final areTransactionEqual =
+    final areTransactionListsEqual =
         const ListEquality<TransactionDetailEntity>().equals(widget.transactions, oldWidget.transactions);
-    if (!areTransactionEqual) {
+    final isCalendarValueChanged = widget.calendarValues != oldWidget.calendarValues;
+    if (!areTransactionListsEqual || isCalendarValueChanged) {
       _updateChartItemsMap();
     }
     super.didUpdateWidget(oldWidget);
@@ -366,10 +371,33 @@ class _AccountTransactionsAnalyzeChartState extends State<_AccountTransactionsAn
   void _updateChartItemsMap() {
     _chartItemsMap.clear();
     for (final transaction in widget.transactions) {
-      final clearDate = transaction.transactionDate.toLocal().copyWithStartOfDayTme;
+      final clearDate = transaction.transactionDate.toLocal().copyWithStartOfDayTme.copyWith(
+            day: switch (widget.calendarValues) {
+              CalendarValues.day => null,
+              CalendarValues.month => 0,
+              CalendarValues.year => 0,
+              CalendarValues.week => throw UnimplementedError(),
+            },
+            month: switch (widget.calendarValues) {
+              CalendarValues.day => null,
+              CalendarValues.month => null,
+              CalendarValues.year => 0,
+              CalendarValues.week => throw UnimplementedError(),
+            },
+          );
       final oldItem = _chartItemsMap[clearDate] ??
-          ChartItemData(id: clearDate.millisecondsSinceEpoch, value: 0.0, label: clearDate.ddMM);
-      final currentTotal = oldItem.value + (transaction.category.isIncome ? transaction.amount.amountToNum() : -transaction.amount.amountToNum());
+          ChartItemData(
+            id: clearDate.millisecondsSinceEpoch,
+            value: 0.0,
+            label: switch (widget.calendarValues) {
+              CalendarValues.day => clearDate.ddMM,
+              CalendarValues.week => clearDate.ddMM,
+              CalendarValues.month => clearDate.MMyyyy,
+              CalendarValues.year => clearDate.yyyy,
+            },
+          );
+      final currentTotal = oldItem.value +
+          (transaction.category.isIncome ? transaction.amount.amountToNum() : -transaction.amount.amountToNum());
       _chartItemsMap[clearDate] = oldItem.copyWith(
         value: currentTotal,
         tooltipLabel:

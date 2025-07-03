@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 extension DateTimeX on DateTime {
+  String get yyyy => DateFormat('yyyy').format(this);
+  // ignore: non_constant_identifier_names
+  String get MMyyyy => DateFormat('MM.yyyy').format(this);
   String get ddMM => DateFormat('dd.MM').format(this);
   String get ddMMyyyy => DateFormat('dd.MM.yyyy').format(this);
   String get ddMMMMyyyy => DateFormat('dd MMMM yyyy').format(this);
