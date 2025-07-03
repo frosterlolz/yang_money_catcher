@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
@@ -5,6 +6,7 @@ import 'package:yang_money_catcher/features/transactions/presentation/models/tra
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 
 const double _chartStrokeWidth = 8.0;
+const _animationDuration = Duration(milliseconds: 1000);
 
 const List<Color> _chartColors = [
   Color(0xFF4CAF50), // зелёный
@@ -30,12 +32,53 @@ class TransactionsAnalyzePieChart extends StatefulWidget {
   State<TransactionsAnalyzePieChart> createState() => _TransactionsAnalyzePieChartState();
 }
 
-class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChart> {
-  int touchedIndex = -1;
+class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChart>
+    with SingleTickerProviderStateMixin<TransactionsAnalyzePieChart> {
+  late TransactionsAnalysisSummery _currentTransactionAnalysisSummery;
+  late final AnimationController _animationController;
+  bool _hasUpdates = false;
 
-  bool _isTouched(int index) => index == touchedIndex;
+  @override
+  void initState() {
+    super.initState();
+    _currentTransactionAnalysisSummery = widget.transactionAnalysisSummery;
+    _animationController = AnimationController(vsync: this, duration: _animationDuration)
+      ..addListener(_updateTransactionAnalysisData);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _doRotate());
+  }
+
+  @override
+  void didUpdateWidget(covariant TransactionsAnalyzePieChart oldWidget) {
+    if (oldWidget.transactionAnalysisSummery != widget.transactionAnalysisSummery) {
+      _hasUpdates = true;
+      _doRotate();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void _doRotate() {
+    _animationController
+      ..reset()
+      ..forward();
+  }
+
+  void _updateTransactionAnalysisData() {
+    final currentValue = _animationController.value;
+    if (currentValue < 0.5 || _currentTransactionAnalysisSummery == widget.transactionAnalysisSummery) return;
+    setState(() => _currentTransactionAnalysisSummery = widget.transactionAnalysisSummery);
+  }
 
   Color _getColor(int index) => _chartColors[index % _chartColors.length];
+
+  double _getChartOpacity() {
+    if (!_hasUpdates) return 1.0;
+    final value = _animationController.value;
+    if (value <= 0.5) {
+      return 1.0 - (value * 2);
+    } else {
+      return (value - 0.5) * 2;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,37 +93,35 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
           child: Stack(
             children: [
               Positioned.fill(
-                child: PieChart(
-                  PieChartData(
-                    pieTouchData: PieTouchData(
-                      touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                        setState(() {
-                          if (!event.isInterestedForInteractions ||
-                              pieTouchResponse == null ||
-                              pieTouchResponse.touchedSection == null) {
-                            touchedIndex = -1;
-                            return;
-                          }
-                          touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                        });
-                      },
+                child: AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) => Opacity(
+                    opacity: _getChartOpacity(),
+                    child: Transform.rotate(
+                      angle: _animationController.value * 2 * math.pi,
+                      child: child,
                     ),
-                    borderData: FlBorderData(show: false),
-                    sectionsSpace: 0,
-                    centerSpaceRadius: null,
-                    sections: List.generate(
-                      widget.transactionAnalysisSummery.items.length,
-                      (index) {
-                        final summeryItem = widget.transactionAnalysisSummery.items[index];
+                  ),
+                  child: PieChart(
+                    PieChartData(
+                      borderData: FlBorderData(show: false),
+                      sectionsSpace: 0,
+                      centerSpaceRadius: null,
+                      sections: List.generate(
+                        _currentTransactionAnalysisSummery.items.length,
+                        (index) {
+                          final summeryItem = _currentTransactionAnalysisSummery.items[index];
 
-                        return PieChartSectionData(
-                          color: _getColor(index),
-                          value: widget.transactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory),
-                          showTitle: false,
-                          radius: _isTouched(index) ? _chartStrokeWidth * 1.2 : _chartStrokeWidth,
-                        );
-                      },
+                          return PieChartSectionData(
+                            color: _getColor(index),
+                            value: _currentTransactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory),
+                            showTitle: false,
+                            radius: _chartStrokeWidth,
+                          );
+                        },
+                      ),
                     ),
+                    duration: Duration(milliseconds: (_animationDuration.inMilliseconds/2).toInt()),
                   ),
                 ),
               ),
@@ -89,22 +130,26 @@ class _TransactionsAnalyzePieChartState extends State<TransactionsAnalyzePieChar
                 top: offset,
                 width: squareSize,
                 height: squareSize,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.double3),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(widget.transactionAnalysisSummery.items.length, (index) {
-                        final summeryItem = widget.transactionAnalysisSummery.items[index];
-                        return Indicator(
-                          color: _getColor(index),
-                          text:
-                              '${widget.transactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory).smartTruncate()}% ${summeryItem.transactionCategory.name}',
-                          textStyle: TextTheme.of(context).labelSmall?.copyWith(fontSize: AppSizes.double7),
-                          size: 5.65,
-                          isSquare: false,
-                        );
-                      }),
+                child: AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) => Opacity(opacity: _getChartOpacity(), child: child),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.double3),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(widget.transactionAnalysisSummery.items.length, (index) {
+                          final summeryItem = widget.transactionAnalysisSummery.items[index];
+                          return Indicator(
+                            color: _getColor(index),
+                            text:
+                                '${widget.transactionAnalysisSummery.amountPercentage(summeryItem.transactionCategory).smartTruncate()}% ${summeryItem.transactionCategory.name}',
+                            textStyle: TextTheme.of(context).labelSmall?.copyWith(fontSize: AppSizes.double7),
+                            size: 5.65,
+                            isSquare: false,
+                          );
+                        }),
+                      ),
                     ),
                   ),
                 ),
