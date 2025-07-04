@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:yang_money_catcher/core/presentation/common/input_formatters.dart';
 import 'package:yang_money_catcher/core/presentation/common/processing_state_mixin.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
@@ -29,11 +30,38 @@ import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
 import 'package:yang_money_catcher/ui_kit/snacks/topside_snack_bars.dart';
 
+Future<void> showTransactionScreen(
+  BuildContext context, {
+  required bool isIncome,
+  TransactionDetailEntity? initialTransaction,
+}) =>
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      enableDrag: false,
+      isDismissible: false,
+      useRootNavigator: false,
+      useSafeArea: true,
+      barrierColor: ColorScheme.of(context).primary,
+      builder: (_) => BlocProvider(
+        create: (_) {
+          final bloc = TransactionBloc(
+            TransactionState.processing(initialTransaction),
+            transactionsRepository: DependenciesScope.of(context).transactionsRepository,
+          );
+          if (initialTransaction != null) {
+            bloc.add(TransactionEvent.load(initialTransaction.id));
+          }
+          return bloc;
+        },
+        child: TransactionScreen(isIncome: isIncome, initialTransaction: initialTransaction),
+      ),
+    );
+
 /// {@template TransactionScreen.class}
 /// Экран просмотра/добавления/обновления/удаления транзакции
 /// {@endtemplate}
-@RoutePage()
-class TransactionScreen extends StatefulWidget implements AutoRouteWrapper {
+class TransactionScreen extends StatefulWidget {
   /// {@macro TransactionScreen.class}
   const TransactionScreen({required this.isIncome, this.initialTransaction, super.key});
 
@@ -42,21 +70,6 @@ class TransactionScreen extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   State<TransactionScreen> createState() => _TransactionScreenState();
-
-  @override
-  Widget wrappedRoute(BuildContext context) => BlocProvider(
-        create: (context) {
-          final bloc = TransactionBloc(
-            TransactionState.processing(initialTransaction),
-            transactionsRepository: DependenciesScope.of(context).transactionsRepository,
-          );
-          if (initialTransaction != null) {
-            bloc.add(TransactionEvent.load(initialTransaction!.id));
-          }
-          return bloc;
-        },
-        child: this,
-      );
 }
 
 class _TransactionScreenState extends State<TransactionScreen> with _TransactionFormMixin, ProcessingStateMixin {
@@ -93,7 +106,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
   Future<void> _selectDate() async {
     final dtNow = DateTime.now();
     final effectiveFirstDate = dtNow.copyWith(year: dtNow.year - 1);
-    final effectiveEndDate = dtNow.copyWith(year: dtNow.year + 1);
+    final effectiveEndDate = dtNow;
     final fallbackFirstDate = _transactionDate.isBefore(effectiveFirstDate) ? _transactionDate : effectiveFirstDate;
     final fallbackEndDate = _transactionDate.isAfter(effectiveEndDate) ? _transactionDate : effectiveEndDate;
     final date = await showDatePicker(
@@ -245,7 +258,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                                     alignment: Alignment.centerRight,
                                     child: Text(
                                       _amount
-                                          .thousandsSeparated()
+                                          .thousandsSeparated(fractionalLength: null)
                                           .withCurrency(_account?.currency.symbol ?? Currency.rub.symbol, 1),
                                     ),
                                   ),
@@ -348,12 +361,14 @@ mixin _TransactionFormMixin on State<TransactionScreen> {
   }
 
   void _changeTransactionDate(DateTime date) {
-    if (date.isSameDate(_transactionDate) || !mounted) return;
+    final dtNow = DateTime.now();
+    final nextDate = date.isFutureDay(dtNow) ? dtNow : date;
+    if (nextDate.isSameDate(_transactionDate) || !mounted) return;
     setState(
       () => _transactionDate = _transactionDate.copyWith(
-        year: date.year,
-        month: date.month,
-        day: date.day,
+        year: nextDate.year,
+        month: nextDate.month,
+        day: nextDate.day,
       ),
     );
   }
@@ -418,15 +433,37 @@ class _SelectAmountDialog extends StatefulWidget {
 
 class _SelectAmountDialogState extends State<_SelectAmountDialog> {
   late num _amount;
+  late String _decimalSeparator;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    setState(_calculateFractionalPartSeparator);
     _amount = widget.inputAmount;
+    super.didChangeDependencies();
   }
 
   void _onChanged(String value) {
-    setState(() => _amount = value.amountToNum());
+    String newAmount = value.trim();
+    if (newAmount.endsWith(_decimalSeparator)) {
+      newAmount += '0';
+    }
+    if (_decimalSeparator != '.') {
+      newAmount = newAmount.replaceAll(_decimalSeparator, '.');
+    }
+    final newAmountNum = newAmount.amountToNum();
+    if (newAmountNum == _amount) return;
+    setState(() => _amount = newAmountNum);
+  }
+
+  void _calculateFractionalPartSeparator() {
+    final numberFormat = NumberFormat.decimalPattern(context.l10n.localeName);
+    final decimalSeparator = numberFormat.symbols.DECIMAL_SEP;
+    _decimalSeparator = decimalSeparator;
   }
 
   @override
@@ -434,14 +471,14 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
         title: Text(context.l10n.inputAmount),
         content: TextFormField(
           onChanged: _onChanged,
-          initialValue: _amount.toStringAsFixed(2),
+          initialValue: NumberFormat.decimalPattern(context.l10n.localeName).format(_amount),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             suffixText: widget.currency.symbol,
           ),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
-            const DecimalSanitizerFormatter(),
+            DecimalSanitizerFormatter(fractionalLength: 1, decimalSeparator: _decimalSeparator),
           ],
         ),
         actions: [

@@ -1,75 +1,91 @@
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
-import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_storage.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
+import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_history.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
-import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category_stat.dart';
-import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_drift_storage.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
 final class AccountRepositoryImpl implements AccountRepository {
   AccountRepositoryImpl({
-    required AccountsLocalStorage accountsLocalStorage,
-    required TransactionsDriftStorage transactionsLocalStorage,
-  })  : _accountsLocalStorage = accountsLocalStorage,
+    required AccountsNetworkDataSource accountsNetworkDataSource,
+    required AccountsLocalDataSource accountsLocalStorage,
+    required TransactionsLocalDataSource transactionsLocalStorage,
+  })  : _accountsNetworkDataSource = accountsNetworkDataSource,
+        _accountsLocalDataSource = accountsLocalStorage,
         _transactionsLocalStorage = transactionsLocalStorage;
 
-  final AccountsLocalStorage _accountsLocalStorage;
-  final TransactionsDriftStorage _transactionsLocalStorage;
+  final AccountsNetworkDataSource _accountsNetworkDataSource;
+  final AccountsLocalDataSource _accountsLocalDataSource;
+  final TransactionsLocalDataSource _transactionsLocalStorage;
   final Map<int, AccountHistory> _accountHistories = {};
 
   @override
-  Future<AccountEntity> createAccount(AccountRequest$Create request) async {
-    final createdId = await _accountsLocalStorage.updateAccount(request);
-    final createdAccountItem = await _accountsLocalStorage.fetchAccount(createdId);
-    if (createdAccountItem == null) {
-      throw Exception('Error while fetching fresh created account');
+  Stream<AccountEntity> createAccount(AccountRequest$Create request) async* {
+    final localAccount = await _accountsLocalDataSource.updateAccount(request);
+    yield localAccount;
+    final restAccount = await _accountsNetworkDataSource.createAccount(request);
+    if (localAccount != restAccount) {
+      final request = AccountRequest.fromEntity(restAccount);
+      final res = switch (request) {
+        final AccountRequest$Create createRequest => () => _accountsLocalDataSource.updateAccount(createRequest),
+        final AccountRequest$Update updateRequest => () => _accountsLocalDataSource.updateAccount(updateRequest),
+      };
+      res.call().ignore();
     }
-    return AccountEntity.fromTableItem(createdAccountItem);
+    yield restAccount;
   }
 
   @override
-  Future<AccountEntity> updateAccount(AccountRequest$Update request) async {
-    await _accountsLocalStorage.updateAccount(request);
-    final updated = await _accountsLocalStorage.fetchAccount(request.id);
-    if (updated == null) {
-      throw Exception('Error while fetching fresh updated account');
+  Stream<AccountEntity> updateAccount(AccountRequest$Update request) async* {
+    final localAccount = await _accountsLocalDataSource.updateAccount(request);
+    yield localAccount;
+    final restAccount = await _accountsNetworkDataSource.updateAccount(request);
+    if (localAccount != restAccount) {
+      final request = AccountRequest.fromEntity(restAccount);
+      final res = switch (request) {
+        final AccountRequest$Create createRequest => () => _accountsLocalDataSource.updateAccount(createRequest),
+        final AccountRequest$Update updateRequest => () => _accountsLocalDataSource.updateAccount(updateRequest),
+      };
+      res.call().ignore();
     }
-
-    return AccountEntity.fromTableItem(updated);
+    yield restAccount;
   }
 
   @override
   Future<void> deleteAccount(int accountId) async {
-    await _accountsLocalStorage.deleteAccount(accountId);
+    await _accountsLocalDataSource.deleteAccount(accountId);
+    await _accountsNetworkDataSource.deleteAccount(accountId);
   }
 
   @override
-  Future<Iterable<AccountEntity>> getAccounts() async {
-    final accounts = await _accountsLocalStorage.fetchAccounts();
-    return accounts.map(AccountEntity.fromTableItem);
+  Stream<Iterable<AccountEntity>> getAccounts() async* {
+    final localAccounts = await _accountsLocalDataSource.fetchAccounts();
+    yield localAccounts;
+    final networkAccounts = await _accountsNetworkDataSource.getAccounts();
+    yield networkAccounts;
   }
 
   @override
   Future<AccountDetailEntity> getAccountDetail(int id) async {
-    final account = await _accountsLocalStorage.fetchAccount(id);
+    final account = await _accountsLocalDataSource.fetchAccount(id);
     if (account == null) {
       throw Exception('Account not found');
     }
     final accountTransactions = await _transactionsLocalStorage.fetchTransactions(account.id);
-    // TODO(frosterlolz): вынести
-    final categories = transactionCategoriesJson.map(TransactionCategory.fromJson);
+    final categories = await _transactionsLocalStorage.fetchTransactionCategories();
     final incomeCategories = categories.where((category) => category.isIncome);
     final expenseCategories = categories.where((category) => !category.isIncome);
 
     final incomeStats = _calculateFromCategories(incomeCategories, accountTransactions);
     final expenseStats = _calculateFromCategories(expenseCategories, accountTransactions);
 
-    return AccountDetailEntity.fromTableItem(
+    return AccountDetailEntity.fromLocalSource(
       account,
       incomeStats: incomeStats.toList(),
       expenseStats: expenseStats.toList(),
@@ -95,16 +111,18 @@ final class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<AccountHistory> getAccountHistory(int accountId) async {
+    final account = await _accountsLocalDataSource.fetchAccount(accountId);
+    if (account == null) {
+      throw Exception('Account not found');
+    }
     // TODO(frosterlolz): на данном этапе не актульные данные
     final history = _accountHistories[accountId];
-    if (history == null) {
-      throw Exception('Account history not found');
-    }
-    return history;
+
+    return AccountHistory.fromLocalSource(account, history: history == null ? [] : history.history);
   }
 
   Future<void> generateMockData() async {
-    final accountsCount = await _accountsLocalStorage.fetchAccountsCount();
+    final accountsCount = await _accountsLocalDataSource.fetchAccountsCount();
     if (accountsCount > 0) return;
     final requests = List.generate(
       10,
@@ -115,7 +133,7 @@ final class AccountRepositoryImpl implements AccountRepository {
       ),
     ).cast<AccountRequest$Create>();
     for (final request in requests) {
-      await createAccount(request);
+      await createAccount(request).first;
     }
   }
 }

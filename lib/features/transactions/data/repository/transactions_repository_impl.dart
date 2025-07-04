@@ -44,13 +44,25 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
   @override
   Future<TransactionDetailEntity?> getTransaction(int id) async => _transactionsLocalDataSource.fetchTransaction(id);
 
+  @override
+  Future<Iterable<TransactionCategory>> getTransactionCategories() async =>
+      _transactionsLocalDataSource.fetchTransactionCategories();
+
+  @override
+  Stream<TransactionDetailEntity?> transactionChanges(int id) => _transactionsLocalDataSource.transactionChanges(id);
+
+  @override
+  Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
+      _transactionsLocalDataSource.transactionsListChanges(filters);
+
   Future<void> generateMockData() async {
+    await fillTransactionCategories();
     final transactionsCount = await _transactionsLocalDataSource.getTransactionsCount();
     if (transactionsCount > 0) return;
     final random = Random();
     final categories = await getTransactionCategories();
     final requests = List.generate(
-      20,
+      1000,
       (index) {
         final categoryIndex = random.nextInt(categories.length);
         final amountFractionalPart = random.nextInt(2) > 0 ? '00' : '50';
@@ -58,7 +70,7 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
         final transactionMinute = random.nextInt(60);
         final transactionDate = DateTime.now()
             .copyWith(hour: transactionHour, minute: transactionMinute)
-            .subtract(Duration(days: random.nextInt(2)));
+            .subtract(Duration(days: random.nextInt(100)));
         return TransactionRequest.create(
           accountId: 1,
           amount: '10000.$amountFractionalPart',
@@ -68,19 +80,14 @@ final class TransactionsRepositoryImpl implements TransactionsRepository {
         );
       },
     ).cast<TransactionRequest$Create>();
-    for (final request in requests) {
-      await createTransaction(request);
-    }
+    await _transactionsLocalDataSource.insertTransactions(requests);
   }
 
-  @override
-  Future<Iterable<TransactionCategory>> getTransactionCategories() async =>
-      transactionCategoriesJson.map(TransactionCategory.fromJson);
-
-  @override
-  Stream<TransactionDetailEntity?> transactionChanges(int id) => _transactionsLocalDataSource.transactionChanges(id);
-
-  @override
-  Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
-      _transactionsLocalDataSource.transactionsListChanges(filters);
+  Future<void> fillTransactionCategories() async {
+    final transactionCategories = await _transactionsLocalDataSource.transactionCategoriesCount();
+    if (transactionCategories == 0) {
+      final mockCategories = transactionCategoriesJson.map(TransactionCategory.fromJson);
+      await _transactionsLocalDataSource.insertTransactionCategories(mockCategories.toList());
+    }
+  }
 }

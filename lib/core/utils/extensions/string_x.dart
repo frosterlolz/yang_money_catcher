@@ -9,5 +9,5 @@ extension StringExtension on String {
     return numValue.smartTruncate();
   }
 
-  String withCurrency(String currencySymbol, [int? spaces]) => '$this${spaces == null ? '' : ' ' * spaces}₽';
+  String withCurrency(String currencySymbol, [int? spaces]) => '$this${spaces == null ? '' : '\u00A0' * spaces}₽';
 }

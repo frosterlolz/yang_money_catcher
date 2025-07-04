@@ -1,3 +1,4 @@
+import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
@@ -8,10 +9,17 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 typedef TransactionChangeEntry = MapEntry<int, TransactionDetailEntity?>;
 
 abstract interface class TransactionsLocalDataSource implements TransactionChangesSource {
+  /// <--- Transaction categories storage --->
+  Future<int> transactionCategoriesCount();
+  Future<List<TransactionCategory>> fetchTransactionCategories();
+  Future<void> insertTransactionCategories(List<TransactionCategory> transactionCategories);
+
+  /// <--- end of transaction categories storage --->
   Future<int> getTransactionsCount();
   Future<List<TransactionEntity>> fetchTransactions(int accountId);
   Future<List<TransactionDetailEntity>> fetchTransactionsDetailed(TransactionFilters filters);
   Future<TransactionDetailEntity?> fetchTransaction(int id);
+  Future<void> insertTransactions(List<TransactionRequest$Create> requests);
   Future<TransactionEntity> updateTransaction(TransactionRequest transaction);
   Future<int> deleteTransaction(int id);
 }

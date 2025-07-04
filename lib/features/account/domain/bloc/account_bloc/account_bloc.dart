@@ -38,12 +38,14 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   Future<void> _update(_Update event, _Emitter emitter) async {
     emitter(AccountState.processing(state.account));
     try {
-      final account = await switch (event.request) {
+      final accountsStream = switch (event.request) {
         final AccountRequest$Create createRequest => _accountRepository.createAccount(createRequest),
         final AccountRequest$Update updateRequest => _accountRepository.updateAccount(updateRequest),
       };
-      final details = await _accountRepository.getAccountDetail(account.id);
-      emitter(AccountState.idle(details));
+      await for (final account in accountsStream) {
+        final details = await _accountRepository.getAccountDetail(account.id);
+        emitter(AccountState.idle(details));
+      }
     } on Object catch (e, s) {
       emitter(AccountState.error(state.account, error: e));
       onError(e, s);

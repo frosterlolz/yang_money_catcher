@@ -5,6 +5,7 @@ import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/acc
 import 'package:yang_money_catcher/features/account/presentation/widgets/account_selected_wrapper.dart';
 import 'package:yang_money_catcher/features/account/presentation/widgets/accounts_loader_wrapper.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
+import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transactions_body_view.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 
@@ -18,7 +19,8 @@ class TransactionsScreen extends StatelessWidget {
   final bool isIncome;
 
   void _onAddTransactionTap(BuildContext context) {
-    context.pushRoute(TransactionRoute(isIncome: isIncome));
+    showTransactionScreen(context, isIncome: isIncome);
+    // context.pushRoute(TransactionRoute(isIncome: isIncome));
   }
 
   void _onTransactionsHistoryTap(BuildContext context, {required int accountId}) {

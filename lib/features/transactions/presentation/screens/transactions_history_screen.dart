@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,7 @@ import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
+import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
@@ -53,7 +56,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     _loadTransactions();
   }
 
-  void _loadTransactions() {
+  Future<void> _loadTransactions() async {
     if (!mounted) return;
     final filters = TransactionFilters(
       accountId: widget.accountId,
@@ -61,7 +64,8 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
       startDate: _dateTimeRange.start,
       endDate: _dateTimeRange.end,
     );
-    context.read<TransactionsBloc>().add(TransactionsEvent.load(filters));
+    final transactionsBloc = context.read<TransactionsBloc>()..add(TransactionsEvent.load(filters));
+    await transactionsBloc.stream.firstWhere((state) => state is! TransactionsState$Processing);
   }
 
   void _onAnalyzeTap(BuildContext context) {
@@ -79,7 +83,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     if (resDate == null) return;
     final isChanged = _changeDateRange(start: resDate);
     if (!isChanged) return;
-    _loadTransactions();
+    unawaited(_loadTransactions());
   }
 
   Future<void> _onSelectEndDate() async {
@@ -87,7 +91,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     if (resDate == null) return;
     final isChanged = _changeDateRange(end: resDate);
     if (!isChanged) return;
-    _loadTransactions();
+    unawaited(_loadTransactions());
   }
 
   Future<DateTime?> _showDateSelector(DateTime? initialDate) async {
@@ -132,71 +136,74 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
           IconButton(onPressed: () => _onAnalyzeTap(context), icon: SvgPicture.asset(SvgIcons.calendarPlan)),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: ListTile.divideTiles(
-                context: context,
-                tiles: [
-                  // beginning
-                  ListTile(
-                    onTap: _onSelectStartDate,
-                    tileColor: colorScheme.secondary,
-                    title: Text(context.l10n.beginning),
-                    trailing: Text(_dateTimeRange.start.ddMMMMyyyy),
-                  ),
-                  // end
-                  ListTile(
-                    onTap: _onSelectEndDate,
-                    tileColor: colorScheme.secondary,
-                    title: Text(context.l10n.end),
-                    trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
-                  ),
-                  // sort
-                  ListTile(
-                    key: _sortTileKey,
-                    onTap: _onSortTap,
-                    tileColor: colorScheme.secondary,
-                    title: Text(context.l10n.sorting),
-                    trailing: Text(context.l10n.sortingValue(_sortType.name)),
-                  ),
-                  // amount
-                  BlocBuilder<TransactionsBloc, TransactionsState>(
-                    builder: (context, transitionsState) => ListTile(
+      body: RefreshIndicator.adaptive(
+        onRefresh: _loadTransactions,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: ListTile.divideTiles(
+                  context: context,
+                  tiles: [
+                    // beginning
+                    ListTile(
+                      onTap: _onSelectStartDate,
                       tileColor: colorScheme.secondary,
-                      title: Text(context.l10n.amount),
-                      trailing: switch (transitionsState) {
-                        _ when transitionsState.transactions != null => Text(
-                            transitionsState.totalAmount.thousandsSeparated().withCurrency(
-                                  transitionsState.transactions!.firstOrNull?.account.currency.symbol ??
-                                      Currency.rub.symbol,
-                                  1,
-                                ),
-                          ),
-                        TransactionsState$Error() => const SizedBox.shrink(),
-                        _ => const TypedProgressIndicator.small(isCentered: false),
-                      },
+                      title: Text(context.l10n.beginning),
+                      trailing: Text(_dateTimeRange.start.ddMMMMyyyy),
                     ),
-                  ),
-                ],
-              ).toList(),
+                    // end
+                    ListTile(
+                      onTap: _onSelectEndDate,
+                      tileColor: colorScheme.secondary,
+                      title: Text(context.l10n.end),
+                      trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
+                    ),
+                    // sort
+                    ListTile(
+                      key: _sortTileKey,
+                      onTap: _onSortTap,
+                      tileColor: colorScheme.secondary,
+                      title: Text(context.l10n.sorting),
+                      trailing: Text(context.l10n.sortingValue(_sortType.name)),
+                    ),
+                    // amount
+                    BlocBuilder<TransactionsBloc, TransactionsState>(
+                      builder: (context, transitionsState) => ListTile(
+                        tileColor: colorScheme.secondary,
+                        title: Text(context.l10n.amount),
+                        trailing: switch (transitionsState) {
+                          _ when transitionsState.transactions != null => Text(
+                              transitionsState.totalAmount.thousandsSeparated().withCurrency(
+                                    transitionsState.transactions!.firstOrNull?.account.currency.symbol ??
+                                        Currency.rub.symbol,
+                                    1,
+                                  ),
+                            ),
+                          TransactionsState$Error() => const SizedBox.shrink(),
+                          _ => const TypedProgressIndicator.small(isCentered: false),
+                        },
+                      ),
+                    ),
+                  ],
+                ).toList(),
+              ),
             ),
-          ),
-          // list with transactions
-          BlocBuilder<TransactionsBloc, TransactionsState>(
-            builder: (context, transactionsState) => switch (transactionsState) {
-              _ when transactionsState.transactions != null =>
-                _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
-              TransactionsState$Error(:final error) => SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
-                ),
-              _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
-            },
-          ),
-        ],
+            // list with transactions
+            BlocBuilder<TransactionsBloc, TransactionsState>(
+              builder: (context, transactionsState) => switch (transactionsState) {
+                _ when transactionsState.transactions != null =>
+                  _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
+                TransactionsState$Error(:final error) => SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
+                  ),
+                _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -216,8 +223,8 @@ mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
   void _initDateTimeRange() {
     final dtNow = DateTime.now();
     final fallbackDateRange = DateTimeRange(
-      start: dtNow.endOfDay.copyWith(month: dtNow.month - 1),
-      end: dtNow.endOfDay,
+      start: dtNow.copyWithEndOfDayTme.copyWith(month: dtNow.month - 1),
+      end: dtNow.copyWithEndOfDayTme,
     );
     final effectiveDateRange = widget.initialRange ?? fallbackDateRange;
     _dateTimeRange = effectiveDateRange;
@@ -233,8 +240,8 @@ mixin _TransactionHistoryFormMixin on State<TransactionsHistoryScreen> {
     final normalizedStart = start == null ? _normalizeStartRange(start: rawStart, end: rawEnd) : rawStart;
     final normalizedEnd = end == null ? _normalizeEndRange(end: rawEnd, start: rawStart) : rawEnd;
 
-    final withTimeStart = normalizedStart.startOfDay;
-    final withTimeEnd = normalizedEnd.startOfDay;
+    final withTimeStart = normalizedStart.copyWithStartOfDayTme;
+    final withTimeEnd = normalizedEnd.copyWithEndOfDayTme;
 
     final isSameStart = withTimeStart.isSameDateTime(_dateTimeRange.start);
     final isSameEnd = withTimeEnd.isSameDateTime(_dateTimeRange.end);
@@ -307,7 +314,8 @@ class _TransactionsSliverListState extends State<_TransactionsSliverList> {
   }
 
   void _onTransactionTap(BuildContext context, TransactionDetailEntity transaction) {
-    context.pushRoute(TransactionRoute(isIncome: transaction.category.isIncome, initialTransaction: transaction));
+    showTransactionScreen(context, isIncome: transaction.category.isIncome, initialTransaction: transaction);
+    // context.pushRoute(TransactionRoute(isIncome: transaction.category.isIncome, initialTransaction: transaction));
   }
 
   @override

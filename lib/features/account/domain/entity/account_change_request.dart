@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 
 part 'account_change_request.freezed.dart';
@@ -20,4 +21,11 @@ sealed class AccountRequest with _$AccountRequest {
     required String balance,
     required Currency currency,
   }) = AccountRequest$Update;
+
+  factory AccountRequest.fromEntity(AccountEntity account) => AccountRequest.update(
+        id: account.id,
+        name: account.name,
+        balance: account.balance,
+        currency: account.currency,
+      );
 }

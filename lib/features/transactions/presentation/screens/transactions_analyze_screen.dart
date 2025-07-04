@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pretty_chart/pretty_chart.dart';
 import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
@@ -11,6 +12,7 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
+import 'package:yang_money_catcher/features/transactions/presentation/models/transactions_analysis_summery.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
@@ -203,8 +205,8 @@ mixin _TransactionAnalyzeFormMixin on State<TransactionsAnalyzeScreen> {
   void _initDateTimeRange() {
     final dtNow = DateTime.now();
     final fallbackDateRange = DateTimeRange(
-      start: dtNow.endOfDay.copyWith(month: dtNow.month - 1),
-      end: dtNow.endOfDay,
+      start: dtNow.copyWithEndOfDayTme.copyWith(month: dtNow.month - 1),
+      end: dtNow.copyWithEndOfDayTme,
     );
     final effectiveDateRange = widget.initialDtRange ?? fallbackDateRange;
     _dateTimeRange = effectiveDateRange;
@@ -220,8 +222,8 @@ mixin _TransactionAnalyzeFormMixin on State<TransactionsAnalyzeScreen> {
     final normalizedStart = start == null ? _normalizeStartRange(start: rawStart, end: rawEnd) : rawStart;
     final normalizedEnd = end == null ? _normalizeEndRange(end: rawEnd, start: rawStart) : rawEnd;
 
-    final withTimeStart = normalizedStart.startOfDay;
-    final withTimeEnd = normalizedEnd.startOfDay;
+    final withTimeStart = normalizedStart.copyWithStartOfDayTme;
+    final withTimeEnd = normalizedEnd.copyWithEndOfDayTme;
 
     final isSameStart = withTimeStart.isSameDateTime(_dateTimeRange.start);
     final isSameEnd = withTimeEnd.isSameDateTime(_dateTimeRange.end);
@@ -254,19 +256,11 @@ class _TransactionsSuccessView extends StatefulWidget {
 }
 
 class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
-  late Map<TransactionCategory, List<TransactionDetailEntity>> _transactionCategoryAnalysisList;
-
-  num _amountOfCategoryPercentage(TransactionCategory category) {
-    final amount = _transactionCategoryAnalysisList[category]
-            ?.fold(0.0, (previousValue, element) => previousValue + element.amount.amountToNum()) ??
-        0;
-    return amount / widget.totalAmount * 100;
-  }
+  late TransactionsAnalysisSummery _transactionCategoryAnalysisList;
 
   @override
   void initState() {
     super.initState();
-    _transactionCategoryAnalysisList = {};
     _setTransactionCategoryAnalysisList();
   }
 
@@ -279,12 +273,22 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
   }
 
   void _setTransactionCategoryAnalysisList() {
-    _transactionCategoryAnalysisList.clear();
+    final transactionAnalysisMap = <TransactionCategory, List<TransactionDetailEntity>>{};
     for (final transaction in widget.transactions) {
-      final currentTransactions = _transactionCategoryAnalysisList[transaction.category];
-      _transactionCategoryAnalysisList[transaction.category] =
+      final currentTransactions = transactionAnalysisMap[transaction.category];
+      transactionAnalysisMap[transaction.category] =
           currentTransactions == null ? [transaction] : [...currentTransactions, transaction];
     }
+    _transactionCategoryAnalysisList = TransactionsAnalysisSummery(
+      transactionAnalysisMap.entries
+          .map<TransactionAnalysisSummeryItem>(
+            (transactionAnalysisEntry) => TransactionAnalysisSummeryItem(
+              transactionCategory: transactionAnalysisEntry.key,
+              transactions: transactionAnalysisEntry.value,
+            ),
+          )
+          .toList(),
+    );
   }
 
   void _onTransactionAnalysisTap(
@@ -340,30 +344,46 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
     if (widget.transactions.isEmpty) {
       return SliverFillRemaining(hasScrollBody: false, child: Center(child: Text(context.l10n.nothingFound)));
     }
-    return SliverList.builder(
-      itemCount: _transactionCategoryAnalysisList.entries.length,
-      itemBuilder: (context, index) {
-        final transactionAnalysisEntry = _transactionCategoryAnalysisList.entries.elementAt(index);
-        final amount = transactionAnalysisEntry.value
-            .fold(0.0, (previousValue, element) => previousValue + element.amount.amountToNum());
-
-        return TransactionListTile(
-          title: transactionAnalysisEntry.key.name,
-          comment: transactionAnalysisEntry.value.lastOrNull?.comment,
-          emoji: transactionAnalysisEntry.key.emoji,
-          amount: amount.thousandsSeparated(fractionalLength: null).withCurrency(
-                transactionAnalysisEntry.value.firstOrNull?.account.currency.symbol ?? Currency.rub.symbol,
-                1,
-              ),
-          transactionDateTime: '${_amountOfCategoryPercentage(transactionAnalysisEntry.key).smartTruncate()} %',
-          enableBottomDivider: true,
-          onTap: () => _onTransactionAnalysisTap(
-            context,
-            transactions: transactionAnalysisEntry.value,
-            category: transactionAnalysisEntry.key,
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: AnimatedPieChart(
+            List.generate(_transactionCategoryAnalysisList.items.length, (index) {
+              final item = _transactionCategoryAnalysisList.items[index];
+              return ChartItemData(
+                id: item.transactionCategory.id,
+                label: item.transactionCategory.name,
+                value: _transactionCategoryAnalysisList.amountPercentage(item.transactionCategory),
+              );
+            }),
           ),
-        );
-      },
+        ),
+        SliverList.builder(
+          itemCount: _transactionCategoryAnalysisList.items.length,
+          itemBuilder: (context, index) {
+            final transactionAnalysisItem = _transactionCategoryAnalysisList.items.elementAt(index);
+
+            return TransactionListTile(
+              title: transactionAnalysisItem.transactionCategory.name,
+              comment: transactionAnalysisItem.transactions.lastOrNull?.comment,
+              emoji: transactionAnalysisItem.transactionCategory.emoji,
+              amount: transactionAnalysisItem.totalAmount.thousandsSeparated(fractionalLength: null).withCurrency(
+                    transactionAnalysisItem.transactions.firstOrNull?.account.currency.symbol ?? Currency.rub.symbol,
+                    1,
+                  ),
+              transactionDateTime:
+                  '${_transactionCategoryAnalysisList.amountPercentage(transactionAnalysisItem.transactionCategory).smartTruncate()} %',
+              enableTopDivider: index == 0,
+              enableBottomDivider: true,
+              onTap: () => _onTransactionAnalysisTap(
+                context,
+                transactions: transactionAnalysisItem.transactions,
+                category: transactionAnalysisItem.transactionCategory,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
