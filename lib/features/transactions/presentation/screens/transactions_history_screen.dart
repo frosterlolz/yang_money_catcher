@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +56,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     _loadTransactions();
   }
 
-  void _loadTransactions() {
+  Future<void> _loadTransactions() async {
     if (!mounted) return;
     final filters = TransactionFilters(
       accountId: widget.accountId,
@@ -62,7 +64,8 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
       startDate: _dateTimeRange.start,
       endDate: _dateTimeRange.end,
     );
-    context.read<TransactionsBloc>().add(TransactionsEvent.load(filters));
+    final transactionsBloc = context.read<TransactionsBloc>()..add(TransactionsEvent.load(filters));
+    await transactionsBloc.stream.firstWhere((state) => state is! TransactionsState$Processing);
   }
 
   void _onAnalyzeTap(BuildContext context) {
@@ -80,7 +83,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     if (resDate == null) return;
     final isChanged = _changeDateRange(start: resDate);
     if (!isChanged) return;
-    _loadTransactions();
+    unawaited(_loadTransactions());
   }
 
   Future<void> _onSelectEndDate() async {
@@ -88,7 +91,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
     if (resDate == null) return;
     final isChanged = _changeDateRange(end: resDate);
     if (!isChanged) return;
-    _loadTransactions();
+    unawaited(_loadTransactions());
   }
 
   Future<DateTime?> _showDateSelector(DateTime? initialDate) async {
@@ -133,71 +136,74 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
           IconButton(onPressed: () => _onAnalyzeTap(context), icon: SvgPicture.asset(SvgIcons.calendarPlan)),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: ListTile.divideTiles(
-                context: context,
-                tiles: [
-                  // beginning
-                  ListTile(
-                    onTap: _onSelectStartDate,
-                    tileColor: colorScheme.secondary,
-                    title: Text(context.l10n.beginning),
-                    trailing: Text(_dateTimeRange.start.ddMMMMyyyy),
-                  ),
-                  // end
-                  ListTile(
-                    onTap: _onSelectEndDate,
-                    tileColor: colorScheme.secondary,
-                    title: Text(context.l10n.end),
-                    trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
-                  ),
-                  // sort
-                  ListTile(
-                    key: _sortTileKey,
-                    onTap: _onSortTap,
-                    tileColor: colorScheme.secondary,
-                    title: Text(context.l10n.sorting),
-                    trailing: Text(context.l10n.sortingValue(_sortType.name)),
-                  ),
-                  // amount
-                  BlocBuilder<TransactionsBloc, TransactionsState>(
-                    builder: (context, transitionsState) => ListTile(
+      body: RefreshIndicator.adaptive(
+        onRefresh: _loadTransactions,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: ListTile.divideTiles(
+                  context: context,
+                  tiles: [
+                    // beginning
+                    ListTile(
+                      onTap: _onSelectStartDate,
                       tileColor: colorScheme.secondary,
-                      title: Text(context.l10n.amount),
-                      trailing: switch (transitionsState) {
-                        _ when transitionsState.transactions != null => Text(
-                            transitionsState.totalAmount.thousandsSeparated().withCurrency(
-                                  transitionsState.transactions!.firstOrNull?.account.currency.symbol ??
-                                      Currency.rub.symbol,
-                                  1,
-                                ),
-                          ),
-                        TransactionsState$Error() => const SizedBox.shrink(),
-                        _ => const TypedProgressIndicator.small(isCentered: false),
-                      },
+                      title: Text(context.l10n.beginning),
+                      trailing: Text(_dateTimeRange.start.ddMMMMyyyy),
                     ),
-                  ),
-                ],
-              ).toList(),
+                    // end
+                    ListTile(
+                      onTap: _onSelectEndDate,
+                      tileColor: colorScheme.secondary,
+                      title: Text(context.l10n.end),
+                      trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
+                    ),
+                    // sort
+                    ListTile(
+                      key: _sortTileKey,
+                      onTap: _onSortTap,
+                      tileColor: colorScheme.secondary,
+                      title: Text(context.l10n.sorting),
+                      trailing: Text(context.l10n.sortingValue(_sortType.name)),
+                    ),
+                    // amount
+                    BlocBuilder<TransactionsBloc, TransactionsState>(
+                      builder: (context, transitionsState) => ListTile(
+                        tileColor: colorScheme.secondary,
+                        title: Text(context.l10n.amount),
+                        trailing: switch (transitionsState) {
+                          _ when transitionsState.transactions != null => Text(
+                              transitionsState.totalAmount.thousandsSeparated().withCurrency(
+                                    transitionsState.transactions!.firstOrNull?.account.currency.symbol ??
+                                        Currency.rub.symbol,
+                                    1,
+                                  ),
+                            ),
+                          TransactionsState$Error() => const SizedBox.shrink(),
+                          _ => const TypedProgressIndicator.small(isCentered: false),
+                        },
+                      ),
+                    ),
+                  ],
+                ).toList(),
+              ),
             ),
-          ),
-          // list with transactions
-          BlocBuilder<TransactionsBloc, TransactionsState>(
-            builder: (context, transactionsState) => switch (transactionsState) {
-              _ when transactionsState.transactions != null =>
-                _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
-              TransactionsState$Error(:final error) => SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
-                ),
-              _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
-            },
-          ),
-        ],
+            // list with transactions
+            BlocBuilder<TransactionsBloc, TransactionsState>(
+              builder: (context, transactionsState) => switch (transactionsState) {
+                _ when transactionsState.transactions != null =>
+                  _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
+                TransactionsState$Error(:final error) => SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
+                  ),
+                _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
