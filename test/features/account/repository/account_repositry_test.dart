@@ -3,7 +3,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
-import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
+import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
@@ -12,7 +12,7 @@ import '../../transactions/repository/transactions_test.mocks.dart';
 import '../mock_entity_helper/account_entities.dart';
 import 'account_repositry_test.mocks.dart';
 
-@GenerateNiceMocks([MockSpec<AccountsLocalDataSource>()])
+@GenerateNiceMocks([MockSpec<AccountsLocalDataSource>(), MockSpec<AccountsNetworkDataSource>()])
 void main() {
   late AccountRepository repository;
   late AccountsLocalDataSource mockAccountsStorage;
@@ -22,7 +22,7 @@ void main() {
     mockAccountsStorage = MockAccountsLocalDataSource();
     mockTransactionsLocalDataSource = MockTransactionsLocalDataSource();
     repository = AccountRepositoryImpl(
-      accountsNetworkDataSource: AccountsNetworkDataSource$Rest(),
+      accountsNetworkDataSource: MockAccountsNetworkDataSource(),
       accountsLocalStorage: mockAccountsStorage,
       transactionsLocalStorage: mockTransactionsLocalDataSource,
     );

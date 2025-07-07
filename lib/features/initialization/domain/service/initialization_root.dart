@@ -1,7 +1,15 @@
 import 'dart:async';
 
 import 'package:database/database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pretty_logger/pretty_logger.dart';
+import 'package:rest_client/rest_client.dart';
+import 'package:worker_manager/worker_manager.dart';
+import 'package:yang_money_catcher/core/config/env_constants.dart';
+import 'package:yang_money_catcher/core/data/rest_client/dio_configurator.dart';
+import 'package:yang_money_catcher/core/data/rest_client/interceptors/auth_interceptor.dart';
+import 'package:yang_money_catcher/core/data/rest_client/interceptors/logging_interceptor.dart';
+import 'package:yang_money_catcher/core/data/rest_client/transformers/worker_background_transformer.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source_drift.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
@@ -32,9 +40,23 @@ final class InitializationRoot {
   /// Preparing initialization steps [InitializationStep]
   Map<String, InitializationStep> _prepareInitializationSteps() => {
         'Init logger': (d) async => d.logger = logger,
+        'Init workers': (_) async {
+          await workerManager.init();
+        },
         'Prepare database': (d) async {
           final database = AppDatabase.defaults(name: 'yang_money_catcher_database');
           d.context['drift_database'] = database;
+        },
+        'Initialize rest client': (d) async {
+          final dio = const DioConfigurator().create(
+            url: EnvConstants.apiUrl,
+            transformer: WorkerBackgroundTransformer(),
+            interceptors: [
+              AuthInterceptor(token: EnvConstants.authToken),
+              if (kDebugMode) LoggingInterceptor(d.logger),
+            ],
+          );
+          d.restClient = RestClientDio(dio: dio);
         },
         'Prepare accounts feature': (d) async {
           final database = d.context['drift_database']! as AppDatabase;
@@ -43,7 +65,7 @@ final class InitializationRoot {
           final transactionsDao = TransactionsDao(database);
           final transactionsLocalDataSource = TransactionsLocalDataSource$Drift(transactionsDao);
           d.context['transactions_local_data_source'] = transactionsLocalDataSource;
-          final accountsNetworkDataSource = AccountsNetworkDataSource$Rest();
+          final accountsNetworkDataSource = AccountsNetworkDataSource$Rest(d.restClient);
           final accountsRepository = AccountRepositoryImpl(
             accountsNetworkDataSource: accountsNetworkDataSource,
             accountsLocalStorage: accountsLocalDataSource,

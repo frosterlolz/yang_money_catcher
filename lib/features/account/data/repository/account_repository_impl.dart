@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source.dart';
@@ -26,17 +27,23 @@ final class AccountRepositoryImpl implements AccountRepository {
   final Map<int, AccountHistory> _accountHistories = {};
 
   @override
+  Stream<Iterable<AccountEntity>> getAccounts() async* {
+    final localAccounts = await _accountsLocalDataSource.fetchAccounts();
+    yield localAccounts;
+    final networkAccounts = await _accountsNetworkDataSource.getAccounts();
+    if (!const ListEquality<AccountEntity>().equals(localAccounts, networkAccounts)) {
+      _accountsLocalDataSource.syncAccounts(networkAccounts).ignore();
+    }
+    yield networkAccounts;
+  }
+
+  @override
   Stream<AccountEntity> createAccount(AccountRequest$Create request) async* {
     final localAccount = await _accountsLocalDataSource.updateAccount(request);
     yield localAccount;
     final restAccount = await _accountsNetworkDataSource.createAccount(request);
     if (localAccount != restAccount) {
-      final request = AccountRequest.fromEntity(restAccount);
-      final res = switch (request) {
-        final AccountRequest$Create createRequest => () => _accountsLocalDataSource.updateAccount(createRequest),
-        final AccountRequest$Update updateRequest => () => _accountsLocalDataSource.updateAccount(updateRequest),
-      };
-      res.call().ignore();
+      _accountsLocalDataSource.syncAccount(restAccount).ignore();
     }
     yield restAccount;
   }
@@ -47,12 +54,7 @@ final class AccountRepositoryImpl implements AccountRepository {
     yield localAccount;
     final restAccount = await _accountsNetworkDataSource.updateAccount(request);
     if (localAccount != restAccount) {
-      final request = AccountRequest.fromEntity(restAccount);
-      final res = switch (request) {
-        final AccountRequest$Create createRequest => () => _accountsLocalDataSource.updateAccount(createRequest),
-        final AccountRequest$Update updateRequest => () => _accountsLocalDataSource.updateAccount(updateRequest),
-      };
-      res.call().ignore();
+      _accountsLocalDataSource.syncAccount(restAccount).ignore();
     }
     yield restAccount;
   }
@@ -61,14 +63,6 @@ final class AccountRepositoryImpl implements AccountRepository {
   Future<void> deleteAccount(int accountId) async {
     await _accountsLocalDataSource.deleteAccount(accountId);
     await _accountsNetworkDataSource.deleteAccount(accountId);
-  }
-
-  @override
-  Stream<Iterable<AccountEntity>> getAccounts() async* {
-    final localAccounts = await _accountsLocalDataSource.fetchAccounts();
-    yield localAccounts;
-    final networkAccounts = await _accountsNetworkDataSource.getAccounts();
-    yield networkAccounts;
   }
 
   @override

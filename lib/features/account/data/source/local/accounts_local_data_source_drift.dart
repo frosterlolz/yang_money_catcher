@@ -13,6 +13,40 @@ final class AccountsLocalDataSource$Drift implements AccountsLocalDataSource {
   Future<int> fetchAccountsCount() => _accountsDao.accountsRowCount();
 
   @override
+  Future<List<AccountEntity>> syncAccounts(List<AccountEntity> accounts) async {
+    final companions = accounts
+        .map(
+          (account) => AccountItemsCompanion.insert(
+            id: Value(account.id),
+            name: account.name,
+            balance: account.balance,
+            currency: account.currency.key,
+            createdAt: Value(account.createdAt),
+            updatedAt: Value(account.updatedAt),
+            userId: account.userId,
+          ),
+        )
+        .toList();
+    await _accountsDao.syncAccounts(companions);
+    return fetchAccounts();
+  }
+
+  @override
+  Future<AccountEntity> syncAccount(AccountEntity account) async {
+    final companion = AccountItemsCompanion.insert(
+      id: Value(account.id),
+      name: account.name,
+      balance: account.balance,
+      currency: account.currency.key,
+      createdAt: Value(account.createdAt),
+      updatedAt: Value(account.updatedAt),
+      userId: account.userId,
+    );
+    final accountItem = await _accountsDao.upsertAccount(companion);
+    return AccountEntity.fromTableItem(accountItem);
+  }
+
+  @override
   Future<int> deleteAccount(int id) => _accountsDao.deleteAccount(id);
 
   @override

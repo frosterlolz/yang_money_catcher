@@ -8,6 +8,12 @@ class AccountsDao extends DatabaseAccessor<AppDatabase> with _$AccountsDaoMixin 
   AccountsDao(super.attachedDatabase);
 
   Future<int> accountsRowCount() => accountItems.count().getSingle();
+  Future<void> syncAccounts(List<AccountItemsCompanion> companions) async {
+    await batch((batch) {
+      batch..deleteAll(accountItems)
+      ..insertAll(accountItems, companions);
+    });
+  }
   Future<List<AccountItem>> fetchAccounts() => accountItems.select().get();
   Future<AccountItem?> fetchAccount(int id) =>
       (accountItems.select()..where((accountItem) => accountItem.id.equals(id))).getSingleOrNull();

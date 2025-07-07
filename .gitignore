@@ -46,3 +46,7 @@ app.*.map.json
 
 # Codegen
 *.*.dart
+
+# Project configuration
+config/*.json
+!config/*.template.json

@@ -6,6 +6,16 @@ import 'package:yang_money_catcher/features/account/domain/entity/account_entity
 abstract interface class AccountsLocalDataSource {
   Future<int> fetchAccountsCount();
 
+  /// Обновляет аккаунты в базе данных.
+  ///
+  /// Возвращает список обновленных аккаунтов.
+  Future<List<AccountEntity>> syncAccounts(List<AccountEntity> accounts);
+
+  /// Обновляет аккаунт в базе данных.
+  ///
+  /// Возвращает обновленный аккаунт
+  Future<AccountEntity> syncAccount(AccountEntity account);
+
   /// Загружает список всех аккаунтов из базы данных.
   ///
   /// Возвращает список [AccountEntity], включая их `id`, `createdAt`, `updatedAt` и другие поля.

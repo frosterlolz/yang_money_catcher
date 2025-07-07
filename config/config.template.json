@@ -1,0 +1,5 @@
+{
+  "ENVIRONMENT": "${ENVIRONMENT}",
+  "BASE_URL": "${BASE_URL}",
+  "AUTH_TOKEN": "${AUTH_TOKEN}"
+}

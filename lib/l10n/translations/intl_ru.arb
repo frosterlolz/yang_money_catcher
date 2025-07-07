@@ -1,6 +1,7 @@
 {
   "appCurrentlyUnavailable": "В данный момент приложение не доступно",
   "mayBeFailTryItLater": "Возможно произошла техническая ошибка, попробуйте снова позднее",
+  "pleaseProvideCorrectToken": "Пожалуйста, передайте корректный токен",
   "reload": "Перезапустить",
   "expenses": "Расходы",
   "expense": "Расход",
