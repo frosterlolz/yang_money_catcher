@@ -204,7 +204,7 @@ class _AccountBalanceTileState extends State<_AccountBalanceTile> with Processin
     final accountBloc = context.read<AccountBloc>()..add(AccountEvent.update(request));
     unawaited(
       doProcessing(() async {
-        await accountBloc.stream.firstWhere((state) => state is AccountState$Processing);
+        await accountBloc.stream.firstWhere((state) => state is! AccountState$Processing);
       }),
     );
   }

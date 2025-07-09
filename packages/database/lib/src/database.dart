@@ -8,7 +8,7 @@ part 'database.g.dart';
 /// {@template database}
 /// The drift-managed database configuration
 /// {@endtemplate}
-@DriftDatabase(tables: [AccountItems, TransactionItems, TransactionCategoryItems])
+@DriftDatabase(tables: [AccountItems, AccountEventItems, TransactionItems, TransactionCategoryItems])
 class AppDatabase extends _$AppDatabase {
   /// {@macro database}
   AppDatabase(super.e);

@@ -4,6 +4,7 @@ import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
 import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
@@ -21,18 +22,20 @@ final class AccountRepositoryImpl implements AccountRepository {
     required AccountsNetworkDataSource accountsNetworkDataSource,
     required AccountsLocalDataSource accountsLocalStorage,
     required TransactionsLocalDataSource transactionsLocalStorage,
+    required AccountEventsSyncDataSource accountEventsSyncDataSource,
   })  : _accountsNetworkDataSource = accountsNetworkDataSource,
         _accountsLocalDataSource = accountsLocalStorage,
-        _transactionsLocalStorage = transactionsLocalStorage;
+        _transactionsLocalStorage = transactionsLocalStorage,
+        _accountEventsSyncDataSource = accountEventsSyncDataSource;
 
   final AccountsNetworkDataSource _accountsNetworkDataSource;
   final AccountsLocalDataSource _accountsLocalDataSource;
   final TransactionsLocalDataSource _transactionsLocalStorage;
-
-  final List<SyncAction<TransactionEntity>> _actions = [];
+  final AccountEventsSyncDataSource _accountEventsSyncDataSource;
 
   @override
   Stream<DataResult<Iterable<AccountEntity>>> getAccounts() async* {
+    await _syncEvents();
     final localAccounts = await _accountsLocalDataSource.fetchAccounts();
     yield DataResult.offline(data: localAccounts);
     try {
@@ -49,32 +52,95 @@ final class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Stream<DataResult<AccountEntity>> createAccount(AccountRequest$Create request) async* {
+    await _syncEvents();
     final localAccount = await _accountsLocalDataSource.updateAccount(request);
     yield DataResult.offline(data: localAccount);
-    final restAccount = await _accountsNetworkDataSource.createAccount(request);
-    if (localAccount != restAccount) {
-      _accountsLocalDataSource.syncAccount(restAccount).ignore();
-    }
+    final restAccount = await _createAccountWithSync(localAccount);
     yield DataResult.online(data: restAccount);
+  }
+
+  Future<AccountEntity> _createAccountWithSync(AccountEntity account) async {
+    try {
+      final request = AccountRequest$Create(name: account.name, balance: account.balance, currency: account.currency);
+      final restAccount = await _accountsNetworkDataSource.createAccount(request);
+      _accountsLocalDataSource.syncAccount(restAccount).ignore();
+      return restAccount;
+    } on RestClientException catch (e, s) {
+      final nowUtc = DateTime.now().toUtc();
+      final event = SyncAction.create(
+        createdAt: nowUtc,
+        updatedAt: nowUtc,
+        data: account,
+      );
+      await _accountEventsSyncDataSource.addEvent(event);
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
   }
 
   @override
   Stream<DataResult<AccountEntity>> updateAccount(AccountRequest$Update request) async* {
+    await _syncEvents();
     final localAccount = await _accountsLocalDataSource.updateAccount(request);
     yield DataResult.offline(data: localAccount);
-    final restAccount = await _accountsNetworkDataSource.updateAccount(request);
-    if (localAccount != restAccount) {
-      _accountsLocalDataSource.syncAccount(restAccount).ignore();
-    }
+    final restAccount = await _updateAccountWithSync(localAccount);
     yield DataResult.online(data: restAccount);
+  }
+
+  Future<AccountEntity> _updateAccountWithSync(AccountEntity account) async {
+    final request =
+        AccountRequest$Update(id: account.id, name: account.name, balance: account.balance, currency: account.currency);
+    try {
+      final restAccount = await _accountsNetworkDataSource.updateAccount(request);
+      _accountsLocalDataSource.syncAccount(restAccount).ignore();
+
+      return restAccount;
+    } on RestClientException catch (e, s) {
+      final nowUtc = DateTime.now().toUtc();
+      final event = SyncAction.update(
+        createdAt: nowUtc,
+        updatedAt: nowUtc,
+        data: account,
+      );
+      await _accountEventsSyncDataSource.addEvent(event);
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
   }
 
   @override
   Stream<DataResult<void>> deleteAccount(int accountId) async* {
+    await _syncEvents();
+    await _deleteAccountWithSync(accountId);
+    yield const DataResult.online(data: null);
     await _accountsLocalDataSource.deleteAccount(accountId);
     yield const DataResult.offline(data: null);
-    await _accountsNetworkDataSource.deleteAccount(accountId);
-    yield const DataResult.online(data: null);
+  }
+
+  Future<void> _deleteAccountWithSync(int accountId) async {
+    try {
+      await _accountsNetworkDataSource.deleteAccount(accountId);
+      return;
+    } on RestClientException catch (e, s) {
+      final nowUtc = DateTime.now().toUtc();
+      final event = SyncAction<AccountEntity>.delete(
+        dataId: accountId,
+        createdAt: nowUtc,
+        updatedAt: nowUtc,
+      );
+      await _accountEventsSyncDataSource.addEvent(event);
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
   }
 
   // TODO(frosterlolz): много грязи! нужно рефачить
@@ -106,6 +172,7 @@ final class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Stream<DataResult<AccountHistory>> getAccountHistory(int accountId) async* {
+    await _syncEvents();
     final account$Local = await _accountsLocalDataSource.fetchAccount(accountId);
     if (account$Local != null) {
       // TODO(frosterlolz): на данном этапе не актульные данные
@@ -114,8 +181,13 @@ final class AccountRepositoryImpl implements AccountRepository {
           AccountHistory.fromLocalSource(account$Local, history: history == null ? [] : history.history);
       yield DataResult.offline(data: accountHistory$Local);
     }
-    final accountHistory$Rest = await _accountsNetworkDataSource.getAccountHistory(accountId);
-    yield DataResult.online(data: accountHistory$Rest);
+    try {
+      final accountHistory$Rest = await _accountsNetworkDataSource.getAccountHistory(accountId);
+      yield DataResult.online(data: accountHistory$Rest);
+    } on StructuredBackendException catch (e, s) {
+      final appException = AppException$Simple.fromStructuredException(e.error);
+      Error.throwWithStackTrace(appException, s);
+    }
   }
 
   Future<void> generateMockData() async {
@@ -134,6 +206,20 @@ final class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
+  Future<void> _syncEvents() async {
+    final events = await _accountEventsSyncDataSource.fetchEvents();
+    for (final event in events) {
+      switch (event) {
+        case SyncAction$Create(:final data):
+          await _createAccountWithSync(data);
+        case SyncAction$Update(:final data):
+          await _updateAccountWithSync(data);
+        case SyncAction$Delete(:final dataId):
+          await _deleteAccountWithSync(dataId);
+      }
+    }
+  }
+
   // TODO(frosterlolz): временный метод
   Iterable<TransactionCategoryStat> _calculateFromCategories(
     Iterable<TransactionCategory> categories,
@@ -149,22 +235,5 @@ final class AccountRepositoryImpl implements AccountRepository {
     });
 
     return transactionStats;
-  }
-
-  void _addToSyncEvents(SyncAction<TransactionEntity> event) {
-    final index = _actions.indexWhere((a) => a.id == event.id);
-    if (index == -1) {
-      _actions.add(event);
-      return;
-    }
-
-    final existing = _actions[index];
-    final merged = existing.merge(event);
-
-    if (merged == null) {
-      _actions.removeAt(index);
-    } else {
-      _actions[index] = merged;
-    }
   }
 }

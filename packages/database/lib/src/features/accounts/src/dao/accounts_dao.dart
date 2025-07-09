@@ -8,16 +8,21 @@ class AccountsDao extends DatabaseAccessor<AppDatabase> with _$AccountsDaoMixin 
   AccountsDao(super.attachedDatabase);
 
   Future<int> accountsRowCount() => accountItems.count().getSingle();
+
   Future<void> syncAccounts(List<AccountItemsCompanion> companions) async {
     await batch((batch) {
       batch..deleteAll(accountItems)
       ..insertAll(accountItems, companions);
     });
   }
+
   Future<List<AccountItem>> fetchAccounts() => accountItems.select().get();
+
   Future<AccountItem?> fetchAccount(int id) =>
       (accountItems.select()..where((accountItem) => accountItem.id.equals(id))).getSingleOrNull();
+
   Future<int> deleteAccount(int id) => (delete(accountItems)..where((t) => t.id.equals(id))).go();
+
   Future<AccountItem> upsertAccount(AccountItemsCompanion companion) async =>
       companion.id.present ? _updateAccount(companion) : _insertAccount(companion);
 
@@ -26,8 +31,7 @@ class AccountsDao extends DatabaseAccessor<AppDatabase> with _$AccountsDaoMixin 
 
   Future<AccountItem> _updateAccount(AccountItemsCompanion companion) async => transaction(() async {
         final statement = update(accountItems)..where((tx) => tx.id.equals(companion.id.value));
-        final updatedRowId = await statement.write(companion);
-        final updatedAccount = select(accountItems)..where((tx) => tx.rowId.equals(updatedRowId));
-        return updatedAccount.getSingle();
+        final updatedAccounts = await statement.writeReturning(companion);
+        return updatedAccounts.first;
       });
 }

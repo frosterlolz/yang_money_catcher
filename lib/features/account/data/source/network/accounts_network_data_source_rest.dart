@@ -11,7 +11,7 @@ final class AccountsNetworkDataSource$Rest implements AccountsNetworkDataSource 
 
   @override
   Future<AccountEntity> createAccount(AccountRequest$Create request) async {
-    final response = await _client.post('createAccount', body: request.toJson());
+    final response = await _client.post('/createAccount', body: request.toJson());
     if (response == null) throw const ClientException(message: 'Unexpected null response from POST createAccount');
     return AccountEntity.fromJson(response);
   }
@@ -21,14 +21,14 @@ final class AccountsNetworkDataSource$Rest implements AccountsNetworkDataSource 
 
   @override
   Future<AccountDetailEntity> getAccount(int id) async {
-    final response = await _client.get('accounts/$id');
+    final response = await _client.get('/accounts/$id');
     if (response == null) throw const ClientException(message: 'Unexpected null response from GET getAccount');
     return AccountDetailEntity.fromJson(response);
   }
 
   @override
   Future<AccountHistory> getAccountHistory(int id) async {
-    final response = await _client.get('accounts/$id/history');
+    final response = await _client.get('/accounts/$id/history');
     if (response == null) throw const ClientException(message: 'Unexpected null response from GET getAccountHistory');
 
     return AccountHistory.fromJson(response);

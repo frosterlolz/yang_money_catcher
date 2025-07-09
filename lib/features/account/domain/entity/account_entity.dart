@@ -69,6 +69,8 @@ class AccountDetailEntity with _$AccountDetailEntity {
 
   factory AccountDetailEntity.fromJson(JsonMap json) => _$AccountDetailEntityFromJson(json);
 
+  const AccountDetailEntity._();
+
   AccountDetailEntity merge(AccountEntity other) => AccountDetailEntity(
         id: other.id,
         name: other.name,

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
@@ -12,19 +13,26 @@ import '../../transactions/repository/transactions_test.mocks.dart';
 import '../mock_entity_helper/account_entities.dart';
 import 'account_repositry_test.mocks.dart';
 
-@GenerateNiceMocks([MockSpec<AccountsLocalDataSource>(), MockSpec<AccountsNetworkDataSource>()])
+@GenerateNiceMocks([
+  MockSpec<AccountsLocalDataSource>(),
+  MockSpec<AccountsNetworkDataSource>(),
+  MockSpec<AccountEventsSyncDataSource>(),
+])
 void main() {
   late AccountRepository repository;
   late AccountsLocalDataSource mockAccountsStorage;
   late TransactionsLocalDataSource mockTransactionsLocalDataSource;
+  late AccountEventsSyncDataSource mockAccountEventsSyncDataSource;
 
   setUp(() {
     mockAccountsStorage = MockAccountsLocalDataSource();
     mockTransactionsLocalDataSource = MockTransactionsLocalDataSource();
+    mockAccountEventsSyncDataSource = MockAccountEventsSyncDataSource();
     repository = AccountRepositoryImpl(
       accountsNetworkDataSource: MockAccountsNetworkDataSource(),
       accountsLocalStorage: mockAccountsStorage,
       transactionsLocalStorage: mockTransactionsLocalDataSource,
+      accountEventsSyncDataSource: mockAccountEventsSyncDataSource,
     );
   });
 

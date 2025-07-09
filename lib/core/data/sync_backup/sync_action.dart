@@ -1,50 +1,55 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/sync_action_type.dart';
 
-class SyncAction<T> {
-  const SyncAction({
-    required this.id,
-    required this.actionType,
-    required this.timestamp,
-    required this.data,
-  });
+part 'sync_action.freezed.dart';
 
-  final int id;
-  final SyncActionType actionType;
-  final DateTime timestamp;
-  final T data;
+@freezed
+sealed class SyncAction<T> with _$SyncAction<T> {
+  const factory SyncAction.create({
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    required T data,
+  }) = SyncAction$Create<T>;
 
+  const factory SyncAction.update({
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    required T data,
+  }) = SyncAction$Update<T>;
+
+  const factory SyncAction.delete({
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    required int dataId,
+  }) = SyncAction$Delete<T>;
+
+  const SyncAction._();
+
+  @useResult
   SyncAction<T>? merge(SyncAction<T> other) {
-    assert(id == other.id, 'Cannot merge actions with different ids');
-
-    return switch (actionType) {
-      SyncActionType.create => switch (other.actionType) {
-          SyncActionType.update => other.copyWith(actionType: SyncActionType.create),
-          SyncActionType.delete => null,
-          SyncActionType.create => this,
+    final createAt = createdAt.isAfter(other.createdAt) ? other.createdAt : createdAt;
+    return switch (this) {
+      SyncAction$Create() => switch (other) {
+          SyncAction$Create() => copyWith(createdAt: createAt),
+          SyncAction$Update() => SyncAction.create(createdAt: createAt, updatedAt: other.updatedAt, data: other.data),
+          SyncAction$Delete() => null,
         },
-      SyncActionType.update => switch (other.actionType) {
-          SyncActionType.update => other,
-          SyncActionType.delete => other,
-          SyncActionType.create => this,
+      SyncAction$Update() => switch (other) {
+          SyncAction$Create() => copyWith(createdAt: createAt),
+          SyncAction$Update() => copyWith(createdAt: createAt),
+          SyncAction$Delete() => other.copyWith(createdAt: createAt),
         },
-      SyncActionType.delete => switch (other.actionType) {
-          SyncActionType.create => other.copyWith(actionType: SyncActionType.update),
-          SyncActionType.update => this,
-          SyncActionType.delete => this,
+      SyncAction$Delete() => switch (other) {
+          SyncAction$Create() => SyncAction.update(createdAt: createAt, updatedAt: other.updatedAt, data: other.data),
+          SyncAction$Update() => copyWith(createdAt: createAt),
+          SyncAction$Delete() => copyWith(createdAt: createAt),
         },
     };
   }
 
-  SyncAction<T> copyWith({
-    int? id,
-    SyncActionType? actionType,
-    DateTime? timestamp,
-    T? data,
-  }) =>
-      SyncAction<T>(
-        id: id ?? this.id,
-        actionType: actionType ?? this.actionType,
-        timestamp: timestamp ?? this.timestamp,
-        data: data ?? this.data,
-      );
+  SyncActionType get actionType => switch (this) {
+        SyncAction$Create() => SyncActionType.create,
+        SyncAction$Update() => SyncActionType.update,
+        SyncAction$Delete() => SyncActionType.delete,
+      };
 }

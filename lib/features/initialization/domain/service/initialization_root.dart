@@ -11,6 +11,7 @@ import 'package:yang_money_catcher/core/data/rest_client/interceptors/auth_inter
 import 'package:yang_money_catcher/core/data/rest_client/interceptors/logging_interceptor.dart';
 import 'package:yang_money_catcher/core/data/rest_client/transformers/worker_background_transformer.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source_drift.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source_drift.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
@@ -66,12 +67,15 @@ final class InitializationRoot {
           final transactionsLocalDataSource = TransactionsLocalDataSource$Drift(transactionsDao);
           d.context['transactions_local_data_source'] = transactionsLocalDataSource;
           final accountsNetworkDataSource = AccountsNetworkDataSource$Rest(d.restClient);
+          final accountEventsSyncDataSource = AccountEventsSyncDataSourceDrift(AccountEventsDao(database));
           final accountsRepository = AccountRepositoryImpl(
             accountsNetworkDataSource: accountsNetworkDataSource,
             accountsLocalStorage: accountsLocalDataSource,
             transactionsLocalStorage: transactionsLocalDataSource,
+            accountEventsSyncDataSource: accountEventsSyncDataSource,
           );
-          await accountsRepository.generateMockData();
+          // TODO(frosterlolz): мок данные не треюбуются, БЭК подключен
+          // await accountsRepository.generateMockData();
           d.accountRepository = accountsRepository;
         },
         'Prepare transactions feature': (d) async {
