@@ -12,7 +12,7 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
-import 'package:yang_money_catcher/features/transactions/presentation/models/transactions_analysis_summery.dart';
+import 'package:yang_money_catcher/features/transactions/presentation/models/transactions_analysis_summary.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
@@ -256,7 +256,7 @@ class _TransactionsSuccessView extends StatefulWidget {
 }
 
 class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
-  late TransactionsAnalysisSummery _transactionCategoryAnalysisList;
+  late TransactionsAnalysisSummary _transactionCategoryAnalysisList;
 
   @override
   void initState() {
@@ -279,10 +279,10 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
       transactionAnalysisMap[transaction.category] =
           currentTransactions == null ? [transaction] : [...currentTransactions, transaction];
     }
-    _transactionCategoryAnalysisList = TransactionsAnalysisSummery(
+    _transactionCategoryAnalysisList = TransactionsAnalysisSummary(
       transactionAnalysisMap.entries
-          .map<TransactionAnalysisSummeryItem>(
-            (transactionAnalysisEntry) => TransactionAnalysisSummeryItem(
+          .map<TransactionAnalysisSummaryItem>(
+            (transactionAnalysisEntry) => TransactionAnalysisSummaryItem(
               transactionCategory: transactionAnalysisEntry.key,
               transactions: transactionAnalysisEntry.value,
             ),

@@ -5,16 +5,16 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
 @immutable
-class TransactionsAnalysisSummery {
-  const TransactionsAnalysisSummery(this.items);
+class TransactionsAnalysisSummary {
+  const TransactionsAnalysisSummary(this.items);
 
-  final List<TransactionAnalysisSummeryItem> items;
+  final List<TransactionAnalysisSummaryItem> items;
 
   double amountPercentage(TransactionCategory category) {
-    final transactionSummeryItem = items.firstWhereOrNull((element) => element.transactionCategory == category);
-    if (transactionSummeryItem == null) return 0.0;
+    final transactionSummaryItem = items.firstWhereOrNull((element) => element.transactionCategory == category);
+    if (transactionSummaryItem == null) return 0.0;
 
-    return transactionSummeryItem.totalAmount /
+    return transactionSummaryItem.totalAmount /
         items.fold(0.0, (previousValue, element) => previousValue + element.totalAmount) *
         100;
   }
@@ -22,30 +22,30 @@ class TransactionsAnalysisSummery {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TransactionsAnalysisSummery &&
+      other is TransactionsAnalysisSummary &&
           runtimeType == other.runtimeType &&
-          const ListEquality<TransactionAnalysisSummeryItem>().equals(items, other.items);
+          const ListEquality<TransactionAnalysisSummaryItem>().equals(items, other.items);
 
   @override
   int get hashCode => items.hashCode;
 }
 
 @immutable
-class TransactionAnalysisSummeryItem {
-  factory TransactionAnalysisSummeryItem({
+class TransactionAnalysisSummaryItem {
+  factory TransactionAnalysisSummaryItem({
     required TransactionCategory transactionCategory,
     required List<TransactionDetailEntity> transactions,
   }) {
     final amount = transactions.fold(0.0, (previousValue, element) => previousValue + element.amount.amountToNum());
 
-    return TransactionAnalysisSummeryItem._(
+    return TransactionAnalysisSummaryItem._(
       transactionCategory: transactionCategory,
       transactions: transactions,
       totalAmount: amount,
     );
   }
 
-  const TransactionAnalysisSummeryItem._({
+  const TransactionAnalysisSummaryItem._({
     required this.transactionCategory,
     required this.transactions,
     required this.totalAmount,
@@ -58,7 +58,7 @@ class TransactionAnalysisSummeryItem {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TransactionAnalysisSummeryItem &&
+      other is TransactionAnalysisSummaryItem &&
           runtimeType == other.runtimeType &&
           transactionCategory == other.transactionCategory &&
           const ListEquality<TransactionDetailEntity>().equals(transactions, other.transactions) &&

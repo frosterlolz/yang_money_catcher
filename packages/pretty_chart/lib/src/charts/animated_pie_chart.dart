@@ -108,11 +108,11 @@ class _AnimatedPieChartState extends State<AnimatedPieChart> with SingleTickerPr
                       sections: List.generate(
                         _currentChartItems.length,
                         (index) {
-                          final summeryItem = _currentChartItems[index];
+                          final summaryItem = _currentChartItems[index];
 
                           return PieChartSectionData(
                             color: _getColor(index),
-                            value: _itemPercentage(summeryItem),
+                            value: _itemPercentage(summaryItem),
                             showTitle: false,
                             radius: _chartStrokeWidth,
                           );
@@ -138,11 +138,11 @@ class _AnimatedPieChartState extends State<AnimatedPieChart> with SingleTickerPr
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: List.generate(_currentChartItems.length, (index) {
-                            final summeryItem = _currentChartItems[index];
+                            final summaryItem = _currentChartItems[index];
                             return _Indicator(
                               key: ValueKey('Indicator at $index'),
                               color: _getColor(index),
-                              text: '${_itemPercentage(summeryItem).toStringAsFixed(2)}% ${summeryItem.label}',
+                              text: '${_itemPercentage(summaryItem).toStringAsFixed(2)}% ${summaryItem.label}',
                               textStyle: widget.labelStyle ?? TextTheme.of(context).labelSmall?.copyWith(fontSize: 7.0),
                               size: widget.indicatorSize ?? 5.65,
                               isSquare: false,
