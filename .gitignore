@@ -50,3 +50,4 @@ app.*.map.json
 # Project configuration
 config/*.json
 !config/*.template.json
+/devtools_options.yaml
