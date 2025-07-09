@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:rest_client/rest_client.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
+import 'package:yang_money_catcher/core/data/sync_backup/utils/sync_handler_mixin.dart';
 import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
@@ -17,7 +18,7 @@ import 'package:yang_money_catcher/features/transaction_categories/domain/entity
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
-final class AccountRepositoryImpl implements AccountRepository {
+final class AccountRepositoryImpl with SyncHandlerMixin implements AccountRepository {
   AccountRepositoryImpl({
     required AccountsNetworkDataSource accountsNetworkDataSource,
     required AccountsLocalDataSource accountsLocalStorage,
@@ -61,18 +62,25 @@ final class AccountRepositoryImpl implements AccountRepository {
 
   Future<AccountEntity> _createAccountWithSync(AccountEntity account) async {
     try {
-      final request = AccountRequest$Create(name: account.name, balance: account.balance, currency: account.currency);
-      final restAccount = await _accountsNetworkDataSource.createAccount(request);
-      _accountsLocalDataSource.syncAccount(restAccount).ignore();
-      return restAccount;
-    } on RestClientException catch (e, s) {
-      final nowUtc = DateTime.now().toUtc();
-      final event = SyncAction.create(
-        createdAt: nowUtc,
-        updatedAt: nowUtc,
-        data: account,
+      return await handleWithSync<AccountEntity>(
+        method: () async {
+          final request =
+              AccountRequest$Create(name: account.name, balance: account.balance, currency: account.currency);
+          final restAccount = await _accountsNetworkDataSource.createAccount(request);
+          _accountsLocalDataSource.syncAccount(restAccount).ignore();
+          return restAccount;
+        },
+        addEventMethod: () async {
+          final nowUtc = DateTime.now().toUtc();
+          final event = SyncAction.create(
+            createdAt: nowUtc,
+            updatedAt: nowUtc,
+            data: account,
+          );
+          await _accountEventsSyncDataSource.addEvent(event);
+        },
       );
-      await _accountEventsSyncDataSource.addEvent(event);
+    } on RestClientException catch (e, s) {
       final resException = switch (e) {
         StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
         _ => e,
@@ -91,21 +99,31 @@ final class AccountRepositoryImpl implements AccountRepository {
   }
 
   Future<AccountEntity> _updateAccountWithSync(AccountEntity account) async {
-    final request =
-        AccountRequest$Update(id: account.id, name: account.name, balance: account.balance, currency: account.currency);
     try {
-      final restAccount = await _accountsNetworkDataSource.updateAccount(request);
-      _accountsLocalDataSource.syncAccount(restAccount).ignore();
+      return handleWithSync<AccountEntity>(
+        method: () async {
+          final request = AccountRequest$Update(
+            id: account.id,
+            name: account.name,
+            balance: account.balance,
+            currency: account.currency,
+          );
+          final restAccount = await _accountsNetworkDataSource.updateAccount(request);
+          _accountsLocalDataSource.syncAccount(restAccount).ignore();
 
-      return restAccount;
-    } on RestClientException catch (e, s) {
-      final nowUtc = DateTime.now().toUtc();
-      final event = SyncAction.update(
-        createdAt: nowUtc,
-        updatedAt: nowUtc,
-        data: account,
+          return restAccount;
+        },
+        addEventMethod: () async {
+          final nowUtc = DateTime.now().toUtc();
+          final event = SyncAction.update(
+            createdAt: nowUtc,
+            updatedAt: nowUtc,
+            data: account,
+          );
+          await _accountEventsSyncDataSource.addEvent(event);
+        },
       );
-      await _accountEventsSyncDataSource.addEvent(event);
+    } on RestClientException catch (e, s) {
       final resException = switch (e) {
         StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
         _ => e,
@@ -125,16 +143,19 @@ final class AccountRepositoryImpl implements AccountRepository {
 
   Future<void> _deleteAccountWithSync(int accountId) async {
     try {
-      await _accountsNetworkDataSource.deleteAccount(accountId);
-      return;
-    } on RestClientException catch (e, s) {
-      final nowUtc = DateTime.now().toUtc();
-      final event = SyncAction<AccountEntity>.delete(
-        dataId: accountId,
-        createdAt: nowUtc,
-        updatedAt: nowUtc,
+      return await handleWithSync<void>(
+        method: () => _accountsNetworkDataSource.deleteAccount(accountId),
+        addEventMethod: () async {
+          final nowUtc = DateTime.now().toUtc();
+          final event = SyncAction<AccountEntity>.delete(
+            dataId: accountId,
+            createdAt: nowUtc,
+            updatedAt: nowUtc,
+          );
+          await _accountEventsSyncDataSource.addEvent(event);
+        },
       );
-      await _accountEventsSyncDataSource.addEvent(event);
+    } on RestClientException catch (e, s) {
       final resException = switch (e) {
         StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
         _ => e,
@@ -146,6 +167,7 @@ final class AccountRepositoryImpl implements AccountRepository {
   // TODO(frosterlolz): много грязи! нужно рефачить
   @override
   Stream<DataResult<AccountDetailEntity>> getAccountDetail(int id) async* {
+    await _syncEvents();
     final account = await _accountsLocalDataSource.fetchAccount(id);
     if (account != null) {
       final accountTransactions = await _transactionsLocalStorage.fetchTransactions(account.id);
@@ -190,6 +212,7 @@ final class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
+  @Deprecated('For testing only, now REST API is used')
   Future<void> generateMockData() async {
     final accountsCount = await _accountsLocalDataSource.fetchAccountsCount();
     if (accountsCount > 0) return;

@@ -8,7 +8,10 @@ part 'database.g.dart';
 /// {@template database}
 /// The drift-managed database configuration
 /// {@endtemplate}
-@DriftDatabase(tables: [AccountItems, AccountEventItems, TransactionItems, TransactionCategoryItems])
+@DriftDatabase(
+  tables: [AccountItems, AccountEventItems, TransactionItems, TransactionCategoryItems],
+  daos: [AccountsDao, AccountEventsDao, TransactionsDao],
+)
 class AppDatabase extends _$AppDatabase {
   /// {@macro database}
   AppDatabase(super.e);
@@ -16,12 +19,21 @@ class AppDatabase extends _$AppDatabase {
   /// {@macro database}
   AppDatabase.defaults({required String name})
       : super(
-    driftDatabase(
-      name: name,
-      native: const DriftNativeOptions(shareAcrossIsolates: true),
-    ),
-  );
+          driftDatabase(
+            name: name,
+            native: const DriftNativeOptions(shareAcrossIsolates: true),
+          ),
+        );
 
   @override
-  int get schemaVersion => 1;
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (migration, from, to) async {
+          if (from == 1) {
+            await migration.createTable(accountEventItems);
+          }
+        },
+      );
+
+  @override
+  int get schemaVersion => 2;
 }

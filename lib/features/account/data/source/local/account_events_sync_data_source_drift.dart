@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:database/database.dart';
 import 'package:drift/drift.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
-import 'package:yang_money_catcher/core/data/sync_backup/sync_action_type.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 
@@ -49,9 +48,9 @@ final class AccountEventsSyncDataSourceDrift implements AccountEventsSyncDataSou
     if (merged == null) {
       await _dao.deleteEvent(accountId);
     } else {
-      final updatedCompanion = AccountEventItemsCompanion.insert(
-        actionType: merged.actionType.name,
-        account: accountId,
+      final updatedCompanion = AccountEventItemsCompanion(
+        actionType: Value(merged.actionType.name),
+        account: Value(accountId),
         createdAt: Value(merged.createdAt),
       );
       await _dao.updateEvent(updatedCompanion);
@@ -66,16 +65,21 @@ final class AccountEventsSyncDataSourceDrift implements AccountEventsSyncDataSou
 
   SyncAction<AccountEntity> _fromVO(AccountEventsValueObject vo) {
     final actionType = SyncActionType.fromName(vo.event.actionType);
-    final account = AccountEntity.fromTableItem(vo.account);
     return switch (actionType) {
-      SyncActionType.create =>
-        SyncAction.create(createdAt: vo.event.createdAt, updatedAt: vo.event.updatedAt, data: account),
-      SyncActionType.update =>
-        SyncAction.update(createdAt: vo.event.createdAt, updatedAt: vo.event.updatedAt, data: account),
+      SyncActionType.create => SyncAction.create(
+          createdAt: vo.event.createdAt,
+          updatedAt: vo.event.updatedAt,
+          data: AccountEntity.fromTableItem(vo.account ?? (throw StateError('Account is null'))),
+        ),
+      SyncActionType.update => SyncAction.update(
+          createdAt: vo.event.createdAt,
+          updatedAt: vo.event.updatedAt,
+          data: AccountEntity.fromTableItem(vo.account ?? (throw StateError('Account is null'))),
+        ),
       SyncActionType.delete => SyncAction<AccountEntity>.delete(
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
-          dataId: account.id,
+          dataId: vo.event.account,
         ),
     };
   }

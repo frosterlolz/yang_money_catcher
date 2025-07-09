@@ -7,7 +7,15 @@ part 'account_events_dao.g.dart';
 class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEventsDaoMixin {
   AccountEventsDao(super.attachedDatabase);
 
+  Future<int> eventsRowCount() async {
+    final isExists = await _isTableExists();
+    if (!isExists) return 0;
+    return accountEventItems.count().getSingle();
+  }
+
   Future<List<AccountEventsValueObject>> fetchEvents() async {
+    final isExists = await _isTableExists();
+    if (!isExists) return [];
     final eventsWithRefs = await attachedDatabase.managers.accountEventItems
         .withReferences(
           (prefetch) => prefetch(account: true),
@@ -25,6 +33,8 @@ class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEvent
   }
 
   Future<AccountEventsValueObject?> fetchEvent(int accountId) async {
+    final isExists = await _isTableExists();
+    if (!isExists) return null;
     final accountEventWithRefs = await attachedDatabase.managers.accountEventItems
         .withReferences(
           (prefetch) => prefetch(account: true),
@@ -59,4 +69,6 @@ class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEvent
         ),
       )
       .watch();
+
+  Future<bool> _isTableExists() => attachedDatabase.managers.accountEventItems.exists();
 }

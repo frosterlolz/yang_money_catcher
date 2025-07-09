@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:yang_money_catcher/core/data/sync_backup/sync_action_type.dart';
 
 part 'sync_action.freezed.dart';
 
@@ -52,4 +51,12 @@ sealed class SyncAction<T> with _$SyncAction<T> {
         SyncAction$Update() => SyncActionType.update,
         SyncAction$Delete() => SyncActionType.delete,
       };
+}
+
+enum SyncActionType {
+  create,
+  update,
+  delete;
+
+  factory SyncActionType.fromName(String name) => values.firstWhere((e) => e.name == name);
 }

@@ -4,13 +4,11 @@ class AccountEventsValueObject {
   factory AccountEventsValueObject({
     required AccountEventItem event,
     required AccountItem? account,
-  }) {
-    if (account == null) throw StateError('AccountEventsValueObject creation failed: account is null');
-    return AccountEventsValueObject._(
-      event: event,
-      account: account,
-    );
-  }
+  }) =>
+      AccountEventsValueObject._(
+        event: event,
+        account: account,
+      );
 
   const AccountEventsValueObject._({
     required this.event,
@@ -18,5 +16,5 @@ class AccountEventsValueObject {
   });
 
   final AccountEventItem event;
-  final AccountItem account;
+  final AccountItem? account;
 }
