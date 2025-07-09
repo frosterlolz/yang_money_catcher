@@ -10,25 +10,28 @@ final class AccountsNetworkDataSource$Rest implements AccountsNetworkDataSource 
   final RestClient _client;
 
   @override
-  Future<AccountEntity?> createAccount(AccountRequest$Create request) async {
-    final res = await _client.post('/accounts', body: request.toJson());
-    return res == null ? null : AccountEntity.fromJson(res);
+  Future<AccountEntity> createAccount(AccountRequest$Create request) async {
+    final response = await _client.post('createAccount', body: request.toJson());
+    if (response == null) throw const ClientException(message: 'Unexpected null response from POST createAccount');
+    return AccountEntity.fromJson(response);
   }
 
   @override
   Future<void> deleteAccount(int id) => _client.delete('/accounts/$id');
 
   @override
-  Future<AccountDetailEntity?> getAccount(int id) async {
-    final res = await _client.get('accounts/$id');
-    return res == null ? null : AccountDetailEntity.fromJson(res);
+  Future<AccountDetailEntity> getAccount(int id) async {
+    final response = await _client.get('accounts/$id');
+    if (response == null) throw const ClientException(message: 'Unexpected null response from GET getAccount');
+    return AccountDetailEntity.fromJson(response);
   }
 
   @override
-  Future<AccountHistory?> getAccountHistory(int id) async {
+  Future<AccountHistory> getAccountHistory(int id) async {
     final response = await _client.get('accounts/$id/history');
+    if (response == null) throw const ClientException(message: 'Unexpected null response from GET getAccountHistory');
 
-    return response == null ? null : AccountHistory.fromJson(response);
+    return AccountHistory.fromJson(response);
   }
 
   @override
@@ -40,8 +43,9 @@ final class AccountsNetworkDataSource$Rest implements AccountsNetworkDataSource 
   }
 
   @override
-  Future<AccountEntity?> updateAccount(AccountRequest$Update request) async {
-    final updatedAccount = await _client.put('/accounts/${request.id}', body: request.toJson());
-    return updatedAccount == null ? null : AccountEntity.fromJson(updatedAccount);
+  Future<AccountEntity> updateAccount(AccountRequest$Update request) async {
+    final response = await _client.put('/accounts/${request.id}', body: request.toJson());
+    if (response == null) throw const ClientException(message: 'Unexpected null response from POST updateAccount');
+    return AccountEntity.fromJson(response);
   }
 }

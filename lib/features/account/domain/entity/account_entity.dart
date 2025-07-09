@@ -51,8 +51,6 @@ class AccountDetailEntity with _$AccountDetailEntity {
     required DateTime updatedAt,
   }) = _AccountDetailEntity;
 
-  factory AccountDetailEntity.fromJson(JsonMap json) => _$AccountDetailEntityFromJson(json);
-
   factory AccountDetailEntity.fromLocalSource(
     AccountEntity item, {
     required List<TransactionCategoryStat> incomeStats,
@@ -67,5 +65,18 @@ class AccountDetailEntity with _$AccountDetailEntity {
         expenseStats: expenseStats,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
+      );
+
+  factory AccountDetailEntity.fromJson(JsonMap json) => _$AccountDetailEntityFromJson(json);
+
+  AccountDetailEntity merge(AccountEntity other) => AccountDetailEntity(
+        id: other.id,
+        name: other.name,
+        balance: other.balance,
+        currency: other.currency,
+        createdAt: other.createdAt,
+        updatedAt: other.updatedAt,
+        incomeStats: incomeStats,
+        expenseStats: expenseStats,
       );
 }

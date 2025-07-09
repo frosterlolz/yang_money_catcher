@@ -1,4 +1,5 @@
-import 'package:database/src/app_tables/app_tables.dart';
+import 'package:database/src/features/accounts/accounts.dart';
+import 'package:database/src/features/transactions/transactions.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 

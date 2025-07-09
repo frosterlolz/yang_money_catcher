@@ -67,7 +67,7 @@ final class AppException$Simple implements AppException {
   /// }
   /// ```
   factory AppException$Simple.fromStructuredException(JsonMap json) {
-    final message = json['message'];
+    final message = [json['common'], json['error'], json['message']].whereType<String>().firstOrNull;
     if (message is! String) return const AppException$Simple(null);
 
     return AppException$Simple(message);

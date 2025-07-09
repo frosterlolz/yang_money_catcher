@@ -8,17 +8,17 @@ abstract interface class AccountsNetworkDataSource {
   Future<List<AccountEntity>> getAccounts();
 
   /// Создаёт новый счёт.
-  Future<AccountEntity?> createAccount(AccountRequest$Create request);
+  Future<AccountEntity> createAccount(AccountRequest$Create request);
 
   /// Возвращает детали счёта по ID.
-  Future<AccountDetailEntity?> getAccount(int id);
+  Future<AccountDetailEntity> getAccount(int id);
 
   /// Обновляет существующий счёт.
-  Future<AccountEntity?> updateAccount(AccountRequest$Update request);
+  Future<AccountEntity> updateAccount(AccountRequest$Update request);
 
   /// Удаляет счёт по ID.
   Future<void> deleteAccount(int id);
 
   /// Получает историю операций по счёту.
-  Future<AccountHistory?> getAccountHistory(int id);
+  Future<AccountHistory> getAccountHistory(int id);
 }

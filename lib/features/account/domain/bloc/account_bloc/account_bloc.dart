@@ -12,7 +12,7 @@ part 'account_bloc.freezed.dart';
 typedef _Emitter = Emitter<AccountState>;
 
 class AccountBloc extends Bloc<AccountEvent, AccountState> {
-  AccountBloc(this._accountRepository) : super(const AccountState.processing(null)) {
+  AccountBloc(this._accountRepository) : super(const AccountState.processing(null, isOffline: true)) {
     on<AccountEvent>(
       (event, emitter) => switch (event) {
         _Load() => _load(event, emitter),
@@ -25,29 +25,43 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   final AccountRepository _accountRepository;
 
   Future<void> _load(_Load event, _Emitter emitter) async {
-    emitter(AccountState.processing(state.account));
+    emitter(AccountState.processing(state.account, isOffline: state.isOffline));
     try {
-      final account = await _accountRepository.getAccountDetail(event.accountId);
-      emitter(AccountState.idle(account));
+      final accountStream = _accountRepository.getAccountDetail(event.accountId);
+      await for (final account in accountStream) {
+        switch (account.isOffline) {
+          case true:
+            emitter(AccountState.processing(account.data, isOffline: true));
+          case false:
+            emitter(AccountState.processing(account.data, isOffline: false));
+        }
+      }
     } on Object catch (e, s) {
-      emitter(AccountState.error(state.account, error: e));
+      emitter(AccountState.error(state.account, isOffline: state.isOffline, error: e));
       onError(e, s);
     }
   }
 
   Future<void> _update(_Update event, _Emitter emitter) async {
-    emitter(AccountState.processing(state.account));
+    emitter(AccountState.processing(state.account, isOffline: state.isOffline));
     try {
       final accountsStream = switch (event.request) {
         final AccountRequest$Create createRequest => _accountRepository.createAccount(createRequest),
         final AccountRequest$Update updateRequest => _accountRepository.updateAccount(updateRequest),
       };
       await for (final account in accountsStream) {
-        final details = await _accountRepository.getAccountDetail(account.id);
-        emitter(AccountState.idle(details));
+        switch (account.isOffline) {
+          case true:
+            emitter(AccountState.processing(state.account?.merge(account.data), isOffline: true));
+          case false:
+            final details = _accountRepository.getAccountDetail(account.data.id);
+            await for (final accountResult in details) {
+              emitter(AccountState.idle(accountResult.data, isOffline: accountResult.isOffline));
+            }
+        }
       }
     } on Object catch (e, s) {
-      emitter(AccountState.error(state.account, error: e));
+      emitter(AccountState.error(state.account, isOffline: state.isOffline, error: e));
       onError(e, s);
     }
   }

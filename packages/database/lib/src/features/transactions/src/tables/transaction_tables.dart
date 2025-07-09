@@ -1,4 +1,4 @@
-import 'package:database/src/app_tables/account_tables.dart';
+import 'package:database/src/features/accounts/accounts.dart';
 import 'package:database/src/utils/table_mixin.dart';
 import 'package:drift/drift.dart';
 

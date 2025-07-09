@@ -34,8 +34,8 @@ void main() {
     when(mockAccountsStorage.updateAccount(request)).thenAnswer((_) async => accountEntity);
     final account = await repository.createAccount(request).first;
 
-    expect(account.name, equals(accountEntity.name));
-    expect(account.balance, equals(account.balance));
+    expect(account.data.name, equals(accountEntity.name));
+    expect(account.data.balance, equals(account.data.balance));
   });
 
   test('Получение списка аккаунтов', () async {
@@ -51,7 +51,7 @@ void main() {
     when(mockAccountsStorage.fetchAccounts()).thenAnswer((_) async => [firstAccountEntity, secondAccountEntity]);
     final accounts = await repository.getAccounts().first;
 
-    expect(accounts.length, equals(secondAccountEntity.id));
+    expect(accounts.data.length, equals(secondAccountEntity.id));
   });
 
   test('Обновление аккаунта', () async {
@@ -61,16 +61,16 @@ void main() {
     final created = await repository.createAccount(createRequest).first;
 
     final updateRequest = AccountRequest$Update(
-      id: created.id,
+      id: created.data.id,
       name: 'Updated name',
-      balance: created.balance,
-      currency: created.currency,
+      balance: created.data.balance,
+      currency: created.data.currency,
     );
     final updatedAccount = accountEntity.copyWith(name: updateRequest.name);
     when(mockAccountsStorage.updateAccount(updateRequest)).thenAnswer((_) async => updatedAccount);
     final updated = await repository.updateAccount(updateRequest).first;
 
-    expect(updated.name, equals(updatedAccount.name));
+    expect(updated.data.name, equals(updatedAccount.name));
   });
 
   test('Получение деталей аккаунта', () async {
@@ -82,9 +82,9 @@ void main() {
     when(mockAccountsStorage.fetchAccount(accountEntity.id)).thenAnswer((_) async => accountEntity);
     when(mockTransactionsLocalDataSource.fetchTransactions(accountEntity.id)).thenAnswer((_) async => []);
     when(mockTransactionsLocalDataSource.fetchTransactionCategories()).thenAnswer((_) async => []);
-    final detail = await repository.getAccountDetail(created.id);
+    final detail = await repository.getAccountDetail(created.data.id).first;
 
-    expect(detail.name, equals(accountEntity.name));
+    expect(detail.data.name, equals(accountEntity.name));
   });
 
   test('Получение истории аккаунта', () async {
@@ -93,9 +93,9 @@ void main() {
     when(mockAccountsStorage.updateAccount(request)).thenAnswer((_) async => accountEntity);
     final created = await repository.createAccount(request).first;
 
-    when(mockAccountsStorage.fetchAccount(created.id)).thenAnswer((_) async => accountEntity);
-    final history = await repository.getAccountHistory(created.id);
+    when(mockAccountsStorage.fetchAccount(created.data.id)).thenAnswer((_) async => accountEntity);
+    final history = await repository.getAccountHistory(created.data.id).first;
 
-    expect(history.accountId, equals(created.id));
+    expect(history.data.accountId, equals(created.data.id));
   });
 }

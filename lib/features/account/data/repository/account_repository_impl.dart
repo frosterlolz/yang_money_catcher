@@ -1,4 +1,8 @@
 import 'package:collection/collection.dart';
+import 'package:rest_client/rest_client.dart';
+import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
+import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
+import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source.dart';
@@ -24,66 +28,110 @@ final class AccountRepositoryImpl implements AccountRepository {
   final AccountsNetworkDataSource _accountsNetworkDataSource;
   final AccountsLocalDataSource _accountsLocalDataSource;
   final TransactionsLocalDataSource _transactionsLocalStorage;
-  final Map<int, AccountHistory> _accountHistories = {};
+
+  final List<SyncAction<TransactionEntity>> _actions = [];
 
   @override
-  Stream<Iterable<AccountEntity>> getAccounts() async* {
+  Stream<DataResult<Iterable<AccountEntity>>> getAccounts() async* {
     final localAccounts = await _accountsLocalDataSource.fetchAccounts();
-    yield localAccounts;
-    final networkAccounts = await _accountsNetworkDataSource.getAccounts();
-    if (!const ListEquality<AccountEntity>().equals(localAccounts, networkAccounts)) {
-      _accountsLocalDataSource.syncAccounts(networkAccounts).ignore();
+    yield DataResult.offline(data: localAccounts);
+    try {
+      final networkAccounts = await _accountsNetworkDataSource.getAccounts();
+      if (!const ListEquality<AccountEntity>().equals(localAccounts, networkAccounts)) {
+        _accountsLocalDataSource.syncAccounts(networkAccounts).ignore();
+      }
+      yield DataResult.online(data: networkAccounts);
+    } on StructuredBackendException catch (e, s) {
+      final appException = AppException$Simple.fromStructuredException(e.error);
+      Error.throwWithStackTrace(appException, s);
     }
-    yield networkAccounts;
   }
 
   @override
-  Stream<AccountEntity> createAccount(AccountRequest$Create request) async* {
+  Stream<DataResult<AccountEntity>> createAccount(AccountRequest$Create request) async* {
     final localAccount = await _accountsLocalDataSource.updateAccount(request);
-    yield localAccount;
+    yield DataResult.offline(data: localAccount);
     final restAccount = await _accountsNetworkDataSource.createAccount(request);
     if (localAccount != restAccount) {
       _accountsLocalDataSource.syncAccount(restAccount).ignore();
     }
-    yield restAccount;
+    yield DataResult.online(data: restAccount);
   }
 
   @override
-  Stream<AccountEntity> updateAccount(AccountRequest$Update request) async* {
+  Stream<DataResult<AccountEntity>> updateAccount(AccountRequest$Update request) async* {
     final localAccount = await _accountsLocalDataSource.updateAccount(request);
-    yield localAccount;
+    yield DataResult.offline(data: localAccount);
     final restAccount = await _accountsNetworkDataSource.updateAccount(request);
     if (localAccount != restAccount) {
       _accountsLocalDataSource.syncAccount(restAccount).ignore();
     }
-    yield restAccount;
+    yield DataResult.online(data: restAccount);
   }
 
   @override
-  Future<void> deleteAccount(int accountId) async {
+  Stream<DataResult<void>> deleteAccount(int accountId) async* {
     await _accountsLocalDataSource.deleteAccount(accountId);
+    yield const DataResult.offline(data: null);
     await _accountsNetworkDataSource.deleteAccount(accountId);
+    yield const DataResult.online(data: null);
+  }
+
+  // TODO(frosterlolz): много грязи! нужно рефачить
+  @override
+  Stream<DataResult<AccountDetailEntity>> getAccountDetail(int id) async* {
+    final account = await _accountsLocalDataSource.fetchAccount(id);
+    if (account != null) {
+      final accountTransactions = await _transactionsLocalStorage.fetchTransactions(account.id);
+      final categories = await _transactionsLocalStorage.fetchTransactionCategories();
+      final incomeCategories = categories.where((category) => category.isIncome);
+      final expenseCategories = categories.where((category) => !category.isIncome);
+      final incomeStats = _calculateFromCategories(incomeCategories, accountTransactions);
+      final expenseStats = _calculateFromCategories(expenseCategories, accountTransactions);
+      final accountDetails$Local = AccountDetailEntity.fromLocalSource(
+        account,
+        incomeStats: incomeStats.toList(),
+        expenseStats: expenseStats.toList(),
+      );
+      yield DataResult.offline(data: accountDetails$Local);
+      try {
+        final accountDetails$Rest = await _accountsNetworkDataSource.getAccount(id);
+        yield DataResult.online(data: accountDetails$Rest);
+      } on StructuredBackendException catch (e, s) {
+        final appException = AppException$Simple.fromStructuredException(e.error);
+        Error.throwWithStackTrace(appException, s);
+      }
+    }
   }
 
   @override
-  Future<AccountDetailEntity> getAccountDetail(int id) async {
-    final account = await _accountsLocalDataSource.fetchAccount(id);
-    if (account == null) {
-      throw Exception('Account not found');
+  Stream<DataResult<AccountHistory>> getAccountHistory(int accountId) async* {
+    final account$Local = await _accountsLocalDataSource.fetchAccount(accountId);
+    if (account$Local != null) {
+      // TODO(frosterlolz): на данном этапе не актульные данные
+      const AccountHistory? history = null;
+      final accountHistory$Local =
+          AccountHistory.fromLocalSource(account$Local, history: history == null ? [] : history.history);
+      yield DataResult.offline(data: accountHistory$Local);
     }
-    final accountTransactions = await _transactionsLocalStorage.fetchTransactions(account.id);
-    final categories = await _transactionsLocalStorage.fetchTransactionCategories();
-    final incomeCategories = categories.where((category) => category.isIncome);
-    final expenseCategories = categories.where((category) => !category.isIncome);
+    final accountHistory$Rest = await _accountsNetworkDataSource.getAccountHistory(accountId);
+    yield DataResult.online(data: accountHistory$Rest);
+  }
 
-    final incomeStats = _calculateFromCategories(incomeCategories, accountTransactions);
-    final expenseStats = _calculateFromCategories(expenseCategories, accountTransactions);
-
-    return AccountDetailEntity.fromLocalSource(
-      account,
-      incomeStats: incomeStats.toList(),
-      expenseStats: expenseStats.toList(),
-    );
+  Future<void> generateMockData() async {
+    final accountsCount = await _accountsLocalDataSource.fetchAccountsCount();
+    if (accountsCount > 0) return;
+    final requests = List.generate(
+      10,
+      (index) => AccountRequest.create(
+        name: 'Account $index',
+        balance: '100$index.00',
+        currency: Currency.rub,
+      ),
+    ).cast<AccountRequest$Create>();
+    for (final request in requests) {
+      await createAccount(request).first;
+    }
   }
 
   // TODO(frosterlolz): временный метод
@@ -103,31 +151,20 @@ final class AccountRepositoryImpl implements AccountRepository {
     return transactionStats;
   }
 
-  @override
-  Future<AccountHistory> getAccountHistory(int accountId) async {
-    final account = await _accountsLocalDataSource.fetchAccount(accountId);
-    if (account == null) {
-      throw Exception('Account not found');
+  void _addToSyncEvents(SyncAction<TransactionEntity> event) {
+    final index = _actions.indexWhere((a) => a.id == event.id);
+    if (index == -1) {
+      _actions.add(event);
+      return;
     }
-    // TODO(frosterlolz): на данном этапе не актульные данные
-    final history = _accountHistories[accountId];
 
-    return AccountHistory.fromLocalSource(account, history: history == null ? [] : history.history);
-  }
+    final existing = _actions[index];
+    final merged = existing.merge(event);
 
-  Future<void> generateMockData() async {
-    final accountsCount = await _accountsLocalDataSource.fetchAccountsCount();
-    if (accountsCount > 0) return;
-    final requests = List.generate(
-      10,
-      (index) => AccountRequest.create(
-        name: 'Account $index',
-        balance: '100$index.00',
-        currency: Currency.rub,
-      ),
-    ).cast<AccountRequest$Create>();
-    for (final request in requests) {
-      await createAccount(request).first;
+    if (merged == null) {
+      _actions.removeAt(index);
+    } else {
+      _actions[index] = merged;
     }
   }
 }
