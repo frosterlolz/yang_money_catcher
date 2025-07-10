@@ -36,6 +36,7 @@ abstract class MockAccountEntitiesHelper {
           AccountRequest$Create() => id,
           AccountRequest$Update(:final id) => id,
         },
+        remoteId: 1,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         name: request.name,

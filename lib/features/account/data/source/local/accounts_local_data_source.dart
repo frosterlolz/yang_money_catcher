@@ -1,3 +1,4 @@
+import 'package:yang_money_catcher/features/account/data/dto/dto.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 
@@ -9,12 +10,25 @@ abstract interface class AccountsLocalDataSource {
   /// Обновляет аккаунты в базе данных.
   ///
   /// Возвращает список обновленных аккаунтов.
-  Future<List<AccountEntity>> syncAccounts(List<AccountEntity> accounts);
+  Future<List<AccountEntity>> syncAccounts({
+    required List<AccountEntity> localAccounts,
+    required List<AccountDto> remoteAccounts,
+  });
 
   /// Обновляет аккаунт в базе данных.
   ///
   /// Возвращает обновленный аккаунт
   Future<AccountEntity> syncAccount(AccountEntity account);
+
+  /// Обновляет аккаунт в базе данных.
+  ///
+  /// Возвращает обновленный аккаунт
+  Future<AccountEntity> syncAccountDetails(AccountDetailsDto account, {int? id});
+
+  /// Обновляет аккаунт в базе данных с учетом истории.
+  ///
+  /// Возвращает обновленный аккаунт
+  Future<AccountEntity> syncAccountHistory(int? id, {required AccountHistoryDto accountHistory});
 
   /// Загружает список всех аккаунтов из базы данных.
   ///

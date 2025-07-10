@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:rest_client/rest_client.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/utils/sync_handler_mixin.dart';
@@ -40,11 +39,12 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
     final localAccounts = await _accountsLocalDataSource.fetchAccounts();
     yield DataResult.offline(data: localAccounts);
     try {
-      final networkAccounts = await _accountsNetworkDataSource.getAccounts();
-      if (!const ListEquality<AccountEntity>().equals(localAccounts, networkAccounts)) {
-        _accountsLocalDataSource.syncAccounts(networkAccounts).ignore();
-      }
-      yield DataResult.online(data: networkAccounts);
+      final networkAccounts$Dto = await _accountsNetworkDataSource.getAccounts();
+      final syncedAccounts = await _accountsLocalDataSource.syncAccounts(
+        localAccounts: localAccounts,
+        remoteAccounts: networkAccounts$Dto,
+      );
+      yield DataResult.online(data: syncedAccounts);
     } on StructuredBackendException catch (e, s) {
       final appException = AppException$Simple.fromStructuredException(e.error);
       Error.throwWithStackTrace(appException, s);
@@ -66,9 +66,10 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
         method: () async {
           final request =
               AccountRequest$Create(name: account.name, balance: account.balance, currency: account.currency);
-          final restAccount = await _accountsNetworkDataSource.createAccount(request);
-          _accountsLocalDataSource.syncAccount(restAccount).ignore();
-          return restAccount;
+          final restAccount$Dto = await _accountsNetworkDataSource.createAccount(request);
+          final restAccount = AccountEntity.merge(restAccount$Dto, account.id);
+          final syncedAccount = await _accountsLocalDataSource.syncAccount(restAccount);
+          return syncedAccount;
         },
         addEventMethod: () async {
           final nowUtc = DateTime.now().toUtc();
@@ -108,10 +109,10 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
             balance: account.balance,
             currency: account.currency,
           );
-          final restAccount = await _accountsNetworkDataSource.updateAccount(request);
-          _accountsLocalDataSource.syncAccount(restAccount).ignore();
-
-          return restAccount;
+          final restAccount$Dto = await _accountsNetworkDataSource.updateAccount(request);
+          final restAccount = AccountEntity.merge(restAccount$Dto, account.id);
+          final syncedAccount = await _accountsLocalDataSource.syncAccount(restAccount);
+          return syncedAccount;
         },
         addEventMethod: () async {
           final nowUtc = DateTime.now().toUtc();
@@ -144,7 +145,12 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
   Future<void> _deleteAccountWithSync(int accountId) async {
     try {
       return await handleWithSync<void>(
-        method: () => _accountsNetworkDataSource.deleteAccount(accountId),
+        method: () async {
+          final accountToDelete = await _accountsLocalDataSource.fetchAccount(accountId);
+          final remoteId = accountToDelete?.remoteId;
+          if (remoteId == null) return;
+          return _accountsNetworkDataSource.deleteAccount(remoteId);
+        },
         addEventMethod: () async {
           final nowUtc = DateTime.now().toUtc();
           final event = SyncAction<AccountEntity>.delete(
@@ -168,27 +174,42 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
   @override
   Stream<DataResult<AccountDetailEntity>> getAccountDetail(int id) async* {
     await _syncEvents();
-    final account = await _accountsLocalDataSource.fetchAccount(id);
-    if (account != null) {
-      final accountTransactions = await _transactionsLocalStorage.fetchTransactions(account.id);
+    final account$Local = await _accountsLocalDataSource.fetchAccount(id);
+    final remoteId = account$Local?.remoteId;
+    if (account$Local != null) {
+      if (remoteId == null) {
+        await _accountsLocalDataSource.deleteAccount(account$Local.id);
+        throw StateError('Account has no remote id after sync');
+      }
+      final accountTransactions = await _transactionsLocalStorage.fetchTransactions(account$Local.id);
       final categories = await _transactionsLocalStorage.fetchTransactionCategories();
       final incomeCategories = categories.where((category) => category.isIncome);
       final expenseCategories = categories.where((category) => !category.isIncome);
       final incomeStats = _calculateFromCategories(incomeCategories, accountTransactions);
       final expenseStats = _calculateFromCategories(expenseCategories, accountTransactions);
       final accountDetails$Local = AccountDetailEntity.fromLocalSource(
-        account,
+        account$Local,
         incomeStats: incomeStats.toList(),
         expenseStats: expenseStats.toList(),
       );
       yield DataResult.offline(data: accountDetails$Local);
-      try {
-        final accountDetails$Rest = await _accountsNetworkDataSource.getAccount(id);
-        yield DataResult.online(data: accountDetails$Rest);
-      } on StructuredBackendException catch (e, s) {
-        final appException = AppException$Simple.fromStructuredException(e.error);
-        Error.throwWithStackTrace(appException, s);
-      }
+    } else {
+      // TODO(frosterlolz): можно дописать возможность фетчить по remoteId
+      throw StateError('Account not found');
+    }
+    try {
+      final accountDetails$RestDto = await _accountsNetworkDataSource.getAccount(remoteId);
+      final syncedAccount =
+          await _accountsLocalDataSource.syncAccountDetails(accountDetails$RestDto, id: account$Local.id);
+      final accountDetails$Synced = AccountDetailEntity.fromLocalSource(
+        syncedAccount,
+        incomeStats: accountDetails$RestDto.incomeStats,
+        expenseStats: accountDetails$RestDto.expenseStats,
+      );
+      yield DataResult.online(data: accountDetails$Synced);
+    } on StructuredBackendException catch (e, s) {
+      final appException = AppException$Simple.fromStructuredException(e.error);
+      Error.throwWithStackTrace(appException, s);
     }
   }
 
@@ -204,8 +225,14 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
       yield DataResult.offline(data: accountHistory$Local);
     }
     try {
-      final accountHistory$Rest = await _accountsNetworkDataSource.getAccountHistory(accountId);
-      yield DataResult.online(data: accountHistory$Rest);
+      final accountHistory$RestDto = await _accountsNetworkDataSource.getAccountHistory(accountId);
+      final account =
+          await _accountsLocalDataSource.syncAccountHistory(account$Local?.id, accountHistory: accountHistory$RestDto);
+      final accountHistorySynced = AccountHistory.fromLocalSource(
+        account,
+        history: accountHistory$RestDto.history.map(AccountHistoryItem.fromDto).toList(),
+      );
+      yield DataResult.online(data: accountHistorySynced);
     } on StructuredBackendException catch (e, s) {
       final appException = AppException$Simple.fromStructuredException(e.error);
       Error.throwWithStackTrace(appException, s);

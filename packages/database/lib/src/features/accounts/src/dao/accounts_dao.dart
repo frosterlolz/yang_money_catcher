@@ -9,10 +9,17 @@ class AccountsDao extends DatabaseAccessor<AppDatabase> with _$AccountsDaoMixin 
 
   Future<int> accountsRowCount() => accountItems.count().getSingle();
 
-  Future<void> syncAccounts(List<AccountItemsCompanion> companions) async {
+  Future<void> syncAccounts({
+    required List<AccountItemsCompanion> companionsToUpsert,
+    required List<int> idSToDelete,
+  }) async {
     await batch((batch) {
-      batch..deleteAll(accountItems)
-      ..insertAll(accountItems, companions);
+      if (idSToDelete.isNotEmpty) {
+        batch.deleteWhere(accountItems, (f) => f.id.isIn(idSToDelete));
+      }
+      if (companionsToUpsert.isNotEmpty) {
+        batch.insertAllOnConflictUpdate(accountItems, companionsToUpsert);
+      }
     });
   }
 

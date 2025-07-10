@@ -1,11 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:yang_money_catcher/core/types/json_types.dart';
+import 'package:yang_money_catcher/features/account/data/dto/account_history_dto.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
-import 'package:yang_money_catcher/features/account/domain/entity/account_state.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 
 part 'account_history.freezed.dart';
-part 'account_history.g.dart';
 
 @freezed
 class AccountHistory with _$AccountHistory {
@@ -16,8 +14,6 @@ class AccountHistory with _$AccountHistory {
     required String currencyBalance,
     required List<AccountHistoryItem> history,
   }) = _AccountHistory;
-
-  factory AccountHistory.fromJson(JsonMap json) => _$AccountHistoryFromJson(json);
 
   factory AccountHistory.fromLocalSource(
     AccountEntity item, {
@@ -44,5 +40,30 @@ class AccountHistoryItem with _$AccountHistoryItem {
     required DateTime createdAt,
   }) = _AccountHistoryItem;
 
-  factory AccountHistoryItem.fromJson(JsonMap json) => _$AccountHistoryItemFromJson(json);
+  factory AccountHistoryItem.fromDto(AccountHistoryItemDto dto) => AccountHistoryItem(
+        id: dto.id,
+        accountId: dto.accountId,
+        changeType: dto.changeType,
+        previousState: AccountState.fromDto(dto.previousState),
+        newState: AccountState.fromDto(dto.newState),
+        changeTimestamp: dto.changeTimestamp,
+        createdAt: dto.createdAt,
+      );
+}
+
+@freezed
+class AccountState with _$AccountState {
+  const factory AccountState({
+    required int id,
+    required String name,
+    required String balance,
+    required Currency currency,
+  }) = _AccountState;
+
+  factory AccountState.fromDto(AccountStateDto dto) => AccountState(
+        id: dto.id,
+        name: dto.name,
+        balance: dto.balance,
+        currency: dto.currency,
+      );
 }

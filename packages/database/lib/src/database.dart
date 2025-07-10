@@ -1,3 +1,4 @@
+import 'package:database/src/database.steps.dart';
 import 'package:database/src/features/accounts/accounts.dart';
 import 'package:database/src/features/transactions/transactions.dart';
 import 'package:drift/drift.dart';
@@ -27,13 +28,17 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (migration, from, to) async {
-          if (from == 1) {
-            await migration.createTable(accountEventItems);
-          }
-        },
+        onUpgrade: stepByStep(
+          from1To2: (m, schema) async {
+            await m.createTable(accountEventItems);
+          },
+          from2To3: (m, schema) async {
+            await m.addColumn(accountItems, accountItems.remoteId);
+            await m.addColumn(accountEventItems, accountEventItems.accountRemoteId);
+          },
+        ),
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 }
