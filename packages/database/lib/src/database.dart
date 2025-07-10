@@ -47,9 +47,13 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(accountItems, accountItems.remoteId);
             await m.addColumn(accountEventItems, accountEventItems.accountRemoteId);
           },
+          from3To4: (Migrator m, Schema4 schema) async {
+            await m.addColumn(transactionItems, transactionItems.remoteId);
+            await m.createTable(transactionEventItems);
+          },
         ),
       );
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 }
