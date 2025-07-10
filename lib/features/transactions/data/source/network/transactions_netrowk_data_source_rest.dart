@@ -31,8 +31,9 @@ class TransactionsNetworkDataSource$Rest implements TransactionsNetworkDataSourc
 
   @override
   Future<List<TransactionDetailsDto>> getTransactions(TransactionFilters filters) async {
+    if (filters.accountRemoteId == null) return <TransactionDetailsDto>[];
     final transactions =
-        await _client.get('/transactions/account/${filters.accountId}/period', queryParams: filters.toJson());
+        await _client.get('/transactions/account/${filters.accountRemoteId}/period', queryParams: filters.toJson());
     final data = transactions?['data'];
     if (data is! JsonList) return [];
     return data.cast<JsonMap>().map(TransactionDetailsDto.fromJson).toList();

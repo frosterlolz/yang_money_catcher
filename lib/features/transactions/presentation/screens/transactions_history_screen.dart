@@ -11,6 +11,8 @@ import 'package:yang_money_catcher/core/utils/extensions/key_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/core/utils/models/sort_types.dart';
+import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
+import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/initialization/presentation/dependencies_scope.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
@@ -40,10 +42,18 @@ class TransactionsHistoryScreen extends StatefulWidget implements AutoRouteWrapp
   State<TransactionsHistoryScreen> createState() => _TransactionsHistoryScreenState();
 
   @override
-  Widget wrappedRoute(BuildContext context) => BlocProvider(
-        create: (context) => TransactionsBloc(DependenciesScope.of(context).transactionsRepository),
-        child: this,
-      );
+  Widget wrappedRoute(BuildContext context) {
+    final dependenciesScope = DependenciesScope.of(context);
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => TransactionsBloc(dependenciesScope.transactionsRepository)),
+        BlocProvider(
+          create: (context) => AccountBloc(dependenciesScope.accountRepository)..add(AccountEvent.load(accountId)),
+        ),
+      ],
+      child: this,
+    );
+  }
 }
 
 class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> with _TransactionHistoryFormMixin {
@@ -53,13 +63,20 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
   void initState() {
     super.initState();
     _sortTileKey = GlobalKey();
-    _loadTransactions();
   }
 
-  Future<void> _loadTransactions() async {
+  void _accountListener(BuildContext context, AccountState state) {
+    final account = state.account;
+    if (account == null) return;
+    _loadTransactions(account);
+  }
+
+  Future<void> _loadTransactions([AccountDetailEntity? accountDetails]) async {
     if (!mounted) return;
+    final account = accountDetails ?? context.read<AccountBloc>().state.account;
     final filters = TransactionFilters(
       accountId: widget.accountId,
+      accountRemoteId: account?.remoteId,
       isIncome: widget.isIncome,
       startDate: _dateTimeRange.start,
       endDate: _dateTimeRange.end,
@@ -129,80 +146,84 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.myHistory),
-        actions: [
-          IconButton(onPressed: () => _onAnalyzeTap(context), icon: SvgPicture.asset(SvgIcons.calendarPlan)),
-        ],
-      ),
-      body: RefreshIndicator.adaptive(
-        onRefresh: _loadTransactions,
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: ListTile.divideTiles(
-                  context: context,
-                  tiles: [
-                    // beginning
-                    ListTile(
-                      onTap: _onSelectStartDate,
-                      tileColor: colorScheme.secondary,
-                      title: Text(context.l10n.beginning),
-                      trailing: Text(_dateTimeRange.start.ddMMMMyyyy),
-                    ),
-                    // end
-                    ListTile(
-                      onTap: _onSelectEndDate,
-                      tileColor: colorScheme.secondary,
-                      title: Text(context.l10n.end),
-                      trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
-                    ),
-                    // sort
-                    ListTile(
-                      key: _sortTileKey,
-                      onTap: _onSortTap,
-                      tileColor: colorScheme.secondary,
-                      title: Text(context.l10n.sorting),
-                      trailing: Text(context.l10n.sortingValue(_sortType.name)),
-                    ),
-                    // amount
-                    BlocBuilder<TransactionsBloc, TransactionsState>(
-                      builder: (context, transitionsState) => ListTile(
-                        tileColor: colorScheme.secondary,
-                        title: Text(context.l10n.amount),
-                        trailing: switch (transitionsState) {
-                          _ when transitionsState.transactions != null => Text(
-                              transitionsState.totalAmount.thousandsSeparated().withCurrency(
-                                    transitionsState.transactions!.firstOrNull?.account.currency.symbol ??
-                                        Currency.rub.symbol,
-                                    1,
-                                  ),
-                            ),
-                          TransactionsState$Error() => const SizedBox.shrink(),
-                          _ => const TypedProgressIndicator.small(isCentered: false),
-                        },
-                      ),
-                    ),
-                  ],
-                ).toList(),
-              ),
-            ),
-            // list with transactions
-            BlocBuilder<TransactionsBloc, TransactionsState>(
-              builder: (context, transactionsState) => switch (transactionsState) {
-                _ when transactionsState.transactions != null =>
-                  _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
-                TransactionsState$Error(:final error) => SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
-                  ),
-                _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
-              },
-            ),
+    return BlocListener<AccountBloc, AccountState>(
+      listenWhen: (o, c) => o.account?.id != c.account?.id,
+      listener: _accountListener,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.l10n.myHistory),
+          actions: [
+            IconButton(onPressed: () => _onAnalyzeTap(context), icon: SvgPicture.asset(SvgIcons.calendarPlan)),
           ],
+        ),
+        body: RefreshIndicator.adaptive(
+          onRefresh: _loadTransactions,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: ListTile.divideTiles(
+                    context: context,
+                    tiles: [
+                      // beginning
+                      ListTile(
+                        onTap: _onSelectStartDate,
+                        tileColor: colorScheme.secondary,
+                        title: Text(context.l10n.beginning),
+                        trailing: Text(_dateTimeRange.start.ddMMMMyyyy),
+                      ),
+                      // end
+                      ListTile(
+                        onTap: _onSelectEndDate,
+                        tileColor: colorScheme.secondary,
+                        title: Text(context.l10n.end),
+                        trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
+                      ),
+                      // sort
+                      ListTile(
+                        key: _sortTileKey,
+                        onTap: _onSortTap,
+                        tileColor: colorScheme.secondary,
+                        title: Text(context.l10n.sorting),
+                        trailing: Text(context.l10n.sortingValue(_sortType.name)),
+                      ),
+                      // amount
+                      BlocBuilder<TransactionsBloc, TransactionsState>(
+                        builder: (context, transitionsState) => ListTile(
+                          tileColor: colorScheme.secondary,
+                          title: Text(context.l10n.amount),
+                          trailing: switch (transitionsState) {
+                            _ when transitionsState.transactions != null => Text(
+                                transitionsState.totalAmount.thousandsSeparated().withCurrency(
+                                      transitionsState.transactions!.firstOrNull?.account.currency.symbol ??
+                                          Currency.rub.symbol,
+                                      1,
+                                    ),
+                              ),
+                            TransactionsState$Error() => const SizedBox.shrink(),
+                            _ => const TypedProgressIndicator.small(isCentered: false),
+                          },
+                        ),
+                      ),
+                    ],
+                  ).toList(),
+                ),
+              ),
+              // list with transactions
+              BlocBuilder<TransactionsBloc, TransactionsState>(
+                builder: (context, transactionsState) => switch (transactionsState) {
+                  _ when transactionsState.transactions != null =>
+                    _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
+                  TransactionsState$Error(:final error) => SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
+                    ),
+                  _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -44,16 +44,32 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(accountEventItems);
           },
           from2To3: (m, schema) async {
-            await m.addColumn(accountItems, accountItems.remoteId);
-            await m.addColumn(accountEventItems, accountEventItems.accountRemoteId);
+            await m.addColumn(schema.accountItems, schema.accountItems.remoteId);
+            await m.addColumn(schema.accountEventItems, schema.accountEventItems.accountRemoteId);
           },
           from3To4: (Migrator m, Schema4 schema) async {
-            await m.addColumn(transactionItems, transactionItems.remoteId);
-            await m.createTable(transactionEventItems);
+            await m.addColumn(schema.transactionItems, schema.transactionItems.remoteId);
+            await m.createTable(schema.transactionEventItems);
+          },
+          from4To5: (Migrator m, Schema5 schema) async {
+            // Очистка таблиц через SQL (удаляем все записи, сохраняя структуру)
+            await customStatement('DELETE FROM ${schema.accountItems.actualTableName};');
+            await customStatement('DELETE FROM ${schema.transactionItems.actualTableName};');
+
+            // Создаём уникальный индекс на remoteId
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_account_remote_id ON ${schema.accountItems.actualTableName}(${schema.accountItems.remoteId.name});',
+            );
+          },
+          from5To6: (Migrator m, Schema6 schema) async {
+            await m.deleteTable(schema.accountItems.actualTableName);
+            await m.deleteTable(schema.transactionItems.actualTableName);
+            await m.createTable(schema.accountItems);
+            await m.createTable(schema.transactionItems);
           },
         ),
       );
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 }

@@ -73,17 +73,18 @@ class TransactionDetailEntity with _$TransactionDetailEntity implements Comparab
 
   const TransactionDetailEntity._();
 
-  factory TransactionDetailEntity.merge(TransactionDetailsDto dto, int localId) => TransactionDetailEntity(
-        id: localId,
-        remoteId: dto.id,
-        account: AccountBrief.fromDto(dto.account),
-        category: dto.category,
-        amount: dto.amount,
-        transactionDate: dto.transactionDate,
-        comment: dto.comment,
-        createdAt: dto.createdAt,
-        updatedAt: dto.updatedAt,
-      );
+  // TODO(frosterlolz): unused factory
+  // factory TransactionDetailEntity.merge(TransactionDetailsDto dto, int localId) => TransactionDetailEntity(
+  //       id: localId,
+  //       remoteId: dto.id,
+  //       account: AccountBrief.merge(dto.account),
+  //       category: dto.category,
+  //       amount: dto.amount,
+  //       transactionDate: dto.transactionDate,
+  //       comment: dto.comment,
+  //       createdAt: dto.createdAt,
+  //       updatedAt: dto.updatedAt,
+  //     );
 
   factory TransactionDetailEntity.fromTableItem(
     TransactionItem item, {

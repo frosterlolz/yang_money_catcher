@@ -106,7 +106,7 @@ void main() {
     when(transactionsLocalDataSource.updateTransaction(firstRequest)).thenAnswer((_) async => firstEntity);
     when(transactionsLocalDataSource.updateTransaction(secondRequest)).thenAnswer((_) async => secondEntity);
 
-    final filters = TransactionFilters(accountId: 1, startDate: now.subtract(const Duration(days: 1)));
+    final filters = TransactionFilters(accountId: 1, accountRemoteId: 1, startDate: now.subtract(const Duration(days: 1)));
     when(transactionsLocalDataSource.fetchTransactionsDetailed(filters)).thenAnswer((_) async => [firstDetailedEntity]);
     final result = await repository.getTransactions(filters).first;
 

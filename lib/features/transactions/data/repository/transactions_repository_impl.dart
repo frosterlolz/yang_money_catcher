@@ -42,7 +42,8 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
     );
     yield DataResult.offline(data: transactions$Local);
     try {
-      final transactions$Remote = await _transactionsNetworkDataSource.getTransactions(filters);
+      final transactions$Remote =
+          await _transactionsNetworkDataSource.getTransactions(filters);
       final syncedTransactions = await _transactionsLocalDataSource.syncTransactions(
         localTransactions: transactions$Local,
         remoteTransactions: transactions$Remote,

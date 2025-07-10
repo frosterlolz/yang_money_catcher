@@ -13,20 +13,52 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
     required List<TransactionItemsCompanion> transactionsToUpsert,
     required List<int> transactionIdsToDelete,
     required List<AccountItemsCompanion> accountsToUpsert,
+    required Map<int, int> txAccountRemoteIdMap,
   }) async {
     await transaction(() async {
+      // 1. Обновляем аккаунты по remoteId (если они уже существуют)
+      for (final acc in accountsToUpsert) {
+        final remoteId = acc.remoteId.value;
+        if (remoteId == null) continue;
+
+        await (update(accountItems)..where((tbl) => tbl.remoteId.equals(remoteId))).write(acc);
+      }
+
+      // 2. Получаем обновлённые аккаунты из базы, чтобы достать их локальные id
+      final updatedRemoteIds = accountsToUpsert.map((acc) => acc.remoteId.value).whereType<int>().toSet().toList();
+
+      final existingAccounts = await (select(accountItems)..where((tbl) => tbl.remoteId.isIn(updatedRemoteIds))).get();
+
+      final remoteToLocalAccountId = {
+        for (final acc in existingAccounts) acc.remoteId: acc.id,
+      };
+
+      // 3. Подставляем правильный accountId в каждую транзакцию
+      final transactionsWithAccount = transactionsToUpsert.map((tx) {
+        final remoteTxId = tx.remoteId.value;
+        final remoteAccountId = txAccountRemoteIdMap[remoteTxId];
+
+        if (remoteAccountId == null) {
+          throw Exception('Missing remoteAccountId for transaction $remoteTxId');
+        }
+
+        final localAccountId = remoteToLocalAccountId[remoteAccountId];
+
+        if (localAccountId == null) {
+          throw Exception('No local account for remoteAccountId $remoteAccountId');
+        }
+
+        return tx.copyWith(account: Value(localAccountId));
+      }).toList();
+
+      // 4. Выполняем удаление и вставку транзакций
       await batch((batch) {
-        // delete unsynced transactions
         if (transactionIdsToDelete.isNotEmpty) {
-          batch.deleteWhere(transactionItems, (f) => f.id.isIn(transactionIdsToDelete));
+          batch.deleteWhere(transactionItems, (tbl) => tbl.id.isIn(transactionIdsToDelete));
         }
-        // upsert transactions
-        if (transactionsToUpsert.isNotEmpty) {
-          batch.insertAllOnConflictUpdate(transactionItems, transactionsToUpsert);
-        }
-        // update account
-        if (accountsToUpsert.isNotEmpty) {
-          batch.insertAllOnConflictUpdate(accountItems, accountsToUpsert);
+
+        if (transactionsWithAccount.isNotEmpty) {
+          batch.insertAllOnConflictUpdate(transactionItems, transactionsWithAccount);
         }
       });
     });

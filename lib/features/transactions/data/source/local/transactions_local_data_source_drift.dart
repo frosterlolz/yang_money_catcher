@@ -59,6 +59,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
   }) async {
     final transactionsToUpsert = <TransactionItemsCompanion>[];
     final Map<int, AccountItemsCompanion> accountsMapToUpsert = {};
+    final Map<int, int> txAccountRemoteIdMap = {}; // remoteTxId → remoteAccountId
 
     for (final remoteTransaction in remoteTransactions) {
       final localOverlap =
@@ -75,6 +76,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
         updatedAt: Value(remoteTransaction.updatedAt),
       );
       transactionsToUpsert.add(transactionCompanion);
+      txAccountRemoteIdMap[remoteTransaction.id] = remoteTransaction.account.id;
       final remoteAccount = remoteTransaction.account;
 
       accountsMapToUpsert[remoteAccount.id] = AccountItemsCompanion(
@@ -94,8 +96,10 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
       transactionsToUpsert: transactionsToUpsert,
       transactionIdsToDelete: idSToDelete,
       accountsToUpsert: accountsMapToUpsert.values.toList(growable: false),
+      txAccountRemoteIdMap: txAccountRemoteIdMap,
     );
-    return fetchTransactionsDetailed(TransactionFilters(accountId: remoteTransactions.first.account.id));
+    final account = remoteTransactions.firstOrNull?.account;
+    return account == null ? [] : fetchTransactionsDetailed(TransactionFilters(accountId: account.id, accountRemoteId: null));
   }
 
   @override

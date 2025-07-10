@@ -4,6 +4,7 @@ import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
+import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
@@ -19,10 +20,10 @@ import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
 /// {@endtemplate}
 class TransactionsBodyView extends StatefulWidget {
   /// {@macro TransactionsView.class}
-  const TransactionsBodyView({super.key, required this.isIncome, required this.accountId});
+  const TransactionsBodyView({super.key, required this.isIncome, required this.account});
 
   final bool isIncome;
-  final int accountId;
+  final AccountDetailEntity account;
 
   @override
   State<TransactionsBodyView> createState() => _TransactionsBodyViewState();
@@ -42,8 +43,13 @@ class _TransactionsBodyViewState extends State<TransactionsBodyView> {
     final dtNow = DateTime.now();
     final start = dtNow.copyWithStartOfDayTme;
     final end = dtNow.copyWithEndOfDayTme;
-    final filters =
-        TransactionFilters(accountId: widget.accountId, startDate: start, endDate: end, isIncome: widget.isIncome);
+    final filters = TransactionFilters(
+      accountId: widget.account.id,
+      accountRemoteId: widget.account.remoteId,
+      startDate: start,
+      endDate: end,
+      isIncome: widget.isIncome,
+    );
     final transactionsBloc = context.read<TransactionsBloc>()..add(TransactionsEvent.load(filters));
     await transactionsBloc.stream.firstWhere((state) => state is! TransactionsState$Processing);
   }

@@ -48,6 +48,13 @@ final class InitializationRoot {
         },
         'Prepare database': (d) async {
           final database = AppDatabase.defaults(name: 'yang_money_catcher_database');
+          final result = await database.customSelect(
+              "PRAGMA index_info('sqlite_autoindex_transaction_items_1');"
+          ).get();
+
+          for (final row in result) {
+            print(row.data);
+          }
           d.context['drift_database'] = database;
         },
         'Initialize rest client': (d) async {

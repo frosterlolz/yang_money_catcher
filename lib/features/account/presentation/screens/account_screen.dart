@@ -107,6 +107,7 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
     };
     final filters = TransactionFilters(
       accountId: widget.account.id,
+      accountRemoteId: widget.account.remoteId,
       startDate: startDate,
       endDate: dtNow,
     );

@@ -63,7 +63,7 @@ abstract class MockTransactionsEntitiesHelper {
         remoteId: 1,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        account: const AccountBrief(id: 1, name: '', balance: '', currency: Currency.rub),
+        account: const AccountBrief(id: 1, remoteId: 1, name: '', balance: '', currency: Currency.rub),
         category: const TransactionCategory(id: 1, name: '', emoji: '', isIncome: true),
         amount: request.amount,
         transactionDate: request.transactionDate,
