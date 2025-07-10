@@ -13,8 +13,8 @@ abstract interface class TransactionsRepository implements TransactionChangesSou
   ///   [request] — данные для создания транзакции.
   ///
   /// Returns:
-  ///   [TransactionEntity] — созданная транзакция.
-  Stream<DataResult<TransactionEntity>> createTransaction(TransactionRequest$Create request);
+  ///   [TransactionDetailEntity] — созданная транзакция.
+  Stream<DataResult<TransactionDetailEntity>> createTransaction(TransactionRequest$Create request);
 
   /// Получить полную информацию о конкретной транзакции.
   ///

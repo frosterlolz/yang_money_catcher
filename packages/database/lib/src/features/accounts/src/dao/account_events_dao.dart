@@ -32,7 +32,7 @@ class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEvent
         .toList();
   }
 
-  Future<AccountEventsValueObject?> fetchEvent(int accountId) async {
+/*  Future<AccountEventsValueObject?> _fetchEvent(int accountId) async {
     final isExists = await _isTableExists();
     if (!isExists) return null;
     final accountEventWithRefs = await attachedDatabase.managers.accountEventItems
@@ -46,7 +46,7 @@ class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEvent
       event: accountEventWithRefs.$1,
       account: accountEventWithRefs.$2.account.prefetchedData?.singleOrNull,
     );
-  }
+  }*/
 
   Future<void> insertEvent(AccountEventItemsCompanion companion) async =>
       into(accountEventItems).insert(companion, mode: InsertMode.insertOrReplace);

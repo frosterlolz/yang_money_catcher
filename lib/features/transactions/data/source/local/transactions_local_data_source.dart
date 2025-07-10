@@ -23,8 +23,10 @@ abstract interface class TransactionsLocalDataSource implements TransactionChang
     required List<TransactionDetailsDto> remoteTransactions,
   });
   Future<TransactionEntity> syncTransaction(TransactionEntity transaction);
-  Future<TransactionDetailEntity> syncTransactionWithDetails(TransactionDetailsDto transaction,
-      {required int? localId});
+  Future<TransactionDetailEntity> syncTransactionWithDetails(
+    TransactionDetailsDto transaction, {
+    required int? localId,
+  });
   Future<List<TransactionDetailEntity>> fetchTransactionsDetailed(TransactionFilters filters);
   Future<TransactionDetailEntity?> fetchTransaction(int id);
   Future<void> insertTransactions(List<TransactionRequest$Create> requests);

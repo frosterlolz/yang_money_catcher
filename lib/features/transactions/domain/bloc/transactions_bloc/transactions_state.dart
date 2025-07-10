@@ -4,12 +4,17 @@ part of 'transactions_bloc.dart';
 sealed class TransactionsState with _$TransactionsState {
   const TransactionsState._();
 
-  const factory TransactionsState.idle(UnmodifiableListView<TransactionDetailEntity> transactions) =
-      TransactionsState$Idle;
-  const factory TransactionsState.processing(UnmodifiableListView<TransactionDetailEntity>? transactions) =
-      TransactionsState$Processing;
+  const factory TransactionsState.idle(
+    UnmodifiableListView<TransactionDetailEntity> transactions, {
+    required bool isOffline,
+  }) = TransactionsState$Idle;
+  const factory TransactionsState.processing(
+    UnmodifiableListView<TransactionDetailEntity>? transactions, {
+    required bool isOffline,
+  }) = TransactionsState$Processing;
   const factory TransactionsState.error(
     UnmodifiableListView<TransactionDetailEntity>? transactions, {
+    required bool isOffline,
     required Object error,
   }) = TransactionsState$Error;
 

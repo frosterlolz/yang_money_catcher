@@ -33,8 +33,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<Iterable<TransactionDetailEntity>>> getTransactions(TransactionFilters filters) async* {
-    // TODO(frosterlolz): add sync method
-    // 1 - получаю локальные транзакции
+    await _syncEvents();
     final transactions$Local = await _transactionsLoaderCache.fetch(
       () async {
         final transactions = await _transactionsLocalDataSource.fetchTransactionsDetailed(filters);
@@ -56,17 +55,19 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
   }
 
   @override
-  Stream<DataResult<TransactionEntity>> createTransaction(TransactionRequest$Create request) async* {
-    // TODO(frosterlolz): add sync method
+  Stream<DataResult<TransactionDetailEntity>> createTransaction(TransactionRequest$Create request) async* {
+    await _syncEvents();
     final transaction$Local = await _transactionsLocalDataSource.updateTransaction(request);
-    yield DataResult.offline(data: transaction$Local);
+    final detailedTransaction = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
+    if (detailedTransaction == null) throw StateError('Cannot fetch transaction after update');
+    yield DataResult.offline(data: detailedTransaction);
     final syncedTransaction = await _createTransactionWithSync(transaction$Local);
     yield DataResult.online(data: syncedTransaction);
   }
 
-  Future<TransactionEntity> _createTransactionWithSync(TransactionEntity transaction$Local) async {
+  Future<TransactionDetailEntity> _createTransactionWithSync(TransactionEntity transaction$Local) async {
     try {
-      return await handleWithSync<TransactionEntity>(
+      return await handleWithSync<TransactionDetailEntity>(
         method: () async {
           final request = TransactionRequest$Create(
             accountId: transaction$Local.accountId,
@@ -78,7 +79,9 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
           final transaction$Remote = await _transactionsNetworkDataSource.createTransaction(request);
           final transaction$RemoteEntity = TransactionEntity.merge(transaction$Remote, transaction$Local.id);
           final syncedTransaction = await _transactionsLocalDataSource.syncTransaction(transaction$RemoteEntity);
-          return syncedTransaction;
+          final transactionDetailed = await _transactionsLocalDataSource.fetchTransaction(syncedTransaction.id);
+          if (transactionDetailed == null) throw StateError('Cannot fetch transaction after update');
+          return transactionDetailed;
         },
         addEventMethod: () async {
           final nowUtc = DateTime.now().toUtc();
@@ -101,7 +104,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<TransactionDetailEntity>> updateTransaction(TransactionRequest$Update request) async* {
-    // TODO(frosterlolz): add sync method
+    await _syncEvents();
     final transaction$Local = await _transactionsLocalDataSource.updateTransaction(request);
     final detailedTransaction = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
     if (detailedTransaction == null) throw StateError('Cannot fetch transaction after update');
@@ -123,9 +126,11 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
             comment: transaction$Local.comment,
           );
           final transaction$Remote = await _transactionsNetworkDataSource.updateTransaction(request);
-          final syncedAccount = await _transactionsLocalDataSource.syncTransactionWithDetails(transaction$Remote,
-              localId: transaction$Local.id);
-          return syncedAccount;
+          final syncedTransaction = await _transactionsLocalDataSource.syncTransactionWithDetails(
+            transaction$Remote,
+            localId: transaction$Local.id,
+          );
+          return syncedTransaction;
         },
         addEventMethod: () async {
           final nowUtc = DateTime.now().toUtc();
@@ -148,7 +153,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<void>> deleteTransaction(int id) async* {
-    // TODO(frosterlolz): add sync method
+    await _syncEvents();
     final transactionId$Remote = await _transactionsLocalDataSource.deleteTransaction(id);
     yield const DataResult.offline(data: null);
     if (transactionId$Remote == null) return;
@@ -183,7 +188,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<TransactionDetailEntity>> getTransaction(int id) async* {
-    // TODO(frosterlolz): add sync method
+    await _syncEvents();
     final transaction$Local = await _transactionsLocalDataSource.fetchTransaction(id);
     if (transaction$Local != null) {
       yield DataResult.offline(data: transaction$Local);
@@ -203,7 +208,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<Iterable<TransactionCategory>>> getTransactionCategories() async* {
-    // TODO(frosterlolz): add sync method
+    await _syncEvents();
     final categories$Local = await _transactionsLocalDataSource.fetchTransactionCategories();
     yield DataResult.offline(data: categories$Local);
     try {
@@ -222,6 +227,20 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
   @override
   Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
       _transactionsLocalDataSource.transactionsListChanges(filters);
+
+  Future<void> _syncEvents() async {
+    final events = await _transactionEventsSyncDS.fetchEvents();
+    for (final event in events) {
+      switch (event) {
+        case SyncAction$Create(:final data):
+          await _createTransactionWithSync(data);
+        case SyncAction$Update(:final data):
+          await _updateTransactionWithSync(data);
+        case SyncAction$Delete(:final dataId):
+          await _deleteTransactionWithSync(dataId);
+      }
+    }
+  }
 
   @Deprecated('For testing only, now REST API is used')
   Future<void> generateMockData() async {

@@ -69,7 +69,7 @@ final class InitializationRoot {
           final transactionsLocalDataSource = TransactionsLocalDataSource$Drift(transactionsDao);
           d.context['transactions_local_data_source'] = transactionsLocalDataSource;
           final accountsNetworkDataSource = AccountsNetworkDataSource$Rest(d.restClient);
-          final accountEventsSyncDataSource = AccountEventsSyncDataSourceDrift(AccountEventsDao(database));
+          final accountEventsSyncDataSource = AccountEventsSyncDataSource$Drift(AccountEventsDao(database));
           final accountsRepository = AccountRepositoryImpl(
             accountsNetworkDataSource: accountsNetworkDataSource,
             accountsLocalStorage: accountsLocalDataSource,

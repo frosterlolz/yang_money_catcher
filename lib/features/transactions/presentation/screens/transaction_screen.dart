@@ -46,7 +46,7 @@ Future<void> showTransactionScreen(
       builder: (_) => BlocProvider(
         create: (_) {
           final bloc = TransactionBloc(
-            TransactionState.processing(initialTransaction),
+            TransactionState.processing(initialTransaction, isOffline: initialTransaction?.remoteId == null),
             transactionsRepository: DependenciesScope.of(context).transactionsRepository,
           );
           if (initialTransaction != null) {
