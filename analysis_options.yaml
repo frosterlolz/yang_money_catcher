@@ -236,6 +236,7 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "**/*.mocks.dart"
+    - "**/migration_test.dart"
 
   errors:
     body_might_complete_normally_nullable: ignore

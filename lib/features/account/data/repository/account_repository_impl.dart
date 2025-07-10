@@ -104,7 +104,7 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
       return handleWithSync<AccountEntity>(
         method: () async {
           final request = AccountRequest$Update(
-            id: account.id,
+            id: account.remoteId ?? (throw StateError('Account has no remote id')),
             name: account.name,
             balance: account.balance,
             currency: account.currency,
@@ -134,27 +134,25 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
   }
 
   @override
-  Stream<DataResult<void>> deleteAccount(int accountId) async* {
+  Stream<DataResult<void>> deleteAccount(int accountId$Local) async* {
     await _syncEvents();
-    await _deleteAccountWithSync(accountId);
-    yield const DataResult.online(data: null);
-    await _accountsLocalDataSource.deleteAccount(accountId);
+    final accountId$Remote = await _accountsLocalDataSource.deleteAccount(accountId$Local);
     yield const DataResult.offline(data: null);
+    if (accountId$Remote == null) return;
+    await _deleteAccountWithSync(accountId$Remote);
+    yield const DataResult.online(data: null);
   }
 
-  Future<void> _deleteAccountWithSync(int accountId) async {
+  Future<void> _deleteAccountWithSync(int accountId$Remote) async {
     try {
       return await handleWithSync<void>(
         method: () async {
-          final accountToDelete = await _accountsLocalDataSource.fetchAccount(accountId);
-          final remoteId = accountToDelete?.remoteId;
-          if (remoteId == null) return;
-          return _accountsNetworkDataSource.deleteAccount(remoteId);
+          await _accountsNetworkDataSource.deleteAccount(accountId$Remote);
         },
         addEventMethod: () async {
           final nowUtc = DateTime.now().toUtc();
           final event = SyncAction<AccountEntity>.delete(
-            dataId: accountId,
+            dataId: accountId$Remote,
             createdAt: nowUtc,
             updatedAt: nowUtc,
           );

@@ -28,7 +28,12 @@ class AccountsDao extends DatabaseAccessor<AppDatabase> with _$AccountsDaoMixin 
   Future<AccountItem?> fetchAccount(int id) =>
       (accountItems.select()..where((accountItem) => accountItem.id.equals(id))).getSingleOrNull();
 
-  Future<int> deleteAccount(int id) => (delete(accountItems)..where((t) => t.id.equals(id))).go();
+  /// Возвращает remoteId удаленного аккаунта
+  Future<int?> deleteAccount(int id) async => transaction(() async {
+        final account = await (select(accountItems)..where((t) => t.id.equals(id))).getSingleOrNull();
+        await (delete(accountItems)..where((t) => t.id.equals(id))).go();
+        return account?.remoteId;
+      });
 
   Future<AccountItem> upsertAccount(AccountItemsCompanion companion) async =>
       companion.id.present ? _updateAccount(companion) : _insertAccount(companion);

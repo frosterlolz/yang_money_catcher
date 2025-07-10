@@ -3,14 +3,15 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_brief.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
+import 'package:yang_money_catcher/features/transactions/data/dto/transaction_dto.dart';
 
 part 'transaction_entity.freezed.dart';
-part 'transaction_entity.g.dart';
 
 @freezed
 class TransactionEntity with _$TransactionEntity {
   const factory TransactionEntity({
     required int id,
+    required int? remoteId,
     required int accountId,
     required int categoryId,
     required String amount,
@@ -20,10 +21,33 @@ class TransactionEntity with _$TransactionEntity {
     required DateTime updatedAt,
   }) = _TransactionEntity;
 
-  factory TransactionEntity.fromJson(JsonMap json) => _$TransactionEntityFromJson(json);
+  factory TransactionEntity.merge(TransactionDto dto, int localId) => TransactionEntity(
+        id: localId,
+        remoteId: dto.id,
+        accountId: dto.accountId,
+        categoryId: dto.categoryId,
+        amount: dto.amount,
+        transactionDate: dto.transactionDate,
+        comment: dto.comment,
+        createdAt: dto.createdAt,
+        updatedAt: dto.updatedAt,
+      );
+
+  factory TransactionEntity.fromDetails(TransactionDetailEntity details) => TransactionEntity(
+        id: details.id,
+        remoteId: details.remoteId,
+        accountId: details.account.id,
+        categoryId: details.category.id,
+        amount: details.amount,
+        transactionDate: details.transactionDate,
+        comment: details.comment,
+        createdAt: details.createdAt,
+        updatedAt: details.updatedAt,
+      );
 
   factory TransactionEntity.fromTableItem(TransactionItem item) => TransactionEntity(
         id: item.id,
+        remoteId: item.remoteId,
         accountId: item.account,
         categoryId: item.category,
         amount: item.amount,
@@ -38,6 +62,7 @@ class TransactionEntity with _$TransactionEntity {
 class TransactionDetailEntity with _$TransactionDetailEntity implements Comparable<TransactionDetailEntity> {
   const factory TransactionDetailEntity({
     required int id,
+    required int? remoteId,
     required AccountBrief account,
     required TransactionCategory category,
     required String amount,
@@ -49,7 +74,17 @@ class TransactionDetailEntity with _$TransactionDetailEntity implements Comparab
 
   const TransactionDetailEntity._();
 
-  factory TransactionDetailEntity.fromJson(JsonMap json) => _$TransactionDetailEntityFromJson(json);
+  factory TransactionDetailEntity.merge(TransactionDetailsDto dto, int localId) => TransactionDetailEntity(
+        id: localId,
+        remoteId: dto.id,
+        account: AccountBrief.fromDto(dto.account),
+        category: dto.category,
+        amount: dto.amount,
+        transactionDate: dto.transactionDate,
+        comment: dto.comment,
+        createdAt: dto.createdAt,
+        updatedAt: dto.updatedAt,
+      );
 
   factory TransactionDetailEntity.fromTableItem(
     TransactionItem item, {
@@ -58,6 +93,7 @@ class TransactionDetailEntity with _$TransactionDetailEntity implements Comparab
   }) =>
       TransactionDetailEntity(
         id: item.id,
+        remoteId: item.remoteId,
         account: accountBrief,
         category: category,
         amount: item.amount,

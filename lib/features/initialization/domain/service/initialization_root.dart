@@ -16,8 +16,10 @@ import 'package:yang_money_catcher/features/account/data/source/local/accounts_l
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source_drift.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source_drift.dart';
+import 'package:yang_money_catcher/features/transactions/data/source/network/transactions_netrowk_data_source_rest.dart';
 
 typedef InitializationStep = FutureOr<void> Function(Mutable$Dependencies dependencies);
 
@@ -79,11 +81,20 @@ final class InitializationRoot {
           d.accountRepository = accountsRepository;
         },
         'Prepare transactions feature': (d) async {
+          final database = d.context['drift_database']! as AppDatabase;
           final transactionsLocalDataSource =
               d.context['transactions_local_data_source']! as TransactionsLocalDataSource;
-          final transactionsRepository = TransactionsRepositoryImpl(transactionsLocalDataSource);
-          await transactionsRepository.fillTransactionCategories();
-          await transactionsRepository.generateMockData();
+          final transactionsNetworkDataSource = TransactionsNetworkDataSource$Rest(d.restClient);
+          final transactionEventsDao = TransactionEventsDao(database);
+          final transactionEventsSyncDataSource = TransactionEventsSyncDataSource$Drift(transactionEventsDao);
+          final transactionsRepository = TransactionsRepositoryImpl(
+            transactionsLocalDataSource: transactionsLocalDataSource,
+            transactionsNetworkDataSource: transactionsNetworkDataSource,
+            transactionsSyncDataSource: transactionEventsSyncDataSource,
+          );
+          // TODO(frosterlolz): мок данные не треюбуются, БЭК подключен
+          // await transactionsRepository.fillTransactionCategories();
+          // await transactionsRepository.generateMockData();
           d.transactionsRepository = transactionsRepository;
         },
       };

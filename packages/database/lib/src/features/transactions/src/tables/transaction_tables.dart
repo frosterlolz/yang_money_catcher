@@ -3,11 +3,17 @@ import 'package:database/src/utils/table_mixin.dart';
 import 'package:drift/drift.dart';
 
 class TransactionItems extends Table with TimestampedTable {
+  late final remoteId = integer().nullable()();
   late final account = integer().references(AccountItems, #id)();
   late final category = integer().references(TransactionCategoryItems, #id)();
   TextColumn get amount => text()();
   DateTimeColumn get transactionDate => dateTime()();
   TextColumn? get comment => text().nullable()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {remoteId},
+  ];
 }
 
 class TransactionCategoryItems extends Table {

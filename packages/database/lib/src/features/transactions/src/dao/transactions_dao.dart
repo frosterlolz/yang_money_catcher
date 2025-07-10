@@ -3,15 +3,47 @@ import 'package:drift/drift.dart';
 
 part 'transactions_dao.g.dart';
 
-@DriftAccessor(tables: [TransactionItems, TransactionCategoryItems])
+@DriftAccessor(tables: [TransactionItems, TransactionCategoryItems, AccountItems])
 class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsDaoMixin {
   TransactionsDao(super.attachedDatabase);
 
   Future<int> transactionCategoryRowsCount() => transactionCategoryItems.count().getSingle();
+
+  Future<void> syncTransactions({
+    required List<TransactionItemsCompanion> transactionsToUpsert,
+    required List<int> transactionIdsToDelete,
+    required List<AccountItemsCompanion> accountsToUpsert,
+  }) async {
+    await transaction(() async {
+      await batch((batch) {
+        // delete unsynced transactions
+        if (transactionIdsToDelete.isNotEmpty) {
+          batch.deleteWhere(transactionItems, (f) => f.id.isIn(transactionIdsToDelete));
+        }
+        // upsert transactions
+        if (transactionsToUpsert.isNotEmpty) {
+          batch.insertAllOnConflictUpdate(transactionItems, transactionsToUpsert);
+        }
+        // update account
+        if (accountsToUpsert.isNotEmpty) {
+          batch.insertAllOnConflictUpdate(accountItems, accountsToUpsert);
+        }
+      });
+    });
+  }
+
   Future<List<TransactionCategoryItem>> fetchTransactionCategories() => transactionCategoryItems.select().get();
 
-  Future<void> insertTransactionCategories(List<TransactionCategoryItemsCompanion> transactionCategoryCompanions) =>
-      transactionCategoryItems.insertAll(transactionCategoryCompanions);
+  Future<List<TransactionCategoryItem>> insertTransactionCategories(List<TransactionCategoryItemsCompanion> items) =>
+      transaction(() async {
+        await transactionCategoryItems.deleteAll();
+
+        if (items.isNotEmpty) {
+          await batch((b) => b.insertAll(transactionCategoryItems, items));
+        }
+
+        return transactionCategoryItems.select().get();
+      });
 
   Future<int> transactionRowsCount() => transactionItems.count().getSingle();
 
@@ -68,6 +100,43 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
 
   Future<void> insertTransactions(List<TransactionItemsCompanion> companions) => transactionItems.insertAll(companions);
 
+  Future<TransactionDetailedValueObject> upsertTransactionDetailed(
+    TransactionItemsCompanion transactionCompanion,
+    AccountItemsCompanion accountCompanion,
+  ) async =>
+      transaction(() async {
+        final accountRemoteId = accountCompanion.remoteId.value ?? (throw StateError('Account remoteId is null'));
+        // 1. Обновляем или вставляем аккаунт по remoteId
+        await into(accountItems).insertOnConflictUpdate(accountCompanion);
+
+        // 2. Получаем локальный id аккаунта по его remoteId
+        final account = await (select(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).getSingle();
+
+        // 3. Обновляем TransactionItemsCompanion, чтобы он ссылался на нужный локальный account.id
+        final updatedTransactionCompanion = transactionCompanion.copyWith(
+          account: Value(account.id),
+        );
+
+        // 4. Вставляем/обновляем транзакцию
+        final transactionId = await into(transactionItems).insertOnConflictUpdate(updatedTransactionCompanion);
+
+        // 5. Получаем связанную категорию
+        final joined = await (select(transactionItems)..where((t) => t.id.equals(transactionId))).join([
+          leftOuterJoin(accountItems, accountItems.id.equalsExp(transactionItems.account)),
+          leftOuterJoin(transactionCategoryItems, transactionCategoryItems.id.equalsExp(transactionItems.category)),
+        ]).getSingle();
+
+        final transactionRow = joined.readTable(transactionItems);
+        final accountRow = joined.readTable(accountItems);
+        final categoryRow = joined.readTable(transactionCategoryItems);
+
+        return TransactionDetailedValueObject(
+          transaction: transactionRow,
+          account: accountRow,
+          category: categoryRow,
+        );
+      });
+
   Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion) async =>
       companion.id.present ? _updateTransaction(companion) : _insertTransaction(companion);
 
@@ -81,7 +150,12 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         return updatedTransaction.getSingle();
       });
 
-  Future<int> deleteTransaction(int id) => (delete(transactionItems)..where((t) => t.id.equals(id))).go();
+  /// Возвращает remoteId удаленного транзакции
+  Future<int?> deleteTransaction(int id) async => transaction(() async {
+        final transaction = await (select(transactionItems)..where((t) => t.id.equals(id))).getSingleOrNull();
+        await (delete(transactionItems)..where((t) => t.id.equals(id))).go();
+        return transaction?.remoteId;
+      });
 
   Stream<List<TransactionDetailedValueObject>> transactionDetailedListChanges(
     int accountId, {

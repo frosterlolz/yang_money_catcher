@@ -51,6 +51,6 @@ abstract interface class AccountsLocalDataSource {
 
   /// Удаляет аккаунт по его идентификатору [accountId].
   ///
-  /// Возвращает количество удалённых строк (0, если аккаунт не найден).
-  Future<int> deleteAccount(int accountId);
+  /// Возвращает id аккаунта на бэкенде (если он был).
+  Future<int?> deleteAccount(int accountId);
 }

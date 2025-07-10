@@ -39,21 +39,31 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
   Future<void> _loadTransaction(_Load event, _Emitter emitter) async {
     final isSameTransaction = state.transaction?.id == event.id;
-    emitter(TransactionState.processing(isSameTransaction ? state.transaction : null));
+    emitter(TransactionState.processing(isSameTransaction ? state.transaction : null, isOffline: state.isOffline));
     if (!isSameTransaction) {
       _updateTransactionChangesSubscription(event.id);
     }
     try {
-      final transaction = await _transactionsRepository.getTransaction(event.id);
-      emitter(TransactionState.idle(transaction));
+      final transactionResultStream = _transactionsRepository.getTransaction(event.id);
+      await for (final transactionResult in transactionResultStream) {
+        switch (transactionResult.isOffline) {
+          case true:
+            emitter(TransactionState.processing(transactionResult.data, isOffline: transactionResult.isOffline));
+          case false:
+            emitter(TransactionState.idle(transactionResult.data, isOffline: transactionResult.isOffline));
+        }
+      }
+      if (state.transaction != null) {
+        emitter(TransactionState.idle(state.transaction!, isOffline: state.isOffline));
+      }
     } on Object catch (e, s) {
-      emitter(TransactionState.error(state.transaction, error: e));
+      emitter(TransactionState.error(state.transaction, isOffline: state.isOffline, error: e));
       onError(e, s);
     }
   }
 
   Future<void> _updateTransaction(_Update event, _Emitter emitter) async {
-    emitter(TransactionState.processing(state.transaction));
+    emitter(TransactionState.processing(state.transaction, isOffline: state.isOffline));
     try {
       switch (event.request) {
         case final TransactionRequest$Create createRequest:

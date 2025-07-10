@@ -35,6 +35,9 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
             emitter(AccountsState.idle(accounts, isOffline: false));
         }
       }
+      if (state.accounts != null) {
+        emitter(AccountsState.idle(state.accounts!, isOffline: state.isOffline));
+      }
     } on Object catch (e, s) {
       emitter(AccountsState.error(state.accounts, isOffline: state.isOffline, error: e));
       onError(e, s);
@@ -50,10 +53,13 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
         final unmodifiableAccounts = UnmodifiableListView(updatedAccounts ?? <AccountEntity>[]);
         switch (deleteResult.isOffline) {
           case true:
-            emitter(AccountsState.processing(unmodifiableAccounts, isOffline: state.isOffline));
+            emitter(AccountsState.processing(unmodifiableAccounts, isOffline: true));
           case false:
             emitter(AccountsState.idle(unmodifiableAccounts, isOffline: false));
         }
+      }
+      if (state.accounts != null) {
+        emitter(AccountsState.idle(state.accounts!, isOffline: state.isOffline));
       }
     } on Object catch (e, s) {
       emitter(AccountsState.error(state.accounts, isOffline: state.isOffline, error: e));
