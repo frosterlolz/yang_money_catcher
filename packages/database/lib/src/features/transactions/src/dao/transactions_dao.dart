@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:database/database.dart';
 import 'package:drift/drift.dart';
 
@@ -156,7 +154,8 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         if (rowsCount == 0) throw StateError('Account from transaction could not be updated');
 
         // 2. Получаем локальный id аккаунта по его remoteId
-        final account = await (select(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).getSingleOrNull();
+        final account =
+            await (select(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).getSingleOrNull();
         if (account == null) throw StateError('Account with remoteId=$accountRemoteId not found after update');
 
         // 3. Обновляем TransactionItemsCompanion, чтобы он ссылался на нужный локальный account.id
@@ -201,11 +200,11 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         return updatedTransaction.getSingle();
       });
 
-  /// Возвращает remoteId удаленного транзакции
-  Future<int?> deleteTransaction(int id) async => transaction(() async {
+  /// Возвращает удаленную транзакцию
+  Future<TransactionItem?> deleteTransaction(int id) async => transaction(() async {
         final transaction = await (select(transactionItems)..where((t) => t.id.equals(id))).getSingleOrNull();
         await (delete(transactionItems)..where((t) => t.id.equals(id))).go();
-        return transaction?.remoteId;
+        return transaction;
       });
 
   Stream<List<TransactionDetailedValueObject>> transactionDetailedListChanges(

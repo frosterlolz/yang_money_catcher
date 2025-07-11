@@ -37,7 +37,8 @@ flutter gen-l10n
 {
   "ENVIRONMENT": "dev",
   "BASE_URL": "***",
-  "AUTH_TOKEN": "***"
+  "AUTH_TOKEN": "***",
+  "SYNC_ATTEMPTS": 3
 }
 ```
 

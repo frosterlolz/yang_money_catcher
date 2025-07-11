@@ -2,6 +2,7 @@ const _environment = 'ENVIRONMENT';
 const _baseUrl = 'BASE_URL';
 const _apiEndpoint = 'api/v1';
 const _authKey = 'AUTH_TOKEN';
+const _syncAttempts = 'SYNC_ATTEMPTS';
 
 abstract final class EnvConstants {
   const EnvConstants();
@@ -18,6 +19,10 @@ abstract final class EnvConstants {
   static const String baseUrl = String.fromEnvironment(_baseUrl);
   static const String apiUrl = '$baseUrl/$_apiEndpoint';
   static const String authToken = String.fromEnvironment(_authKey);
+
+  // --- DATABASE CONSTANTS --- //
+
+  static const int maxSyncActionAttempts = int.fromEnvironment(_syncAttempts, defaultValue: 3);
 }
 
 /// Environment flavor.

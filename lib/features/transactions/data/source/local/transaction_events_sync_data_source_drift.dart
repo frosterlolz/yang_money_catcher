@@ -21,8 +21,14 @@ final class TransactionEventsSyncDataSource$Drift implements TransactionEventsSy
   StreamSubscription<Iterable<SyncAction<TransactionEntity>>>? _accountEventsSubscription;
 
   @override
-  FutureOr<List<SyncAction<TransactionEntity>>> fetchEvents() async {
-    if (_events.isNotEmpty) return _events;
+  FutureOr<List<SyncAction<TransactionEntity>>> fetchEvents(
+    SyncAction<TransactionEntity>? mergeWithNext, {
+    bool forceUpdate = false,
+  }) async {
+    if (mergeWithNext != null) {
+      await addAction(mergeWithNext);
+    }
+    if (_events.isNotEmpty && !forceUpdate) return _events;
     final eventItems = await _dao.fetchEvents();
     final events = eventItems.map(_fromVO).toList();
     _events.addAll(events);
@@ -31,7 +37,7 @@ final class TransactionEventsSyncDataSource$Drift implements TransactionEventsSy
   }
 
   @override
-  Future<void> addEvent(SyncAction<TransactionEntity> event) async {
+  Future<void> addAction(SyncAction<TransactionEntity> event) async {
     final transactionId = _getSyncActionTransactionId(event);
     final index = _events.indexWhere((syncAction) => _getSyncActionTransactionId(syncAction) == transactionId);
 
@@ -53,7 +59,7 @@ final class TransactionEventsSyncDataSource$Drift implements TransactionEventsSy
       final updatedCompanion = TransactionEventItemsCompanion(
         actionType: Value(merged.actionType.name),
         transaction: Value(transactionId),
-        createdAt: Value(merged.createdAt),
+        attempts: Value(merged.attempts),
       );
       await _dao.updateEvent(updatedCompanion);
     }
@@ -68,19 +74,22 @@ final class TransactionEventsSyncDataSource$Drift implements TransactionEventsSy
     final actionType = SyncActionType.fromName(vo.event.actionType);
     return switch (actionType) {
       SyncActionType.create => SyncAction.create(
+          data: TransactionEntity.fromTableItem(vo.transaction ?? (throw StateError('Account is null'))),
+          dataRemoteId: vo.event.transactionRemoteId ?? vo.transaction?.remoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
-          data: TransactionEntity.fromTableItem(vo.transaction ?? (throw StateError('Account is null'))),
         ),
       SyncActionType.update => SyncAction.update(
+          data: TransactionEntity.fromTableItem(vo.transaction ?? (throw StateError('Account is null'))),
+          dataRemoteId: vo.event.transactionRemoteId ?? vo.transaction?.remoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
-          data: TransactionEntity.fromTableItem(vo.transaction ?? (throw StateError('Account is null'))),
         ),
       SyncActionType.delete => SyncAction<TransactionEntity>.delete(
+          dataId: vo.event.transaction,
+          dataRemoteId: vo.event.transactionRemoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
-          dataId: vo.event.transaction,
         ),
     };
   }

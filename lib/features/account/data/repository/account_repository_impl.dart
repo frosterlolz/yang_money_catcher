@@ -53,119 +53,37 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
 
   @override
   Stream<DataResult<AccountEntity>> createAccount(AccountRequest$Create request) async* {
-    await _syncEvents();
     final localAccount = await _accountsLocalDataSource.updateAccount(request);
     yield DataResult.offline(data: localAccount);
-    final restAccount = await _createAccountWithSync(localAccount);
-    yield DataResult.online(data: restAccount);
-  }
-
-  Future<AccountEntity> _createAccountWithSync(AccountEntity account) async {
-    try {
-      return await handleWithSync<AccountEntity>(
-        method: () async {
-          final request =
-              AccountRequest$Create(name: account.name, balance: account.balance, currency: account.currency);
-          final restAccount$Dto = await _accountsNetworkDataSource.createAccount(request);
-          final restAccount = AccountEntity.merge(restAccount$Dto, account.id);
-          final syncedAccount = await _accountsLocalDataSource.syncAccount(restAccount);
-          return syncedAccount;
-        },
-        addEventMethod: () async {
-          final nowUtc = DateTime.now().toUtc();
-          final event = SyncAction.create(
-            createdAt: nowUtc,
-            updatedAt: nowUtc,
-            data: account,
-          );
-          await _accountEventsSyncDataSource.addEvent(event);
-        },
-      );
-    } on RestClientException catch (e, s) {
-      final resException = switch (e) {
-        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
-        _ => e,
-      };
-      Error.throwWithStackTrace(resException, s);
-    }
+    final action = SyncAction.create(data: localAccount, dataRemoteId: null);
+    final syncAccount = await _syncEvents(action);
+    yield DataResult.online(
+      data: syncAccount ?? (throw StateError('_syncEvents must return account with create action')),
+    );
   }
 
   @override
   Stream<DataResult<AccountEntity>> updateAccount(AccountRequest$Update request) async* {
-    await _syncEvents();
-    final localAccount = await _accountsLocalDataSource.updateAccount(request);
-    yield DataResult.offline(data: localAccount);
-    final restAccount = await _updateAccountWithSync(localAccount);
-    yield DataResult.online(data: restAccount);
-  }
-
-  Future<AccountEntity> _updateAccountWithSync(AccountEntity account) async {
-    try {
-      return handleWithSync<AccountEntity>(
-        method: () async {
-          final request = AccountRequest$Update(
-            id: account.remoteId ?? (throw StateError('Account has no remote id')),
-            name: account.name,
-            balance: account.balance,
-            currency: account.currency,
-          );
-          final restAccount$Dto = await _accountsNetworkDataSource.updateAccount(request);
-          final restAccount = AccountEntity.merge(restAccount$Dto, account.id);
-          final syncedAccount = await _accountsLocalDataSource.syncAccount(restAccount);
-          return syncedAccount;
-        },
-        addEventMethod: () async {
-          final nowUtc = DateTime.now().toUtc();
-          final event = SyncAction.update(
-            createdAt: nowUtc,
-            updatedAt: nowUtc,
-            data: account,
-          );
-          await _accountEventsSyncDataSource.addEvent(event);
-        },
-      );
-    } on RestClientException catch (e, s) {
-      final resException = switch (e) {
-        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
-        _ => e,
-      };
-      Error.throwWithStackTrace(resException, s);
-    }
+    final account$Local = await _accountsLocalDataSource.updateAccount(request);
+    yield DataResult.offline(data: account$Local);
+    final action = SyncAction.update(
+      dataRemoteId: null,
+      data: account$Local,
+    );
+    final syncedAccount = await _syncEvents(action);
+    yield DataResult.online(
+      data: syncedAccount ?? (throw StateError('_syncEvents must return account with update action')),
+    );
   }
 
   @override
   Stream<DataResult<void>> deleteAccount(int accountId$Local) async* {
-    await _syncEvents();
-    final accountId$Remote = await _accountsLocalDataSource.deleteAccount(accountId$Local);
+    final account = await _accountsLocalDataSource.deleteAccount(accountId$Local);
     yield const DataResult.offline(data: null);
-    if (accountId$Remote == null) return;
-    await _deleteAccountWithSync(accountId$Remote);
+    if (account == null) return;
+    final action = SyncAction<AccountEntity>.delete(dataId: account.id, dataRemoteId: account.remoteId);
+    await _syncEvents(action);
     yield const DataResult.online(data: null);
-  }
-
-  Future<void> _deleteAccountWithSync(int accountId$Remote) async {
-    try {
-      return await handleWithSync<void>(
-        method: () async {
-          await _accountsNetworkDataSource.deleteAccount(accountId$Remote);
-        },
-        addEventMethod: () async {
-          final nowUtc = DateTime.now().toUtc();
-          final event = SyncAction<AccountEntity>.delete(
-            dataId: accountId$Remote,
-            createdAt: nowUtc,
-            updatedAt: nowUtc,
-          );
-          await _accountEventsSyncDataSource.addEvent(event);
-        },
-      );
-    } on RestClientException catch (e, s) {
-      final resException = switch (e) {
-        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
-        _ => e,
-      };
-      Error.throwWithStackTrace(resException, s);
-    }
   }
 
   // TODO(frosterlolz): много грязи! нужно рефачить
@@ -237,6 +155,117 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
     }
   }
 
+  Future<AccountEntity?> _syncEvents([SyncAction<AccountEntity>? accountAction$Local]) async {
+    final events = await _accountEventsSyncDataSource.fetchEvents(accountAction$Local);
+    AccountEntity? result;
+    for (final event in events) {
+      AccountEntity? bufferResult;
+      switch (event) {
+        case SyncAction$Create(:final data):
+          final res = await _createAccountWithSync(data);
+          if (res.id == data.id) {
+            bufferResult = res;
+          }
+        case SyncAction$Update(:final data):
+          final res = await _updateAccountWithSync(data);
+          if (res.id == data.id) {
+            bufferResult = res;
+          }
+        case SyncAction$Delete(:final dataId, :final dataRemoteId):
+          await _deleteAccountWithSync(accountId: dataId, accountId$Remote: dataRemoteId);
+      }
+      result = bufferResult;
+    }
+    return result;
+  }
+
+  Future<AccountEntity> _createAccountWithSync(AccountEntity account) async {
+    final nowUtc = DateTime.now().toUtc();
+    try {
+      return await handleWithSync(
+        action: SyncAction.create(
+          dataRemoteId: null,
+          createdAt: nowUtc,
+          updatedAt: nowUtc,
+          data: account,
+        ),
+        trySync: () async {
+          final request =
+              AccountRequest$Create(name: account.name, balance: account.balance, currency: account.currency);
+          final restAccount$Dto = await _accountsNetworkDataSource.createAccount(request);
+          final restAccount = AccountEntity.merge(restAccount$Dto, account.id);
+          final syncedAccount = await _accountsLocalDataSource.syncAccount(restAccount);
+          return syncedAccount;
+        },
+        saveAction: _accountEventsSyncDataSource.addAction,
+      );
+    } on RestClientException catch (e, s) {
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
+  }
+
+  Future<AccountEntity> _updateAccountWithSync(AccountEntity account$Local) async {
+    final nowUtc = DateTime.now().toUtc();
+    try {
+      return handleWithSync(
+        action: SyncAction.update(
+          dataRemoteId: null,
+          createdAt: nowUtc,
+          updatedAt: nowUtc,
+          data: account$Local,
+        ),
+        trySync: () async {
+          final request = AccountRequest$Update(
+            id: account$Local.remoteId ?? (throw StateError('Account has no remote id')),
+            name: account$Local.name,
+            balance: account$Local.balance,
+            currency: account$Local.currency,
+          );
+          final restAccount$Dto = await _accountsNetworkDataSource.updateAccount(request);
+          final restAccount = AccountEntity.merge(restAccount$Dto, account$Local.id);
+          final syncedAccount = await _accountsLocalDataSource.syncAccount(restAccount);
+          return syncedAccount;
+        },
+        saveAction: _accountEventsSyncDataSource.addAction,
+      );
+    } on RestClientException catch (e, s) {
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
+  }
+
+  Future<AccountEntity?> _deleteAccountWithSync({required int accountId, int? accountId$Remote}) async {
+    final nowUtc = DateTime.now().toUtc();
+    try {
+      return await handleWithSync(
+        action: SyncAction<AccountEntity>.delete(
+          dataId: accountId,
+          dataRemoteId: accountId,
+          createdAt: nowUtc,
+          updatedAt: nowUtc,
+        ),
+        trySync: () async {
+          if (accountId$Remote == null) return;
+          await _accountsNetworkDataSource.deleteAccount(accountId$Remote);
+        },
+        saveAction: _accountEventsSyncDataSource.addAction,
+      );
+    } on RestClientException catch (e, s) {
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
+  }
+
   @Deprecated('For testing only, now REST API is used')
   Future<void> generateMockData() async {
     final accountsCount = await _accountsLocalDataSource.fetchAccountsCount();
@@ -251,20 +280,6 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
     ).cast<AccountRequest$Create>();
     for (final request in requests) {
       await createAccount(request).first;
-    }
-  }
-
-  Future<void> _syncEvents() async {
-    final events = await _accountEventsSyncDataSource.fetchEvents();
-    for (final event in events) {
-      switch (event) {
-        case SyncAction$Create(:final data):
-          await _createAccountWithSync(data);
-        case SyncAction$Update(:final data):
-          await _updateAccountWithSync(data);
-        case SyncAction$Delete(:final dataId):
-          await _deleteAccountWithSync(dataId);
-      }
     }
   }
 

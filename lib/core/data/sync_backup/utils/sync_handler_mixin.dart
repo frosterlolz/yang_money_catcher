@@ -1,23 +1,17 @@
 import 'package:rest_client/rest_client.dart';
+import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
 
 mixin SyncHandlerMixin on Object {
-  Future<T> handleWithSync<T>({
-    required Future<T> Function() method,
-    required Future<void> Function() addEventMethod,
+  Future<T> handleWithSync<T, S>({
+    required Future<T> Function() trySync,
+    required SyncAction<S> action,
+    required Future<void> Function(SyncAction<S>) saveAction,
   }) async {
     try {
-      final result = await method();
-
-      return result;
+      return await trySync();
     } on RestClientException catch (e) {
-      switch (e) {
-        case ConnectionException():
-          await addEventMethod();
-        case ClientException(:final statusCode) || StructuredBackendException(:final statusCode)
-            when (statusCode ?? 0) >= 500:
-          await addEventMethod();
-        default:
-          break;
+      if (e is ConnectionException || (e.statusCode ?? 0) >= 500) {
+        await saveAction(action);
       }
       rethrow;
     }

@@ -84,7 +84,11 @@ final class AccountsLocalDataSource$Drift implements AccountsLocalDataSource {
   }
 
   @override
-  Future<int?> deleteAccount(int id) => _accountsDao.deleteAccount(id);
+  Future<AccountEntity?> deleteAccount(int id) async {
+    final accountItem = await _accountsDao.deleteAccount(id);
+
+    return accountItem == null ? null : AccountEntity.fromTableItem(accountItem);
+  }
 
   @override
   Future<List<AccountEntity>> fetchAccounts() async {

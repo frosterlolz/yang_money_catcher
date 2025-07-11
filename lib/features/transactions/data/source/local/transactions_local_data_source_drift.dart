@@ -43,7 +43,10 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
   Future<int> getTransactionsCount() => _transactionsDao.transactionRowsCount();
 
   @override
-  Future<int?> deleteTransaction(int id) => _transactionsDao.deleteTransaction(id);
+  Future<TransactionEntity?> deleteTransaction(int id) async {
+    final item = await _transactionsDao.deleteTransaction(id);
+    return item == null ? null : TransactionEntity.fromTableItem(item);
+  }
 
   @override
   Future<List<TransactionEntity>> fetchTransactions(int accountId) async {
@@ -99,7 +102,9 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
       txAccountRemoteIdMap: txAccountRemoteIdMap,
     );
     final account = remoteTransactions.firstOrNull?.account;
-    return account == null ? [] : fetchTransactionsDetailed(TransactionFilters(accountId: account.id, accountRemoteId: null));
+    return account == null
+        ? []
+        : fetchTransactionsDetailed(TransactionFilters(accountId: account.id, accountRemoteId: null));
   }
 
   @override
@@ -236,8 +241,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
       updatedAt: Value(transactionDto.updatedAt),
     );
 
-    final detailedValueObject =
-        await _transactionsDao.syncTransactionDetailed(transactionCompanion, accountCompanion);
+    final detailedValueObject = await _transactionsDao.syncTransactionDetailed(transactionCompanion, accountCompanion);
 
     return TransactionDetailEntity.fromTableItem(
       detailedValueObject.transaction,

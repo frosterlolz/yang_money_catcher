@@ -32,8 +32,8 @@ abstract interface class TransactionsLocalDataSource implements TransactionChang
   Future<void> insertTransactions(List<TransactionRequest$Create> requests);
   Future<TransactionEntity> updateTransaction(TransactionRequest transaction);
 
-  /// Возвращает remoteId удаленной транзакции (если есть)
-  Future<int?> deleteTransaction(int id);
+  /// Возвращает удаленную транзакцию, если было что удалять
+  Future<TransactionEntity?> deleteTransaction(int id);
 }
 
 /// TransactionChangesSource is used to get the status of the authentication

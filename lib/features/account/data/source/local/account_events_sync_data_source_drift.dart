@@ -19,8 +19,14 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
   StreamSubscription<Iterable<SyncAction<AccountEntity>>>? _accountEventsSubscription;
 
   @override
-  FutureOr<List<SyncAction<AccountEntity>>> fetchEvents() async {
-    if (_events.isNotEmpty) return _events;
+  FutureOr<List<SyncAction<AccountEntity>>> fetchEvents(
+    SyncAction<AccountEntity>? mergeWithNext, {
+    bool forceUpdate = false,
+  }) async {
+    if (mergeWithNext != null) {
+      await addAction(mergeWithNext);
+    }
+    if (_events.isNotEmpty && !forceUpdate) return _events;
     final eventItems = await _dao.fetchEvents();
     final events = eventItems.map(_fromVO).toList();
     _events.addAll(events);
@@ -29,9 +35,9 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
   }
 
   @override
-  Future<void> addEvent(SyncAction<AccountEntity> event) async {
-    final accountId = _getSyncActionAccountId(event);
-    final index = _events.indexWhere((syncAction) => _getSyncActionAccountId(syncAction) == accountId);
+  Future<void> addAction(SyncAction<AccountEntity> event) async {
+    final accountId = _getSyncActionAccountId$Local(event);
+    final index = _events.indexWhere((syncAction) => _getSyncActionAccountId$Local(syncAction) == accountId);
 
     // Событие не найдено - добавляем
     if (index == -1) {
@@ -51,10 +57,11 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
       final updatedCompanion = AccountEventItemsCompanion(
         actionType: Value(merged.actionType.name),
         account: Value(accountId),
-        createdAt: Value(merged.createdAt),
+        attempts: Value(merged.attempts),
       );
       await _dao.updateEvent(updatedCompanion);
     }
+    await fetchEvents(null, forceUpdate: true);
   }
 
   @override
@@ -67,19 +74,22 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
     final actionType = SyncActionType.fromName(vo.event.actionType);
     return switch (actionType) {
       SyncActionType.create => SyncAction.create(
+          data: AccountEntity.fromTableItem(vo.account ?? (throw StateError('Account is null'))),
+          dataRemoteId: vo.event.accountRemoteId ?? vo.account?.remoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
-          data: AccountEntity.fromTableItem(vo.account ?? (throw StateError('Account is null'))),
         ),
       SyncActionType.update => SyncAction.update(
+          data: AccountEntity.fromTableItem(vo.account ?? (throw StateError('Account is null'))),
+          dataRemoteId: vo.event.accountRemoteId ?? vo.account?.remoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
-          data: AccountEntity.fromTableItem(vo.account ?? (throw StateError('Account is null'))),
         ),
       SyncActionType.delete => SyncAction<AccountEntity>.delete(
+          dataId: vo.event.account,
+          dataRemoteId: vo.event.accountRemoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
-          dataId: vo.event.account,
         ),
     };
   }
@@ -88,7 +98,7 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
     ..clear()
     ..addAll(events);
 
-  int _getSyncActionAccountId(SyncAction<AccountEntity> event) => switch (event) {
+  int _getSyncActionAccountId$Local(SyncAction<AccountEntity> event) => switch (event) {
         SyncAction$Create<AccountEntity>(:final data) => data.id,
         SyncAction$Update<AccountEntity>(:final data) => data.id,
         SyncAction$Delete<AccountEntity>(:final dataId) => dataId,

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 mixin SyncActionMixin on Table {
   late final actionType = text()();
+  late final attempts = integer().withDefault(const Constant(0))();
 }
 
 mixin TimestampedTable on Table {

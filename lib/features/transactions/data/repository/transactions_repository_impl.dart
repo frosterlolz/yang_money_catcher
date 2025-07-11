@@ -8,6 +8,7 @@ import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
+import 'package:yang_money_catcher/features/transactions/data/dto/transaction_dto.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/network/transactions_network_data_source.dart';
@@ -24,17 +25,19 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
   })  : _transactionsNetworkDataSource = transactionsNetworkDataSource,
         _transactionsLocalDataSource = transactionsLocalDataSource,
         _transactionEventsSyncDS = transactionsSyncDataSource,
-        _transactionsLoaderCache = AsyncCache.ephemeral();
+        _transactionsLoaderCache$Local = AsyncCache.ephemeral(),
+        _transactionsLoaderCache$Network = AsyncCache.ephemeral();
 
   final TransactionsNetworkDataSource _transactionsNetworkDataSource;
   final TransactionsLocalDataSource _transactionsLocalDataSource;
   final TransactionEventsSyncDataSource _transactionEventsSyncDS;
-  final AsyncCache<List<TransactionDetailEntity>> _transactionsLoaderCache;
+  final AsyncCache<List<TransactionDetailEntity>> _transactionsLoaderCache$Local;
+  final AsyncCache<List<TransactionDetailsDto>> _transactionsLoaderCache$Network;
 
   @override
   Stream<DataResult<Iterable<TransactionDetailEntity>>> getTransactions(TransactionFilters filters) async* {
     await _syncEvents();
-    final transactions$Local = await _transactionsLoaderCache.fetch(
+    final transactions$Local = await _transactionsLoaderCache$Local.fetch(
       () async {
         final transactions = await _transactionsLocalDataSource.fetchTransactionsDetailed(filters);
         return transactions.toList();
@@ -42,8 +45,12 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
     );
     yield DataResult.offline(data: transactions$Local);
     try {
-      final transactions$Remote =
-          await _transactionsNetworkDataSource.getTransactions(filters);
+      final transactions$Remote = await _transactionsLoaderCache$Network.fetch(
+        () async {
+          final transactions = await _transactionsNetworkDataSource.getTransactions(filters);
+          return transactions.toList();
+        },
+      );
       final syncedTransactions = await _transactionsLocalDataSource.syncTransactions(
         localTransactions: transactions$Local,
         remoteTransactions: transactions$Remote,
@@ -57,134 +64,37 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<TransactionDetailEntity>> createTransaction(TransactionRequest$Create request) async* {
-    await _syncEvents();
     final transaction$Local = await _transactionsLocalDataSource.updateTransaction(request);
-    final detailedTransaction = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
-    if (detailedTransaction == null) throw StateError('Cannot fetch transaction after update');
-    yield DataResult.offline(data: detailedTransaction);
-    final syncedTransaction = await _createTransactionWithSync(transaction$Local);
-    yield DataResult.online(data: syncedTransaction);
-  }
-
-  Future<TransactionDetailEntity> _createTransactionWithSync(TransactionEntity transaction$Local) async {
-    try {
-      return await handleWithSync<TransactionDetailEntity>(
-        method: () async {
-          final request = TransactionRequest$Create(
-            accountId: transaction$Local.accountId,
-            categoryId: transaction$Local.categoryId,
-            amount: transaction$Local.amount,
-            transactionDate: transaction$Local.transactionDate,
-            comment: transaction$Local.comment,
-          );
-          final transaction$Remote = await _transactionsNetworkDataSource.createTransaction(request);
-          final transaction$RemoteEntity = TransactionEntity.merge(transaction$Remote, transaction$Local.id);
-          final syncedTransaction = await _transactionsLocalDataSource.syncTransaction(transaction$RemoteEntity);
-          final transactionDetailed = await _transactionsLocalDataSource.fetchTransaction(syncedTransaction.id);
-          if (transactionDetailed == null) throw StateError('Cannot fetch transaction after update');
-          return transactionDetailed;
-        },
-        addEventMethod: () async {
-          final nowUtc = DateTime.now().toUtc();
-          final event = SyncAction.create(
-            createdAt: nowUtc,
-            updatedAt: nowUtc,
-            data: transaction$Local,
-          );
-          await _transactionEventsSyncDS.addEvent(event);
-        },
-      );
-    } on RestClientException catch (e, s) {
-      final resException = switch (e) {
-        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
-        _ => e,
-      };
-      Error.throwWithStackTrace(resException, s);
-    }
+    final detailedTransaction$Local = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
+    if (detailedTransaction$Local == null) throw StateError('Cannot fetch transaction after update');
+    yield DataResult.offline(data: detailedTransaction$Local);
+    final action = SyncAction.create(data: transaction$Local, dataRemoteId: null);
+    final syncedTransaction = await _syncEvents(action);
+    yield DataResult.online(
+      data: syncedTransaction ?? (throw StateError('_syncEvents must return transaction with create action')),
+    );
   }
 
   @override
   Stream<DataResult<TransactionDetailEntity>> updateTransaction(TransactionRequest$Update request) async* {
-    await _syncEvents();
     final transaction$Local = await _transactionsLocalDataSource.updateTransaction(request);
-    final detailedTransaction = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
-    if (detailedTransaction == null) throw StateError('Cannot fetch transaction after update');
-    yield DataResult.offline(data: detailedTransaction);
-    final syncedTransaction = await _updateTransactionWithSync(transaction$Local);
-    yield DataResult.online(data: syncedTransaction);
-  }
-
-  Future<TransactionDetailEntity> _updateTransactionWithSync(TransactionEntity transaction$Local) async {
-    try {
-      return handleWithSync<TransactionDetailEntity>(
-        method: () async {
-          final request = TransactionRequest$Update(
-            id: transaction$Local.remoteId ?? (throw StateError('Transaction has no remote id')),
-            accountId: transaction$Local.accountId,
-            categoryId: transaction$Local.categoryId,
-            amount: transaction$Local.amount,
-            transactionDate: transaction$Local.transactionDate,
-            comment: transaction$Local.comment,
-          );
-          final transaction$Remote = await _transactionsNetworkDataSource.updateTransaction(request);
-          final syncedTransaction = await _transactionsLocalDataSource.syncTransactionWithDetails(
-            transaction$Remote,
-            localId: transaction$Local.id,
-          );
-          return syncedTransaction;
-        },
-        addEventMethod: () async {
-          final nowUtc = DateTime.now().toUtc();
-          final event = SyncAction.update(
-            createdAt: nowUtc,
-            updatedAt: nowUtc,
-            data: transaction$Local,
-          );
-          await _transactionEventsSyncDS.addEvent(event);
-        },
-      );
-    } on RestClientException catch (e, s) {
-      final resException = switch (e) {
-        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
-        _ => e,
-      };
-      Error.throwWithStackTrace(resException, s);
-    }
+    final transactionDetailed$Local = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
+    if (transactionDetailed$Local == null) throw StateError('Cannot fetch transaction after update');
+    yield DataResult.offline(data: transactionDetailed$Local);
+    final action = SyncAction.update(data: transaction$Local, dataRemoteId: null);
+    final res = await _syncEvents(action);
+    yield DataResult.online(data: res ?? (throw StateError('_syncEvents must return transaction with update action')));
   }
 
   @override
   Stream<DataResult<void>> deleteTransaction(int id) async* {
-    await _syncEvents();
-    final transactionId$Remote = await _transactionsLocalDataSource.deleteTransaction(id);
+    final transaction$Local = await _transactionsLocalDataSource.deleteTransaction(id);
     yield const DataResult.offline(data: null);
-    if (transactionId$Remote == null) return;
-    await _deleteTransactionWithSync(transactionId$Remote);
+    if (transaction$Local == null) return;
+    final action =
+        SyncAction<TransactionEntity>.delete(dataId: transaction$Local.id, dataRemoteId: transaction$Local.remoteId);
+    await _syncEvents(action);
     yield const DataResult.online(data: null);
-  }
-
-  Future<void> _deleteTransactionWithSync(int transactionId$Remote) async {
-    try {
-      return await handleWithSync<void>(
-        method: () async {
-          await _transactionsNetworkDataSource.deleteTransaction(transactionId$Remote);
-        },
-        addEventMethod: () async {
-          final nowUtc = DateTime.now().toUtc();
-          final event = SyncAction<TransactionEntity>.delete(
-            dataId: transactionId$Remote,
-            createdAt: nowUtc,
-            updatedAt: nowUtc,
-          );
-          await _transactionEventsSyncDS.addEvent(event);
-        },
-      );
-    } on RestClientException catch (e, s) {
-      final resException = switch (e) {
-        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
-        _ => e,
-      };
-      Error.throwWithStackTrace(resException, s);
-    }
   }
 
   @override
@@ -229,17 +139,125 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
   Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
       _transactionsLocalDataSource.transactionsListChanges(filters);
 
-  Future<void> _syncEvents() async {
-    final events = await _transactionEventsSyncDS.fetchEvents();
+  Future<TransactionDetailEntity?> _syncEvents([SyncAction<TransactionEntity>? transactionAction$Local]) async {
+    final events = await _transactionEventsSyncDS.fetchEvents(transactionAction$Local);
+    TransactionDetailEntity? result;
     for (final event in events) {
+      TransactionDetailEntity? bufferResult;
       switch (event) {
         case SyncAction$Create(:final data):
-          await _createTransactionWithSync(data);
+          final res = await _createTransactionWithSync(data);
+          if (res.id == data.id) {
+            bufferResult = res;
+          }
         case SyncAction$Update(:final data):
-          await _updateTransactionWithSync(data);
-        case SyncAction$Delete(:final dataId):
-          await _deleteTransactionWithSync(dataId);
+          final res = await _updateTransactionWithSync(data);
+          if (res.id == data.id) {
+            bufferResult = res;
+          }
+        case SyncAction$Delete(:final dataId, :final dataRemoteId):
+          await _deleteTransactionWithSync(transactionId: dataId, transactionId$Remote: dataRemoteId);
       }
+      result = bufferResult;
+    }
+    return result;
+  }
+
+  Future<TransactionDetailEntity> _createTransactionWithSync(TransactionEntity transaction$Local) async {
+    final nowUtc = DateTime.now().toUtc();
+    try {
+      return await handleWithSync<TransactionDetailEntity, TransactionEntity>(
+        action: SyncAction.create(
+          data: transaction$Local,
+          dataRemoteId: null,
+          createdAt: nowUtc,
+          updatedAt: nowUtc,
+        ),
+        trySync: () async {
+          final request = TransactionRequest$Create(
+            accountId: transaction$Local.accountId,
+            categoryId: transaction$Local.categoryId,
+            amount: transaction$Local.amount,
+            transactionDate: transaction$Local.transactionDate,
+            comment: transaction$Local.comment,
+          );
+          final transaction$Remote = await _transactionsNetworkDataSource.createTransaction(request);
+          final transaction$RemoteEntity = TransactionEntity.merge(transaction$Remote, transaction$Local.id);
+          final syncedTransaction = await _transactionsLocalDataSource.syncTransaction(transaction$RemoteEntity);
+          final transactionDetailed = await _transactionsLocalDataSource.fetchTransaction(syncedTransaction.id);
+          if (transactionDetailed == null) throw StateError('Cannot fetch transaction after update');
+          return transactionDetailed;
+        },
+        saveAction: _transactionEventsSyncDS.addAction,
+      );
+    } on RestClientException catch (e, s) {
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
+  }
+
+  Future<TransactionDetailEntity> _updateTransactionWithSync(TransactionEntity transaction$Local) async {
+    final nowUtc = DateTime.now().toUtc();
+    try {
+      return handleWithSync<TransactionDetailEntity, TransactionEntity>(
+        action: SyncAction.update(
+          data: transaction$Local,
+          dataRemoteId: null,
+          createdAt: nowUtc,
+          updatedAt: nowUtc,
+        ),
+        trySync: () async {
+          final request = TransactionRequest$Update(
+            id: transaction$Local.remoteId ?? (throw StateError('Transaction has no remote id')),
+            accountId: transaction$Local.accountId,
+            categoryId: transaction$Local.categoryId,
+            amount: transaction$Local.amount,
+            transactionDate: transaction$Local.transactionDate,
+            comment: transaction$Local.comment,
+          );
+          final transaction$Remote = await _transactionsNetworkDataSource.updateTransaction(request);
+          final syncedTransaction = await _transactionsLocalDataSource.syncTransactionWithDetails(
+            transaction$Remote,
+            localId: transaction$Local.id,
+          );
+          return syncedTransaction;
+        },
+        saveAction: _transactionEventsSyncDS.addAction,
+      );
+    } on RestClientException catch (e, s) {
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
+    }
+  }
+
+  Future<void> _deleteTransactionWithSync({required int transactionId, required int? transactionId$Remote}) async {
+    final nowUtc = DateTime.now().toUtc();
+    try {
+      return await handleWithSync<void, TransactionEntity>(
+        action: SyncAction<TransactionEntity>.delete(
+          dataId: transactionId,
+          dataRemoteId: null,
+          createdAt: nowUtc,
+          updatedAt: nowUtc,
+        ),
+        trySync: () async {
+          if (transactionId$Remote == null) return;
+          await _transactionsNetworkDataSource.deleteTransaction(transactionId$Remote);
+        },
+        saveAction: _transactionEventsSyncDS.addAction,
+      );
+    } on RestClientException catch (e, s) {
+      final resException = switch (e) {
+        StructuredBackendException(:final error) => AppException$Simple.fromStructuredException(error),
+        _ => e,
+      };
+      Error.throwWithStackTrace(resException, s);
     }
   }
 
