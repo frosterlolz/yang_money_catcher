@@ -7,19 +7,9 @@ part 'transaction_events_dao.g.dart';
 class TransactionEventsDao extends DatabaseAccessor<AppDatabase> with _$TransactionEventsDaoMixin {
   TransactionEventsDao(super.attachedDatabase);
 
-  Future<int> eventsRowCount() async {
-    final isExists = await _isTableExists();
-    if (!isExists) return 0;
-    return transactionEventItems.count().getSingle();
-  }
-
   Future<List<TransactionEventValueObject>> fetchEvents() async {
-    final isExists = await _isTableExists();
-    if (!isExists) return [];
     final eventsWithRefs = await attachedDatabase.managers.transactionEventItems
-        .withReferences(
-          (prefetch) => prefetch(transaction: true),
-        )
+        .withReferences((prefetch) => prefetch(transaction: true))
         .get();
 
     return eventsWithRefs
@@ -30,22 +20,6 @@ class TransactionEventsDao extends DatabaseAccessor<AppDatabase> with _$Transact
           ),
         )
         .toList();
-  }
-
-  Future<TransactionEventValueObject?> fetchEvent(int transactionId) async {
-    final isExists = await _isTableExists();
-    if (!isExists) return null;
-    final transactionEventWithRefs = await attachedDatabase.managers.transactionEventItems
-        .withReferences(
-          (prefetch) => prefetch(transaction: true),
-        )
-        .filter((f) => f.transaction.id.equals(transactionId))
-        .getSingleOrNull();
-    if (transactionEventWithRefs == null) return null;
-    return TransactionEventValueObject(
-      event: transactionEventWithRefs.$1,
-      transaction: transactionEventWithRefs.$2.transaction.prefetchedData?.singleOrNull,
-    );
   }
 
   Future<void> insertEvent(TransactionEventItemsCompanion companion) async =>
@@ -71,6 +45,4 @@ class TransactionEventsDao extends DatabaseAccessor<AppDatabase> with _$Transact
         ),
       )
       .watch();
-
-  Future<bool> _isTableExists() => attachedDatabase.managers.transactionEventItems.exists();
 }

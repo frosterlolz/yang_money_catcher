@@ -7,20 +7,9 @@ part 'account_events_dao.g.dart';
 class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEventsDaoMixin {
   AccountEventsDao(super.attachedDatabase);
 
-  Future<int> eventsRowCount() async {
-    final isExists = await _isTableExists();
-    if (!isExists) return 0;
-    return accountEventItems.count().getSingle();
-  }
-
   Future<List<AccountEventsValueObject>> fetchEvents() async {
-    final isExists = await _isTableExists();
-    if (!isExists) return [];
-    final eventsWithRefs = await attachedDatabase.managers.accountEventItems
-        .withReferences(
-          (prefetch) => prefetch(account: true),
-        )
-        .get();
+    final eventsWithRefs =
+        await attachedDatabase.managers.accountEventItems.withReferences((prefetch) => prefetch(account: true)).get();
 
     return eventsWithRefs
         .map(
@@ -31,22 +20,6 @@ class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEvent
         )
         .toList();
   }
-
-/*  Future<AccountEventsValueObject?> _fetchEvent(int accountId) async {
-    final isExists = await _isTableExists();
-    if (!isExists) return null;
-    final accountEventWithRefs = await attachedDatabase.managers.accountEventItems
-        .withReferences(
-          (prefetch) => prefetch(account: true),
-        )
-        .filter((f) => f.account.id.equals(accountId))
-        .getSingleOrNull();
-    if (accountEventWithRefs == null) return null;
-    return AccountEventsValueObject(
-      event: accountEventWithRefs.$1,
-      account: accountEventWithRefs.$2.account.prefetchedData?.singleOrNull,
-    );
-  }*/
 
   Future<void> insertEvent(AccountEventItemsCompanion companion) async =>
       into(accountEventItems).insert(companion, mode: InsertMode.insertOrReplace);
@@ -69,6 +42,4 @@ class AccountEventsDao extends DatabaseAccessor<AppDatabase> with _$AccountEvent
         ),
       )
       .watch();
-
-  Future<bool> _isTableExists() => attachedDatabase.managers.accountEventItems.exists();
 }

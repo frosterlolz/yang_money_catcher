@@ -20,10 +20,10 @@ class TransactionEntity with _$TransactionEntity {
     required DateTime updatedAt,
   }) = _TransactionEntity;
 
-  factory TransactionEntity.merge(TransactionDto dto, int localId) => TransactionEntity(
+  factory TransactionEntity.merge(TransactionDto dto, {required int localId, required int localAccountId}) => TransactionEntity(
         id: localId,
         remoteId: dto.id,
-        accountId: dto.accountId,
+        accountId: localAccountId,
         categoryId: dto.categoryId,
         amount: dto.amount,
         transactionDate: dto.transactionDate,
@@ -72,19 +72,6 @@ class TransactionDetailEntity with _$TransactionDetailEntity implements Comparab
   }) = _TransactionDetailEntity;
 
   const TransactionDetailEntity._();
-
-  // TODO(frosterlolz): unused factory
-  // factory TransactionDetailEntity.merge(TransactionDetailsDto dto, int localId) => TransactionDetailEntity(
-  //       id: localId,
-  //       remoteId: dto.id,
-  //       account: AccountBrief.merge(dto.account),
-  //       category: dto.category,
-  //       amount: dto.amount,
-  //       transactionDate: dto.transactionDate,
-  //       comment: dto.comment,
-  //       createdAt: dto.createdAt,
-  //       updatedAt: dto.updatedAt,
-  //     );
 
   factory TransactionDetailEntity.fromTableItem(
     TransactionItem item, {

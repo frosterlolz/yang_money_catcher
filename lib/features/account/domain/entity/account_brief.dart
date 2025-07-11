@@ -1,6 +1,5 @@
 import 'package:database/database.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:yang_money_catcher/features/account/data/dto/account_dto.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 
@@ -15,14 +14,6 @@ class AccountBrief with _$AccountBrief {
     required String balance,
     required Currency currency,
   }) = _AccountBrief;
-
-  factory AccountBrief.merge(AccountBriefDto dto, {required int localId}) => AccountBrief(
-        id: localId,
-        remoteId: dto.id,
-        name: dto.name,
-        balance: dto.balance,
-        currency: dto.currency,
-      );
 
   factory AccountBrief.fromEntity(AccountEntity entity) => AccountBrief(
         id: entity.id,

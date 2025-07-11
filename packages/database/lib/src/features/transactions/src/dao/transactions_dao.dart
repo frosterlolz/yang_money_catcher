@@ -4,25 +4,41 @@ import 'package:drift/drift.dart';
 
 part 'transactions_dao.g.dart';
 
+/// key -> remoteTxId, value -> localTxId
+typedef TransactionSyncedMap = Map<int, int>;
+
 @DriftAccessor(tables: [TransactionItems, TransactionCategoryItems, AccountItems])
 class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsDaoMixin {
   TransactionsDao(super.attachedDatabase);
 
   Future<int> transactionCategoryRowsCount() => transactionCategoryItems.count().getSingle();
+  Future<List<TransactionCategoryItem>> fetchTransactionCategories() => transactionCategoryItems.select().get();
+
+  Future<List<TransactionCategoryItem>> insertTransactionCategories(List<TransactionCategoryItemsCompanion> items) =>
+      transaction(() async {
+        if (items.isNotEmpty) {
+          await batch((b) {
+            b
+              ..deleteAll(transactionCategoryItems)
+              ..insertAll(transactionCategoryItems, items);
+          });
+        }
+
+        return transactionCategoryItems.select().get();
+      });
 
   Future<void> syncTransactions({
     required List<TransactionItemsCompanion> transactionsToUpsert,
     required List<int> transactionIdsToDelete,
     required List<AccountItemsCompanion> accountsToUpsert,
-    required Map<int, int> txAccountRemoteIdMap,
+    required TransactionSyncedMap txAccountRemoteIdMap,
   }) async {
     await transaction(() async {
       // 1. Обновляем аккаунты по remoteId (если они уже существуют)
       for (final acc in accountsToUpsert) {
         final remoteId = acc.remoteId.value;
         if (remoteId == null) continue;
-
-        await (update(accountItems)..where((tbl) => tbl.remoteId.equals(remoteId))).write(acc);
+        await (accountItems.update()..where((tbl) => tbl.remoteId.equals(remoteId))).write(acc);
       }
 
       // 2. Получаем обновлённые аккаунты из базы, чтобы достать их локальные id
@@ -86,19 +102,6 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
     });
   }
 
-  Future<List<TransactionCategoryItem>> fetchTransactionCategories() => transactionCategoryItems.select().get();
-
-  Future<List<TransactionCategoryItem>> insertTransactionCategories(List<TransactionCategoryItemsCompanion> items) =>
-      transaction(() async {
-        await transactionCategoryItems.deleteAll();
-
-        if (items.isNotEmpty) {
-          await batch((b) => b.insertAll(transactionCategoryItems, items));
-        }
-
-        return transactionCategoryItems.select().get();
-      });
-
   Future<int> transactionRowsCount() => transactionItems.count().getSingle();
 
   Future<List<TransactionItem>> fetchTransactions(int accountId) {
@@ -140,15 +143,15 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
   }
 
   Future<TransactionDetailedValueObject?> fetchTransaction(int id) async {
-    final transactionItem = await attachedDatabase.managers.transactionItems
+    final transactionItemWithRefs = await attachedDatabase.managers.transactionItems
         .withReferences((prefetch) => prefetch(account: true, category: true))
         .filter((f) => f.id.equals(id))
         .getSingleOrNull();
-    if (transactionItem == null) return null;
+    if (transactionItemWithRefs == null) return null;
     return TransactionDetailedValueObject(
-      transaction: transactionItem.$1,
-      category: transactionItem.$2.category.prefetchedData?.singleOrNull,
-      account: transactionItem.$2.account.prefetchedData?.singleOrNull,
+      transaction: transactionItemWithRefs.$1,
+      category: transactionItemWithRefs.$2.category.prefetchedData?.singleOrNull,
+      account: transactionItemWithRefs.$2.account.prefetchedData?.singleOrNull,
     );
   }
 
@@ -165,11 +168,10 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         // 1. Обновляем аккаунт по remoteId, если найден
         final rowsCount =
             await (update(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).write(accountCompanion);
-        if (rowsCount == 0) throw StateError('Account from transaction could not be updated');
+        if (rowsCount == 0) throw StateError('Account (remoteId=$accountRemoteId) could not be updated');
 
         // 2. Получаем локальный id аккаунта по его remoteId
-        final account =
-            await (select(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).getSingleOrNull();
+        final account = await _getAccountByRemoteId(accountRemoteId);
         if (account == null) throw StateError('Account with remoteId=$accountRemoteId not found after update');
 
         // 3. Обновляем TransactionItemsCompanion, чтобы он ссылался на нужный локальный account.id
@@ -284,4 +286,7 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
               : null,
         );
   }
+
+  Future<AccountItem?> _getAccountByRemoteId(int remoteId) =>
+      (accountItems.select()..where((a) => a.remoteId.equals(remoteId))).getSingleOrNull();
 }

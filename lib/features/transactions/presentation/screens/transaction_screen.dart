@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -54,7 +55,10 @@ Future<void> showTransactionScreen(
           }
           return bloc;
         },
-        child: TransactionScreen(isIncome: isIncome, initialTransaction: initialTransaction),
+        child: BlocBuilder<TransactionBloc, TransactionState>(
+          builder: (context, transactionState) =>
+              TransactionScreen(isIncome: isIncome, initialTransaction: transactionState.transaction),
+        ),
       ),
     );
 
@@ -302,6 +306,14 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 onDeleteTap: (transactionId) => doProcessing(() => _deleteTransaction(transactionId)),
                 isIncome: widget.isIncome,
               ),
+              if (kDebugMode)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
+                    Text('AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}'),
+                  ],
+                ),
             ],
           ),
         ),

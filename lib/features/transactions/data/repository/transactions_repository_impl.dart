@@ -193,7 +193,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
             comment: transaction$Local.comment,
           );
           final transaction$Remote = await _transactionsNetworkDataSource.createTransaction(request);
-          final transaction$RemoteEntity = TransactionEntity.merge(transaction$Remote, transaction$Local.id);
+          final transaction$RemoteEntity = TransactionEntity.merge(transaction$Remote, localId: transaction$Local.id, localAccountId: transaction$Local.accountId);
           final syncedTransaction = await _transactionsLocalDataSource.syncTransaction(transaction$RemoteEntity);
           final transactionDetailed = await _transactionsLocalDataSource.fetchTransaction(syncedTransaction.id);
           if (transactionDetailed == null) throw StateError('Cannot fetch transaction after update');

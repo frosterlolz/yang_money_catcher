@@ -57,18 +57,6 @@ class AccountDetailEntity with _$AccountDetailEntity {
     required DateTime updatedAt,
   }) = _AccountDetailEntity;
 
-  factory AccountDetailEntity.merge(AccountDetailsDto dto, int localId) => AccountDetailEntity(
-        id: localId,
-        remoteId: dto.id,
-        name: dto.name,
-        balance: dto.balance,
-        currency: dto.currency,
-        createdAt: dto.createdAt,
-        updatedAt: dto.updatedAt,
-        incomeStats: dto.incomeStats,
-        expenseStats: dto.expenseStats,
-      );
-
   factory AccountDetailEntity.fromLocalSource(
     AccountEntity item, {
     required List<TransactionCategoryStat> incomeStats,
@@ -88,7 +76,7 @@ class AccountDetailEntity with _$AccountDetailEntity {
 
   const AccountDetailEntity._();
 
-  AccountDetailEntity merge(AccountEntity other) => AccountDetailEntity(
+  AccountDetailEntity fromEntity(AccountEntity other) => AccountDetailEntity(
         id: other.id,
         name: other.name,
         balance: other.balance,

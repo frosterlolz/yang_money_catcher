@@ -54,7 +54,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       await for (final account in accountsStream) {
         switch (account.isOffline) {
           case true:
-            emitter(AccountState.processing(state.account?.merge(account.data), isOffline: true));
+            emitter(AccountState.processing(state.account?.fromEntity(account.data), isOffline: true));
           case false:
             final details = _accountRepository.getAccountDetail(account.data.id);
             await for (final accountResult in details) {

@@ -62,7 +62,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
   }) async {
     final transactionsToUpsert = <TransactionItemsCompanion>[];
     final Map<int, AccountItemsCompanion> accountsMapToUpsert = {};
-    final Map<int, int> txAccountRemoteIdMap = {}; // remoteTxId → remoteAccountId
+    final TransactionSyncedMap txAccountRemoteIdMap = {}; // remoteTxId → remoteAccountId
 
     for (final remoteTransaction in remoteTransactions) {
       final localOverlap =
@@ -156,7 +156,6 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
 
   @override
   Future<TransactionEntity> upsertTransaction(TransactionRequest request) async {
-    final now = DateTime.now();
     final companion = TransactionItemsCompanion(
       id: switch (request) {
         TransactionRequest$Create() => const Value.absent(),
@@ -167,7 +166,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
       amount: Value(request.amount),
       transactionDate: Value(request.transactionDate),
       comment: Value(request.comment),
-      updatedAt: Value(now),
+      updatedAt: Value(DateTime.now().toUtc()),
     );
     final updatedTransaction = await _transactionsDao.upsertTransaction(companion);
 
