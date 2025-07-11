@@ -92,7 +92,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
     }
 
     final idSToDelete = localTransactions
-        .where((local) => local.remoteId != null && !remoteTransactions.any((remote) => remote.id == local.remoteId))
+        .where((local) => !remoteTransactions.any((remote) => remote.id == local.remoteId))
         .map((local) => local.id)
         .toList(growable: false);
     await _transactionsDao.syncTransactions(
@@ -155,7 +155,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
   }
 
   @override
-  Future<TransactionEntity> updateTransaction(TransactionRequest request) async {
+  Future<TransactionEntity> upsertTransaction(TransactionRequest request) async {
     final now = DateTime.now();
     final companion = TransactionItemsCompanion(
       id: switch (request) {
@@ -209,6 +209,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
   Future<TransactionEntity> syncTransaction(TransactionEntity transaction) {
     final companion = TransactionItemsCompanion(
       id: Value(transaction.id),
+      remoteId: transaction.remoteId == null ? const Value.absent() : Value(transaction.remoteId),
       account: Value(transaction.accountId),
       category: Value(transaction.categoryId),
       amount: Value(transaction.amount),

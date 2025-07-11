@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:database/database.dart';
 import 'package:drift/drift.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
@@ -65,6 +66,17 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
   }
 
   @override
+  Future<void> removeAction(SyncAction<AccountEntity> action) async {
+    final currentActions = await fetchEvents(null);
+    final transactionId$Local = _getSyncActionAccountId$Local(action);
+    final foundAction = currentActions
+        .firstWhereOrNull((syncAction) => _getSyncActionAccountId$Local(syncAction) == transactionId$Local);
+    if (foundAction == null) return;
+    _events.remove(foundAction);
+    return _dao.deleteEvent(transactionId$Local);
+  }
+
+  @override
   Future<void> dispose() async {
     await _accountEventsSubscription?.cancel();
     _events.clear();
@@ -78,18 +90,21 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
           dataRemoteId: vo.event.accountRemoteId ?? vo.account?.remoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
+          attempts: vo.event.attempts,
         ),
       SyncActionType.update => SyncAction.update(
           data: AccountEntity.fromTableItem(vo.account ?? (throw StateError('Account is null'))),
           dataRemoteId: vo.event.accountRemoteId ?? vo.account?.remoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
+          attempts: vo.event.attempts,
         ),
       SyncActionType.delete => SyncAction<AccountEntity>.delete(
           dataId: vo.event.account,
           dataRemoteId: vo.event.accountRemoteId,
           createdAt: vo.event.createdAt,
           updatedAt: vo.event.updatedAt,
+          attempts: vo.event.attempts,
         ),
     };
   }

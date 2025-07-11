@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
+import 'package:yang_money_catcher/core/utils/converters/converters.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category_stat.dart';
 
@@ -25,7 +26,9 @@ class AccountDto {
   final String name;
   final String balance;
   final Currency currency;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime createdAt;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime updatedAt;
 }
 
@@ -64,7 +67,9 @@ class AccountDetailsDto {
   final String name;
   final String balance;
   final Currency currency;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime createdAt;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime updatedAt;
   final List<TransactionCategoryStat> incomeStats;
   final List<TransactionCategoryStat> expenseStats;

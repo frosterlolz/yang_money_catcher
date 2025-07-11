@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:database/database.dart';
 import 'package:drift/drift.dart';
 
@@ -33,6 +34,15 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         for (final acc in existingAccounts) acc.remoteId: acc.id,
       };
 
+      final existingRemoteIDs = transactionsToUpsert.map((tx) => tx.remoteId.value).nonNulls.toSet();
+      final existingRows = await (transactionItems.selectOnly()
+            ..addColumns([transactionItems.id, transactionItems.remoteId])
+            ..where(transactionItems.remoteId.isIn(existingRemoteIDs)))
+          .get();
+      final existingTransactionsMap = {
+        for (final row in existingRows) row.read(transactionItems.remoteId)!: row.read(transactionItems.id)!,
+      };
+
       // 3. Подставляем правильный accountId в каждую транзакцию
       final transactionsWithAccount = transactionsToUpsert.map((tx) {
         final remoteTxId = tx.remoteId.value;
@@ -48,7 +58,11 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
           throw Exception('No local account for remoteAccountId $remoteAccountId');
         }
 
-        return tx.copyWith(account: Value(localAccountId));
+        final txId$Local = existingTransactionsMap[tx.remoteId.value];
+        return tx.copyWith(
+          id: txId$Local == null ? const Value.absent() : Value(txId$Local),
+          account: Value(localAccountId),
+        );
       }).toList();
 
       // 4. Выполняем удаление и вставку транзакций
@@ -62,9 +76,9 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
             final txRemoteId = txItem.remoteId.value;
             if (txRemoteId == null) continue;
             if (txItem.id.present) {
-              batch.insert(transactionItems, txItem, onConflict: DoUpdate((_) => txItem));
-            } else {
               batch.update(transactionItems, txItem, where: (tbl) => tbl.remoteId.equals(txRemoteId));
+            } else {
+              batch.insert(transactionItems, txItem, onConflict: DoUpdate((_) => txItem));
             }
           }
         }
@@ -188,17 +202,28 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
       });
 
   Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion) async =>
-      companion.id.present ? _updateTransaction(companion) : _insertTransaction(companion);
+      companion.id.present ? _updateTransaction(companion) : _insertOrUpdateByRemoteId(companion);
 
-  Future<TransactionItem> _insertTransaction(TransactionItemsCompanion companion) async =>
-      into(transactionItems).insertReturning(companion);
+  Future<TransactionItem> _insertOrUpdateByRemoteId(TransactionItemsCompanion companion) async {
+    final remoteId = companion.remoteId.value;
 
-  Future<TransactionItem> _updateTransaction(TransactionItemsCompanion companion) async => transaction(() async {
-        final statement = update(transactionItems)..where((tx) => tx.id.equals(companion.id.value));
-        final updatedRowId = await statement.write(companion);
-        final updatedTransaction = select(transactionItems)..where((tx) => tx.rowId.equals(updatedRowId));
-        return updatedTransaction.getSingle();
-      });
+    if (remoteId != null) {
+      // Пробуем обновить по remoteId
+      final updatedRows =
+          await (update(transactionItems)..where((tbl) => tbl.remoteId.equals(remoteId))).write(companion);
+
+      if (updatedRows > 0) {
+        // Обновление успешно — возвращаем обновлённую запись
+        return (select(transactionItems)..where((tbl) => tbl.remoteId.equals(remoteId))).getSingle();
+      }
+    }
+
+    // Вставляем как новую
+    return into(transactionItems).insertReturning(companion);
+  }
+
+  Future<TransactionItem> _updateTransaction(TransactionItemsCompanion companion) =>
+      transactionItems.insertReturning(companion, onConflict: DoUpdate((_) => companion));
 
   /// Возвращает удаленную транзакцию
   Future<TransactionItem?> deleteTransaction(int id) async => transaction(() async {

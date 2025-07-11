@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:yang_money_catcher/core/utils/converters/converters.dart';
 
 part 'transaction_change_request.freezed.dart';
 part 'transaction_change_request.g.dart';
@@ -11,7 +12,7 @@ sealed class TransactionRequest with _$TransactionRequest {
     required int accountId,
     required int categoryId,
     required String amount,
-    required DateTime transactionDate,
+    @JsonKey(toJson: DateTimeConverter.toIsoDTString) required DateTime transactionDate,
     required String? comment,
   }) = TransactionRequest$Create;
 
@@ -20,7 +21,7 @@ sealed class TransactionRequest with _$TransactionRequest {
     required int accountId,
     required int categoryId,
     required String amount,
-    required DateTime transactionDate,
+    @JsonKey(toJson: DateTimeConverter.toIsoDTString) required DateTime transactionDate,
     required String? comment,
   }) = TransactionRequest$Update;
 }

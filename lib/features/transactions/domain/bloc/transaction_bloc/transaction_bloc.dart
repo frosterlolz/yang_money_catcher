@@ -78,12 +78,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           case true:
             emitter(TransactionState.processing(transactionResult.data, isOffline: transactionResult.isOffline));
           case false:
-            emitter(TransactionState.idle(transactionResult.data, isOffline: transactionResult.isOffline));
+            emitter(TransactionState.updated(transactionResult.data, isOffline: transactionResult.isOffline));
         }
-      }
-      final currentTransaction = state.transaction;
-      if (currentTransaction != null) {
-        emitter(TransactionState.idle(currentTransaction, isOffline: state.isOffline));
       }
     } on Object catch (e, s) {
       emitter(TransactionState.error(state.transaction, isOffline: state.isOffline, error: e));
@@ -106,7 +102,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
           case true:
             emitter(const TransactionState.processing(null, isOffline: true));
           case false:
-            emitter(const TransactionState.idle(null, isOffline: false));
+            emitter(const TransactionState.updated(null, isOffline: false));
         }
       }
     } on Object catch (e, s) {

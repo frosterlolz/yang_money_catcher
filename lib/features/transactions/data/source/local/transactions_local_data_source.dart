@@ -30,7 +30,7 @@ abstract interface class TransactionsLocalDataSource implements TransactionChang
   Future<List<TransactionDetailEntity>> fetchTransactionsDetailed(TransactionFilters filters);
   Future<TransactionDetailEntity?> fetchTransaction(int id);
   Future<void> insertTransactions(List<TransactionRequest$Create> requests);
-  Future<TransactionEntity> updateTransaction(TransactionRequest transaction);
+  Future<TransactionEntity> upsertTransaction(TransactionRequest transaction);
 
   /// Возвращает удаленную транзакцию, если было что удалять
   Future<TransactionEntity?> deleteTransaction(int id);

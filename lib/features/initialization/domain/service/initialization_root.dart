@@ -12,6 +12,7 @@ import 'package:yang_money_catcher/core/data/rest_client/interceptors/logging_in
 import 'package:yang_money_catcher/core/data/rest_client/transformers/worker_background_transformer.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source_drift.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source_drift.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
@@ -65,6 +66,7 @@ final class InitializationRoot {
           final database = d.context['drift_database']! as AppDatabase;
           final accountsDao = AccountsDao(database);
           final accountsLocalDataSource = AccountsLocalDataSource$Drift(accountsDao);
+          d.context['accounts_local_data_source'] = accountsLocalDataSource;
           final transactionsDao = TransactionsDao(database);
           final transactionsLocalDataSource = TransactionsLocalDataSource$Drift(transactionsDao);
           d.context['transactions_local_data_source'] = transactionsLocalDataSource;
@@ -87,10 +89,12 @@ final class InitializationRoot {
           final transactionsNetworkDataSource = TransactionsNetworkDataSource$Rest(d.restClient);
           final transactionEventsDao = TransactionEventsDao(database);
           final transactionEventsSyncDataSource = TransactionEventsSyncDataSource$Drift(transactionEventsDao);
+          final accountsLocalDataSource = d.context['accounts_local_data_source']! as AccountsLocalDataSource;
           final transactionsRepository = TransactionsRepositoryImpl(
             transactionsLocalDataSource: transactionsLocalDataSource,
             transactionsNetworkDataSource: transactionsNetworkDataSource,
             transactionsSyncDataSource: transactionEventsSyncDataSource,
+            accountsLocalDataSource: accountsLocalDataSource,
           );
           // TODO(frosterlolz): мок данные не треюбуются, БЭК подключен
           // await transactionsRepository.fillTransactionCategories();

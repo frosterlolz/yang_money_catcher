@@ -6,6 +6,7 @@ import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/utils/sync_handler_mixin.dart';
 import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/data/dto/transaction_dto.dart';
@@ -22,21 +23,24 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
     required TransactionsNetworkDataSource transactionsNetworkDataSource,
     required TransactionsLocalDataSource transactionsLocalDataSource,
     required TransactionEventsSyncDataSource transactionsSyncDataSource,
+    required AccountsLocalDataSource accountsLocalDataSource,
   })  : _transactionsNetworkDataSource = transactionsNetworkDataSource,
         _transactionsLocalDataSource = transactionsLocalDataSource,
         _transactionEventsSyncDS = transactionsSyncDataSource,
+        _accountsLocalDataSource = accountsLocalDataSource,
         _transactionsLoaderCache$Local = AsyncCache.ephemeral(),
         _transactionsLoaderCache$Network = AsyncCache.ephemeral();
 
   final TransactionsNetworkDataSource _transactionsNetworkDataSource;
   final TransactionsLocalDataSource _transactionsLocalDataSource;
   final TransactionEventsSyncDataSource _transactionEventsSyncDS;
+  final AccountsLocalDataSource _accountsLocalDataSource;
   final AsyncCache<List<TransactionDetailEntity>> _transactionsLoaderCache$Local;
   final AsyncCache<List<TransactionDetailsDto>> _transactionsLoaderCache$Network;
 
   @override
   Stream<DataResult<Iterable<TransactionDetailEntity>>> getTransactions(TransactionFilters filters) async* {
-    await _syncEvents();
+    await _syncActions();
     final transactions$Local = await _transactionsLoaderCache$Local.fetch(
       () async {
         final transactions = await _transactionsLocalDataSource.fetchTransactionsDetailed(filters);
@@ -64,12 +68,12 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<TransactionDetailEntity>> createTransaction(TransactionRequest$Create request) async* {
-    final transaction$Local = await _transactionsLocalDataSource.updateTransaction(request);
+    final transaction$Local = await _transactionsLocalDataSource.upsertTransaction(request);
     final detailedTransaction$Local = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
     if (detailedTransaction$Local == null) throw StateError('Cannot fetch transaction after update');
     yield DataResult.offline(data: detailedTransaction$Local);
     final action = SyncAction.create(data: transaction$Local, dataRemoteId: null);
-    final syncedTransaction = await _syncEvents(action);
+    final syncedTransaction = await _syncActions(action);
     yield DataResult.online(
       data: syncedTransaction ?? (throw StateError('_syncEvents must return transaction with create action')),
     );
@@ -77,12 +81,12 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<TransactionDetailEntity>> updateTransaction(TransactionRequest$Update request) async* {
-    final transaction$Local = await _transactionsLocalDataSource.updateTransaction(request);
+    final transaction$Local = await _transactionsLocalDataSource.upsertTransaction(request);
     final transactionDetailed$Local = await _transactionsLocalDataSource.fetchTransaction(transaction$Local.id);
     if (transactionDetailed$Local == null) throw StateError('Cannot fetch transaction after update');
     yield DataResult.offline(data: transactionDetailed$Local);
     final action = SyncAction.update(data: transaction$Local, dataRemoteId: null);
-    final res = await _syncEvents(action);
+    final res = await _syncActions(action);
     yield DataResult.online(data: res ?? (throw StateError('_syncEvents must return transaction with update action')));
   }
 
@@ -93,13 +97,13 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
     if (transaction$Local == null) return;
     final action =
         SyncAction<TransactionEntity>.delete(dataId: transaction$Local.id, dataRemoteId: transaction$Local.remoteId);
-    await _syncEvents(action);
+    await _syncActions(action);
     yield const DataResult.online(data: null);
   }
 
   @override
   Stream<DataResult<TransactionDetailEntity>> getTransaction(int id) async* {
-    await _syncEvents();
+    await _syncActions();
     final transaction$Local = await _transactionsLocalDataSource.fetchTransaction(id);
     if (transaction$Local != null) {
       yield DataResult.offline(data: transaction$Local);
@@ -119,7 +123,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
 
   @override
   Stream<DataResult<Iterable<TransactionCategory>>> getTransactionCategories() async* {
-    await _syncEvents();
+    await _syncActions();
     final categories$Local = await _transactionsLocalDataSource.fetchTransactionCategories();
     yield DataResult.offline(data: categories$Local);
     try {
@@ -139,12 +143,12 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
   Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
       _transactionsLocalDataSource.transactionsListChanges(filters);
 
-  Future<TransactionDetailEntity?> _syncEvents([SyncAction<TransactionEntity>? transactionAction$Local]) async {
-    final events = await _transactionEventsSyncDS.fetchEvents(transactionAction$Local);
+  Future<TransactionDetailEntity?> _syncActions([SyncAction<TransactionEntity>? transactionAction$Local]) async {
+    final actions = await _transactionEventsSyncDS.fetchActions(transactionAction$Local);
     TransactionDetailEntity? result;
-    for (final event in events) {
+    for (final action in actions.toList()) {
       TransactionDetailEntity? bufferResult;
-      switch (event) {
+      switch (action) {
         case SyncAction$Create(:final data):
           final res = await _createTransactionWithSync(data);
           if (res.id == data.id) {
@@ -159,6 +163,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
           await _deleteTransactionWithSync(transactionId: dataId, transactionId$Remote: dataRemoteId);
       }
       result = bufferResult;
+      await _transactionEventsSyncDS.removeAction(action);
     }
     return result;
   }
@@ -174,8 +179,14 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
           updatedAt: nowUtc,
         ),
         trySync: () async {
+          final account$Remote = await _accountsLocalDataSource.fetchAccount(transaction$Local.accountId);
+          final accountId$Remote = account$Remote?.remoteId;
+          if (accountId$Remote == null) {
+            await _transactionEventsSyncDS.removeAction(SyncAction.create(data: transaction$Local, dataRemoteId: null));
+            throw StateError('Account has no remote id (_createTransactionWithSync)');
+          }
           final request = TransactionRequest$Create(
-            accountId: transaction$Local.accountId,
+            accountId: accountId$Remote,
             categoryId: transaction$Local.categoryId,
             amount: transaction$Local.amount,
             transactionDate: transaction$Local.transactionDate,
@@ -210,9 +221,12 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
           updatedAt: nowUtc,
         ),
         trySync: () async {
+          final account$Remote = await _accountsLocalDataSource.fetchAccount(transaction$Local.accountId);
+          final accountId$Remote = account$Remote?.remoteId;
+          if (accountId$Remote == null) throw StateError('Account has no remote id (_createTransactionWithSync)');
           final request = TransactionRequest$Update(
             id: transaction$Local.remoteId ?? (throw StateError('Transaction has no remote id')),
-            accountId: transaction$Local.accountId,
+            accountId: accountId$Remote,
             categoryId: transaction$Local.categoryId,
             amount: transaction$Local.amount,
             transactionDate: transaction$Local.transactionDate,

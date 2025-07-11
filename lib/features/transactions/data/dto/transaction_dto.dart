@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
+import 'package:yang_money_catcher/core/utils/converters/converters.dart';
 import 'package:yang_money_catcher/features/account/data/dto/account_dto.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 
@@ -26,7 +27,9 @@ class TransactionDto {
   final String amount;
   final DateTime transactionDate;
   final String? comment;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime createdAt;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime updatedAt;
 }
 
@@ -51,6 +54,8 @@ class TransactionDetailsDto {
   final String amount;
   final DateTime transactionDate;
   final String? comment;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime createdAt;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime updatedAt;
 }

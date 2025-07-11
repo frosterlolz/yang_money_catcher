@@ -14,6 +14,7 @@ dependencies:
     sdk: flutter
   drift: ^2.27.0
   drift_flutter: 0.2.4
+  collection: any
 
 dev_dependencies:
   flutter_test:

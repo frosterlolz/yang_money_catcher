@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
@@ -10,6 +11,7 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/features/transactions/domain/repository/transactions_repository.dart';
 
+import '../../account/repository/account_repositry_test.mocks.dart';
 import '../mock_entity_helper/transaction_entities.dart';
 import 'transactions_test.mocks.dart';
 
@@ -22,23 +24,26 @@ void main() {
   late TransactionsLocalDataSource transactionsLocalDataSource;
   late TransactionEventsSyncDataSource transactionEventsSyncDataSource;
   late TransactionsNetworkDataSource transactionsNetworkDataSource;
+  late AccountsLocalDataSource accountsLocalDataSource;
   late TransactionsRepository repository;
 
   setUp(() {
     transactionsLocalDataSource = MockTransactionsLocalDataSource();
     transactionEventsSyncDataSource = MockTransactionEventsSyncDataSource();
     transactionsNetworkDataSource = MockTransactionsNetworkDataSource();
+    accountsLocalDataSource = MockAccountsLocalDataSource();
     repository = TransactionsRepositoryImpl(
       transactionsSyncDataSource: transactionEventsSyncDataSource,
       transactionsNetworkDataSource: transactionsNetworkDataSource,
       transactionsLocalDataSource: transactionsLocalDataSource,
+      accountsLocalDataSource: accountsLocalDataSource,
     );
   });
 
   test('Создание новой транзакции', () async {
     final txRequest = MockTransactionsEntitiesHelper.sampleCreateRequest();
     final txItem = MockTransactionsEntitiesHelper.entityFromRequest(txRequest);
-    when(transactionsLocalDataSource.updateTransaction(txRequest)).thenAnswer((_) async => txItem);
+    when(transactionsLocalDataSource.upsertTransaction(txRequest)).thenAnswer((_) async => txItem);
     final tx = await repository.createTransaction(txRequest).first;
 
     expect(tx.data.category.id, equals(txItem.id));
@@ -49,7 +54,7 @@ void main() {
     final txRequest = MockTransactionsEntitiesHelper.sampleCreateRequest();
     final txItem = MockTransactionsEntitiesHelper.entityFromRequest(txRequest);
     final txDetailedEntity = MockTransactionsEntitiesHelper.detailedEntityFromRequest(txRequest);
-    when(transactionsLocalDataSource.updateTransaction(txRequest)).thenAnswer((_) async => txItem);
+    when(transactionsLocalDataSource.upsertTransaction(txRequest)).thenAnswer((_) async => txItem);
     final created = await repository.createTransaction(txRequest).first;
     when(transactionsLocalDataSource.fetchTransaction(created.data.id)).thenAnswer((_) async => txDetailedEntity);
     final detail = await repository.getTransaction(created.data.id).first;
@@ -60,7 +65,7 @@ void main() {
   test('Обновление транзакции', () async {
     final txRequest = MockTransactionsEntitiesHelper.sampleCreateRequest();
     final txItem = MockTransactionsEntitiesHelper.entityFromRequest(txRequest);
-    when(transactionsLocalDataSource.updateTransaction(txRequest)).thenAnswer((_) async => txItem);
+    when(transactionsLocalDataSource.upsertTransaction(txRequest)).thenAnswer((_) async => txItem);
     final created = await repository.createTransaction(txRequest).first;
 
     final txUpdateRequest = TransactionRequest$Update(
@@ -73,7 +78,7 @@ void main() {
     );
     final txUpdatedItem = MockTransactionsEntitiesHelper.entityFromRequest(txUpdateRequest);
     final txDetailedUpdatedItem = MockTransactionsEntitiesHelper.detailedEntityFromRequest(txUpdateRequest);
-    when(transactionsLocalDataSource.updateTransaction(txUpdateRequest)).thenAnswer((_) async => txUpdatedItem);
+    when(transactionsLocalDataSource.upsertTransaction(txUpdateRequest)).thenAnswer((_) async => txUpdatedItem);
     when(transactionsLocalDataSource.fetchTransaction(created.data.id)).thenAnswer((_) async => txDetailedUpdatedItem);
     final updated = await repository.updateTransaction(txUpdateRequest).first;
 
@@ -84,7 +89,7 @@ void main() {
   test('Удаление транзакции', () async {
     final txRequest = MockTransactionsEntitiesHelper.sampleCreateRequest();
     final txItem = MockTransactionsEntitiesHelper.entityFromRequest(txRequest);
-    when(transactionsLocalDataSource.updateTransaction(txRequest)).thenAnswer((_) async => txItem);
+    when(transactionsLocalDataSource.upsertTransaction(txRequest)).thenAnswer((_) async => txItem);
     final created = await repository.createTransaction(txRequest).first;
 
     when(transactionsLocalDataSource.deleteTransaction(created.data.id)).thenAnswer((_) async => null);
@@ -103,8 +108,8 @@ void main() {
     final firstEntity = MockTransactionsEntitiesHelper.entityFromRequest(firstRequest);
     final secondEntity = MockTransactionsEntitiesHelper.entityFromRequest(secondRequest, id: 2);
     final firstDetailedEntity = MockTransactionsEntitiesHelper.detailedEntityFromRequest(firstRequest);
-    when(transactionsLocalDataSource.updateTransaction(firstRequest)).thenAnswer((_) async => firstEntity);
-    when(transactionsLocalDataSource.updateTransaction(secondRequest)).thenAnswer((_) async => secondEntity);
+    when(transactionsLocalDataSource.upsertTransaction(firstRequest)).thenAnswer((_) async => firstEntity);
+    when(transactionsLocalDataSource.upsertTransaction(secondRequest)).thenAnswer((_) async => secondEntity);
 
     final filters =
         TransactionFilters(accountId: 1, accountRemoteId: 1, startDate: now.subtract(const Duration(days: 1)));

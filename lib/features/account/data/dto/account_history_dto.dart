@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
+import 'package:yang_money_catcher/core/utils/converters/converters.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 
 part 'account_history_dto.g.dart';
@@ -42,7 +43,9 @@ class AccountHistoryItemDto {
   final AccountStateChangingReason changeType;
   final AccountStateDto previousState;
   final AccountStateDto newState;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime changeTimestamp;
+  @JsonKey(fromJson: DateTimeConverter.fromJson)
   final DateTime createdAt;
 }
 

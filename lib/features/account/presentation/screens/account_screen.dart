@@ -97,6 +97,11 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
     }
   }
 
+  Future<void> _refreshAccount() async {
+    final accountBloc = context.read<AccountBloc>()..add(AccountEvent.load(widget.account.id));
+    await accountBloc.stream.firstWhere((state) => state is! AccountState$Processing);
+  }
+
   Future<void> _loadTransactions() async {
     final dtNow = DateTime.now();
     final startDate = switch (_fetchCalendarValue) {
@@ -115,6 +120,13 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
     await transactionsBloc.stream.firstWhere((state) => state is! TransactionsState$Processing);
   }
 
+  Future<void> _onRefresh() async {
+    await Future.wait([
+      _refreshAccount(),
+      _loadTransactions(),
+    ]).timeout(const Duration(seconds: 20));
+  }
+
   void _changeCalendarValue(CalendarValues value) {
     if (value == _fetchCalendarValue || !mounted) return;
     setState(() => _fetchCalendarValue = value);
@@ -123,7 +135,7 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
 
   @override
   Widget build(BuildContext context) => RefreshIndicator.adaptive(
-        onRefresh: _loadTransactions,
+        onRefresh: _onRefresh,
         child: ListView(
           children: [
             ...ListTile.divideTiles(

@@ -36,14 +36,25 @@ class AccountsDao extends DatabaseAccessor<AppDatabase> with _$AccountsDaoMixin 
       });
 
   Future<AccountItem> upsertAccount(AccountItemsCompanion companion) async =>
-      companion.id.present ? _updateAccount(companion) : _insertAccount(companion);
+      companion.id.present ? _updateAccount(companion) : _insertOrUpdateByRemoteId(companion);
 
-  Future<AccountItem> _insertAccount(AccountItemsCompanion companion) async =>
-      into(accountItems).insertReturning(companion);
+  Future<AccountItem> _insertOrUpdateByRemoteId(AccountItemsCompanion companion) async {
+    final remoteId = companion.remoteId.value;
 
-  Future<AccountItem> _updateAccount(AccountItemsCompanion companion) async => transaction(() async {
-        final statement = update(accountItems)..where((tx) => tx.id.equals(companion.id.value));
-        final updatedAccounts = await statement.writeReturning(companion);
-        return updatedAccounts.first;
-      });
+    if (remoteId != null) {
+      // Пробуем обновить по remoteId
+      final updatedRows =
+          await (update(accountItems)..where((tbl) => tbl.remoteId.equals(remoteId))).writeReturning(companion);
+
+      if (updatedRows.isNotEmpty) {
+        return updatedRows.first;
+      }
+    }
+
+    // Вставляем как новую
+    return into(accountItems).insertReturning(companion);
+  }
+
+  Future<AccountItem> _updateAccount(AccountItemsCompanion companion) async =>
+      (await accountItems.update().writeReturning(companion)).first;
 }

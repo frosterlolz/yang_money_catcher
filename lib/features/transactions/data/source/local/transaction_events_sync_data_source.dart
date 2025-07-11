@@ -5,6 +5,7 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 
 abstract interface class TransactionEventsSyncDataSource {
   Future<void> addAction(SyncAction<TransactionEntity> event);
-  FutureOr<List<SyncAction<TransactionEntity>>> fetchEvents(SyncAction<TransactionEntity>? mergeWithNext);
+  Future<void> removeAction(SyncAction<TransactionEntity> action);
+  FutureOr<List<SyncAction<TransactionEntity>>> fetchActions(SyncAction<TransactionEntity>? mergeWithNext);
   Future<void> dispose();
 }

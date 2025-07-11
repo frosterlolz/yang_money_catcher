@@ -35,7 +35,7 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
 
   @override
   Stream<DataResult<Iterable<AccountEntity>>> getAccounts() async* {
-    await _syncEvents();
+    await _syncActions();
     final localAccounts = await _accountsLocalDataSource.fetchAccounts();
     yield DataResult.offline(data: localAccounts);
     try {
@@ -56,7 +56,7 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
     final localAccount = await _accountsLocalDataSource.updateAccount(request);
     yield DataResult.offline(data: localAccount);
     final action = SyncAction.create(data: localAccount, dataRemoteId: null);
-    final syncAccount = await _syncEvents(action);
+    final syncAccount = await _syncActions(action);
     yield DataResult.online(
       data: syncAccount ?? (throw StateError('_syncEvents must return account with create action')),
     );
@@ -70,7 +70,7 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
       dataRemoteId: null,
       data: account$Local,
     );
-    final syncedAccount = await _syncEvents(action);
+    final syncedAccount = await _syncActions(action);
     yield DataResult.online(
       data: syncedAccount ?? (throw StateError('_syncEvents must return account with update action')),
     );
@@ -82,14 +82,14 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
     yield const DataResult.offline(data: null);
     if (account == null) return;
     final action = SyncAction<AccountEntity>.delete(dataId: account.id, dataRemoteId: account.remoteId);
-    await _syncEvents(action);
+    await _syncActions(action);
     yield const DataResult.online(data: null);
   }
 
   // TODO(frosterlolz): много грязи! нужно рефачить
   @override
   Stream<DataResult<AccountDetailEntity>> getAccountDetail(int id) async* {
-    await _syncEvents();
+    await _syncActions();
     final account$Local = await _accountsLocalDataSource.fetchAccount(id);
     final remoteId = account$Local?.remoteId;
     if (account$Local != null) {
@@ -131,7 +131,7 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
 
   @override
   Stream<DataResult<AccountHistory>> getAccountHistory(int accountId) async* {
-    await _syncEvents();
+    await _syncActions();
     final account$Local = await _accountsLocalDataSource.fetchAccount(accountId);
     if (account$Local != null) {
       // TODO(frosterlolz): на данном этапе не актульные данные
@@ -155,12 +155,12 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
     }
   }
 
-  Future<AccountEntity?> _syncEvents([SyncAction<AccountEntity>? accountAction$Local]) async {
-    final events = await _accountEventsSyncDataSource.fetchEvents(accountAction$Local);
+  Future<AccountEntity?> _syncActions([SyncAction<AccountEntity>? accountAction$Local]) async {
+    final actions = await _accountEventsSyncDataSource.fetchEvents(accountAction$Local);
     AccountEntity? result;
-    for (final event in events) {
+    for (final action in actions) {
       AccountEntity? bufferResult;
-      switch (event) {
+      switch (action) {
         case SyncAction$Create(:final data):
           final res = await _createAccountWithSync(data);
           if (res.id == data.id) {
@@ -175,6 +175,7 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
           await _deleteAccountWithSync(accountId: dataId, accountId$Remote: dataRemoteId);
       }
       result = bufferResult;
+      await _accountEventsSyncDataSource.removeAction(action);
     }
     return result;
   }
