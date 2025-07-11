@@ -59,17 +59,13 @@ final class RestClientDio extends RestClientBase {
           e.stackTrace,
         );
       }
-      // TODO(frosterlolz): Optional. Remove in another scenarios
-      if (e.response?.statusCode == 404) {
-        return null;
-      }
       if (e.response != null) {
         final result = await decodeResponse(
           e.response!.data,
           statusCode: e.response?.statusCode,
         );
         if (result is JsonMap) {
-          Error.throwWithStackTrace(StructuredBackendException(error: result), e.stackTrace);
+          Error.throwWithStackTrace(StructuredBackendException(error: result, statusCode: e.response?.statusCode), e.stackTrace);
         }
       }
       Error.throwWithStackTrace(

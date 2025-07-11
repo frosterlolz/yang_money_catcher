@@ -216,28 +216,28 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
 
   @override
   Future<TransactionDetailEntity> syncTransactionWithDetails(
-    TransactionDetailsDto transaction, {
+    TransactionDetailsDto transactionDto, {
     required int? localId,
   }) async {
     final transactionCompanion = TransactionItemsCompanion(
       id: localId == null ? const Value.absent() : Value(localId),
-      remoteId: Value(transaction.id),
-      category: Value(transaction.category.id),
-      amount: Value(transaction.amount),
-      transactionDate: Value(transaction.transactionDate),
-      comment: Value(transaction.comment),
-      updatedAt: Value(transaction.updatedAt),
+      remoteId: Value(transactionDto.id),
+      category: Value(transactionDto.category.id),
+      amount: Value(transactionDto.amount),
+      transactionDate: Value(transactionDto.transactionDate),
+      comment: Value(transactionDto.comment),
+      updatedAt: Value(transactionDto.updatedAt),
     );
     final accountCompanion = AccountItemsCompanion(
-      remoteId: Value(transaction.account.id),
-      name: Value(transaction.account.name),
-      balance: Value(transaction.account.balance),
-      currency: Value(transaction.account.currency.key),
-      updatedAt: Value(transaction.updatedAt),
+      remoteId: Value(transactionDto.account.id),
+      name: Value(transactionDto.account.name),
+      balance: Value(transactionDto.account.balance),
+      currency: Value(transactionDto.account.currency.key),
+      updatedAt: Value(transactionDto.updatedAt),
     );
 
     final detailedValueObject =
-        await _transactionsDao.upsertTransactionDetailed(transactionCompanion, accountCompanion);
+        await _transactionsDao.syncTransactionDetailed(transactionCompanion, accountCompanion);
 
     return TransactionDetailEntity.fromTableItem(
       detailedValueObject.transaction,

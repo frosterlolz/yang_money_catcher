@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:database/database.dart';
 import 'package:drift/drift.dart';
 
@@ -58,7 +60,15 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         }
 
         if (transactionsWithAccount.isNotEmpty) {
-          batch.insertAllOnConflictUpdate(transactionItems, transactionsWithAccount);
+          for (final txItem in transactionsWithAccount) {
+            final txRemoteId = txItem.remoteId.value;
+            if (txRemoteId == null) continue;
+            if (txItem.id.present) {
+              batch.insert(transactionItems, txItem, onConflict: DoUpdate((_) => txItem));
+            } else {
+              batch.update(transactionItems, txItem, where: (tbl) => tbl.remoteId.equals(txRemoteId));
+            }
+          }
         }
       });
     });
@@ -132,17 +142,22 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
 
   Future<void> insertTransactions(List<TransactionItemsCompanion> companions) => transactionItems.insertAll(companions);
 
-  Future<TransactionDetailedValueObject> upsertTransactionDetailed(
+  Future<TransactionDetailedValueObject> syncTransactionDetailed(
     TransactionItemsCompanion transactionCompanion,
     AccountItemsCompanion accountCompanion,
   ) async =>
       transaction(() async {
         final accountRemoteId = accountCompanion.remoteId.value ?? (throw StateError('Account remoteId is null'));
-        // 1. Обновляем или вставляем аккаунт по remoteId
-        await into(accountItems).insertOnConflictUpdate(accountCompanion);
+        final transactionRemoteId =
+            transactionCompanion.remoteId.value ?? (throw StateError('Transaction remoteId is null'));
+        // 1. Обновляем аккаунт по remoteId, если найден
+        final rowsCount =
+            await (update(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).write(accountCompanion);
+        if (rowsCount == 0) throw StateError('Account from transaction could not be updated');
 
         // 2. Получаем локальный id аккаунта по его remoteId
-        final account = await (select(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).getSingle();
+        final account = await (select(accountItems)..where((a) => a.remoteId.equals(accountRemoteId))).getSingleOrNull();
+        if (account == null) throw StateError('Account with remoteId=$accountRemoteId not found after update');
 
         // 3. Обновляем TransactionItemsCompanion, чтобы он ссылался на нужный локальный account.id
         final updatedTransactionCompanion = transactionCompanion.copyWith(
@@ -150,22 +165,26 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         );
 
         // 4. Вставляем/обновляем транзакцию
-        final transactionId = await into(transactionItems).insertOnConflictUpdate(updatedTransactionCompanion);
+        if (updatedTransactionCompanion.id.present) {
+          await transactionItems.insertOnConflictUpdate(updatedTransactionCompanion);
+        } else {
+          await (transactionItems.update()..where((table) => table.remoteId.equals(transactionRemoteId)))
+              .write(updatedTransactionCompanion);
+        }
 
         // 5. Получаем связанную категорию
-        final joined = await (select(transactionItems)..where((t) => t.id.equals(transactionId))).join([
-          leftOuterJoin(accountItems, accountItems.id.equalsExp(transactionItems.account)),
-          leftOuterJoin(transactionCategoryItems, transactionCategoryItems.id.equalsExp(transactionItems.category)),
-        ]).getSingle();
 
-        final transactionRow = joined.readTable(transactionItems);
-        final accountRow = joined.readTable(accountItems);
-        final categoryRow = joined.readTable(transactionCategoryItems);
+        final txItemWithRefs = await attachedDatabase.managers.transactionItems
+            .withReferences((prefetch) => prefetch(account: true, category: true))
+            .filter((table) => table.remoteId.equals(transactionRemoteId))
+            .getSingleOrNull();
+
+        if (txItemWithRefs == null) throw StateError('TransactionItem with remoteId $transactionRemoteId not found');
 
         return TransactionDetailedValueObject(
-          transaction: transactionRow,
-          account: accountRow,
-          category: categoryRow,
+          transaction: txItemWithRefs.$1,
+          account: txItemWithRefs.$2.account.prefetchedData?.singleOrNull,
+          category: txItemWithRefs.$2.category.prefetchedData?.singleOrNull,
         );
       });
 
