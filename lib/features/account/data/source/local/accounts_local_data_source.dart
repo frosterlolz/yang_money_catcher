@@ -53,4 +53,10 @@ abstract interface class AccountsLocalDataSource {
   ///
   /// Возвращает удаленный аккаунт, если было что удалять.
   Future<AccountEntity?> deleteAccount(int accountId);
+
+  /// Возвращает поток аккаунтов.
+  Stream<List<AccountEntity>> watchAccounts();
+
+  /// Возвращает поток аккаунтов, отслеживающий изменения аккаунта с указанным [id].
+  Stream<AccountDetailEntity> watchAccountDetail(int id);
 }

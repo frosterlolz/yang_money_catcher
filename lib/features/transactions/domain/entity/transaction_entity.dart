@@ -20,7 +20,8 @@ class TransactionEntity with _$TransactionEntity {
     required DateTime updatedAt,
   }) = _TransactionEntity;
 
-  factory TransactionEntity.merge(TransactionDto dto, {required int localId, required int localAccountId}) => TransactionEntity(
+  factory TransactionEntity.merge(TransactionDto dto, {required int localId, required int localAccountId}) =>
+      TransactionEntity(
         id: localId,
         remoteId: dto.id,
         accountId: localAccountId,

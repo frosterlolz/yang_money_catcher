@@ -155,10 +155,16 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
     }
   }
 
+  @override
+  Stream<List<AccountEntity>> watchAccounts() => _accountsLocalDataSource.watchAccounts();
+
+  @override
+  Stream<AccountDetailEntity> watchAccount(int accountId) => _accountsLocalDataSource.watchAccountDetail(accountId);
+
   Future<AccountEntity?> _syncActions([SyncAction<AccountEntity>? accountAction$Local]) async {
     final actions = await _accountEventsSyncDataSource.fetchEvents(accountAction$Local);
     AccountEntity? result;
-    for (final action in actions) {
+    for (final action in actions.toList(growable: false)) {
       AccountEntity? bufferResult;
       switch (action) {
         case SyncAction$Create(:final data):

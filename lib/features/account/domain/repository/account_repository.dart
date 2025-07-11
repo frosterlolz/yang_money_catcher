@@ -55,4 +55,19 @@ abstract interface class AccountRepository {
   /// Returns:
   ///   AccountHistory — история операций (список транзакций или действий).
   Stream<DataResult<AccountHistory>> getAccountHistory(int accountId);
+
+  /// Получить изменения по всем счетам.
+  ///
+  /// Returns:
+  ///   Iterable<AccountEntity>
+  Stream<List<AccountEntity>> watchAccounts();
+
+  /// Получить изменения по конкретному счету.
+  ///
+  /// Parameters:
+  ///   [accountId] — идентификатор счета.
+  ///
+  /// Returns:
+  ///   AccountDetailEntity - полные данные счета.
+  Stream<AccountDetailEntity> watchAccount(int accountId);
 }

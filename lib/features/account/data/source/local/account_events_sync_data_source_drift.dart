@@ -29,10 +29,12 @@ final class AccountEventsSyncDataSource$Drift implements AccountEventsSyncDataSo
     }
     if (_events.isNotEmpty && !forceUpdate) return _events;
     final eventItems = await _dao.fetchEvents();
-    final events = eventItems.map(_fromVO).toList();
-    _events.addAll(events);
+    final events = eventItems.map(_fromVO);
+    _events
+      ..clear()
+      ..addAll(events);
 
-    return events;
+    return _events.toList();
   }
 
   @override

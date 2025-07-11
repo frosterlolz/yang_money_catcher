@@ -38,6 +38,13 @@ class AccountsDao extends DatabaseAccessor<AppDatabase> with _$AccountsDaoMixin 
   Future<AccountItem> upsertAccount(AccountItemsCompanion companion) async =>
       companion.id.present ? _updateAccount(companion) : _insertOrUpdateByRemoteId(companion);
 
+  Stream<AccountItem> watchAccount(int id) {
+    final query = accountItems.select()..where((table) => table.id.equals(id));
+    return query.watchSingle();
+  }
+
+  Stream<List<AccountItem>> watchAccounts() => accountItems.select().watch();
+
   Future<AccountItem> _insertOrUpdateByRemoteId(AccountItemsCompanion companion) async {
     final remoteId = companion.remoteId.value;
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -15,12 +17,20 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
     on<AccountsEvent>(
       (event, emitter) => switch (event) {
         _Load() => _load(event, emitter),
-        _Delete() => _delete(event, emitter),
+        _InternalUpdate() => _internalUpdate(event, emitter),
       },
     );
+    _accountsSubscription = _accountRepository.watchAccounts().listen(_onAccountsListChanged);
   }
 
   final AccountRepository _accountRepository;
+  StreamSubscription<List<AccountEntity>>? _accountsSubscription;
+
+  @override
+  Future<void> close() async {
+    await _accountsSubscription?.cancel();
+    await super.close();
+  }
 
   Future<void> _load(_Load event, _Emitter emitter) async {
     emitter(AccountsState.processing(state.accounts, isOffline: state.isOffline));
@@ -44,26 +54,9 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
     }
   }
 
-  Future<void> _delete(_Delete event, _Emitter emitter) async {
-    emitter(AccountsState.processing(state.accounts, isOffline: state.isOffline));
-    try {
-      final resultStream = _accountRepository.deleteAccount(event.id);
-      await for (final deleteResult in resultStream) {
-        final updatedAccounts = state.accounts?.toList()?..removeWhere((account) => account.id == event.id);
-        final unmodifiableAccounts = UnmodifiableListView(updatedAccounts ?? <AccountEntity>[]);
-        switch (deleteResult.isOffline) {
-          case true:
-            emitter(AccountsState.processing(unmodifiableAccounts, isOffline: true));
-          case false:
-            emitter(AccountsState.idle(unmodifiableAccounts, isOffline: false));
-        }
-      }
-      if (state.accounts != null) {
-        emitter(AccountsState.idle(state.accounts!, isOffline: state.isOffline));
-      }
-    } on Object catch (e, s) {
-      emitter(AccountsState.error(state.accounts, isOffline: state.isOffline, error: e));
-      onError(e, s);
-    }
+  void _internalUpdate(_InternalUpdate event, _Emitter emitter) {
+    emitter(state.copyWith(accounts: UnmodifiableListView(event.accounts.toList())));
   }
+
+  void _onAccountsListChanged(List<AccountEntity> accounts) => add(_InternalUpdate(accounts));
 }

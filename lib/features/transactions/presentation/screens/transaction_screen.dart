@@ -311,7 +311,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
-                    Text('AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}'),
+                    Text(
+                        'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}'),
                   ],
                 ),
             ],

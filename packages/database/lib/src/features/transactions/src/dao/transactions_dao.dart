@@ -203,8 +203,16 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
         );
       });
 
-  Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion) async =>
-      companion.id.present ? _updateTransaction(companion) : _insertOrUpdateByRemoteId(companion);
+  Future<TransactionItem> upsertTransaction(TransactionItemsCompanion companion, {bool isSync = false}) async {
+    final transactionItem =
+        await (companion.id.present ? _updateTransaction(companion) : _insertOrUpdateByRemoteId(companion));
+
+    if (!isSync) {
+      await _maybeUpdateAccountBalance(transactionItem);
+    }
+
+    return transactionItem;
+  }
 
   Future<TransactionItem> _insertOrUpdateByRemoteId(TransactionItemsCompanion companion) async {
     final remoteId = companion.remoteId.value;
@@ -231,6 +239,9 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
   Future<TransactionItem?> deleteTransaction(int id) async => transaction(() async {
         final transaction = await (select(transactionItems)..where((t) => t.id.equals(id))).getSingleOrNull();
         await (delete(transactionItems)..where((t) => t.id.equals(id))).go();
+        if (transaction == null) return null;
+
+        await _maybeUpdateAccountBalance(transaction);
         return transaction;
       });
 
@@ -289,4 +300,21 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase> with _$TransactionsD
 
   Future<AccountItem?> _getAccountByRemoteId(int remoteId) =>
       (accountItems.select()..where((a) => a.remoteId.equals(remoteId))).getSingleOrNull();
+
+  Future<void> _maybeUpdateAccountBalance(TransactionItem transactionItem) async {
+    final category = await (transactionCategoryItems.selectOnly()
+          ..addColumns([transactionCategoryItems.isIncome])
+          ..where(transactionCategoryItems.id.equals(transactionItem.category)))
+        .getSingleOrNull();
+    if (category == null) return;
+    final account =
+        await (accountItems.select()..where((table) => table.id.equals(transactionItem.account))).getSingleOrNull();
+    if (account == null) return;
+    final oldBalance = double.parse(account.balance);
+    final transactionAmount = double.parse(transactionItem.amount);
+    final isIncome = category.read(transactionCategoryItems.isIncome)!;
+    final updatedBalance = isIncome ? oldBalance + transactionAmount : oldBalance - transactionAmount;
+    final accountCompanion = AccountItemsCompanion(balance: Value(updatedBalance.toStringAsFixed(2)));
+    await (accountItems.update()..where((table) => table.id.equals(account.id))).write(accountCompanion);
+  }
 }

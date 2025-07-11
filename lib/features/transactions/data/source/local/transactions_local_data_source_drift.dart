@@ -216,7 +216,7 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
       comment: Value(transaction.comment),
       updatedAt: Value(transaction.updatedAt),
     );
-    return _transactionsDao.upsertTransaction(companion).then(TransactionEntity.fromTableItem);
+    return _transactionsDao.upsertTransaction(companion, isSync: true).then(TransactionEntity.fromTableItem);
   }
 
   @override

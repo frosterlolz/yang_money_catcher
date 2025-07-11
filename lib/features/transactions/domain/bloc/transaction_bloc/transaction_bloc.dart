@@ -97,7 +97,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     try {
       final resultStream = _transactionsRepository.deleteTransaction(event.id);
       await for (final deleteResult in resultStream) {
-        await _transactionChangesSubscription?.cancel();
         switch (deleteResult.isOffline) {
           case true:
             emitter(const TransactionState.processing(null, isOffline: true));
@@ -105,6 +104,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
             emitter(const TransactionState.updated(null, isOffline: false));
         }
       }
+      await _transactionChangesSubscription?.cancel();
     } on Object catch (e, s) {
       emitter(TransactionState.error(state.transaction, isOffline: state.isOffline, error: e));
       onError(e, s);

@@ -5,6 +5,7 @@ import 'package:yang_money_catcher/features/account/data/dto/dto.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
+import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category_stat.dart';
 
 final class AccountsLocalDataSource$Drift implements AccountsLocalDataSource {
   const AccountsLocalDataSource$Drift(this._accountsDao);
@@ -117,9 +118,26 @@ final class AccountsLocalDataSource$Drift implements AccountsLocalDataSource {
       currency: Value(request.currency.key),
       updatedAt: Value(now),
       // TODO(frosterlolz): исправить на корректное значение, если будут пользователи
-      userId: const Value(1),
+      userId: switch (request) {
+        AccountRequest$Create() => const Value(1),
+        AccountRequest$Update() => const Value.absent(),
+      },
     );
     final accountItem = await _accountsDao.upsertAccount(companion);
     return AccountEntity.fromTableItem(accountItem);
   }
+
+  @override
+  Stream<List<AccountEntity>> watchAccounts() => _accountsDao
+      .watchAccounts()
+      .map((accountItemsList) => accountItemsList.map(AccountEntity.fromTableItem).toList(growable: false));
+
+  @override
+  Stream<AccountDetailEntity> watchAccountDetail(int id) => _accountsDao.watchAccount(id).asyncMap((account) async {
+        final accountEntity = AccountEntity.fromTableItem(account);
+        // TODO(frosterlolz): На данный момент НЕ актуальные данные, тк есть вопросы к бэку
+        final incomeStats = <TransactionCategoryStat>[];
+        final expenseStats = <TransactionCategoryStat>[];
+        return AccountDetailEntity.fromLocalSource(accountEntity, incomeStats: incomeStats, expenseStats: expenseStats);
+      });
 }
