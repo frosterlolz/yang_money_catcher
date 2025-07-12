@@ -12,9 +12,7 @@ class TransactionsNetworkDataSource$Rest implements TransactionsNetworkDataSourc
 
   @override
   Future<TransactionDto> createTransaction(TransactionRequest$Create request) async {
-    // удаляем union type из сериализации
-    final fixedJsonRequest = request.toJson()..remove('type');
-    final response = await _client.post('/transactions', body: fixedJsonRequest);
+    final response = await _client.post('/transactions', body: request.toJson());
     if (response == null) throw const ClientException(message: 'Unexpected null response from POST createTransaction');
     return TransactionDto.fromJson(response);
   }
@@ -50,9 +48,7 @@ class TransactionsNetworkDataSource$Rest implements TransactionsNetworkDataSourc
 
   @override
   Future<TransactionDetailsDto> updateTransaction(TransactionRequest$Update request) async {
-    // удаляем union type из сериализации
-    final fixedJsonRequest = request.toJson()..remove('type');
-    final response = await _client.put('/transactions/${request.id}', body: fixedJsonRequest);
+    final response = await _client.put('/transactions/${request.id}', body: request.toJson());
     if (response == null) throw const ClientException(message: 'Unexpected null response from POST updateTransaction');
     return TransactionDetailsDto.fromJson(response);
   }

@@ -157,21 +157,22 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         unawaited(context.maybePop());
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(TopSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
     }
     return;
   }
 
   Future<void> _save(BuildContext context) async {
     final transactionBloc = context.read<TransactionBloc>();
+    TransactionRequest? request;
     try {
-      final request = _createRequest();
+      request = _createRequest();
       transactionBloc.add(TransactionEvent.update(request));
     } on Object catch (e, s) {
       debugPrint('$e');
       debugPrintStack(stackTrace: s);
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(TopSideSnackBars.error(context, error: e));
+      ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: e));
       return;
     }
     final nextState = await transactionBloc.stream.firstWhere((state) => state is! TransactionState$Processing);
@@ -182,14 +183,20 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         break;
       case TransactionState$Updated():
         ScaffoldMessenger.of(context).showSnackBar(
-          TopSideSnackBars.success(
+          BottomSideSnackBars.success(
             context,
             message: widget.isIncome ? context.l10n.incomeSavedSuccessfully : context.l10n.expenseSavedSuccessfully,
           ),
         );
+        switch(request) {
+          case TransactionRequest$Create():
+            unawaited(context.maybePop());
+          case TransactionRequest$Update():
+            break;
+        }
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(TopSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
     }
   }
 

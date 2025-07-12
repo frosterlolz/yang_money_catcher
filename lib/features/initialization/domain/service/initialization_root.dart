@@ -65,10 +65,6 @@ final class InitializationRoot {
           d.context['offline_mode_check_interceptor'] = offlineModeCheckInterceptor;
         },
         'Initialize rest client': (d) async {
-          final retryClient = const DioConfigurator().create(
-            url: EnvConstants.apiUrl,
-            transformer: WorkerBackgroundTransformer(),
-          );
           final offlineModeCheckInterceptor =
               d.context['offline_mode_check_interceptor']! as OfflineModeCheckInterceptor;
           final dio = const DioConfigurator().create(
@@ -76,15 +72,17 @@ final class InitializationRoot {
             transformer: WorkerBackgroundTransformer(),
             interceptors: [
               AuthInterceptor(token: EnvConstants.authToken),
-              SmartRetryInterceptor(
-                dio: retryClient,
-                logReporter: (msg, {error, stackTrace}) {
-                  d.logger.info('[Retry] $msg', error: error, stackTrace: stackTrace);
-                },
-              ),
               offlineModeCheckInterceptor,
               if (kDebugMode) LoggingInterceptor(d.logger),
             ],
+          );
+          dio.interceptors.add(
+            SmartRetryInterceptor(
+              dio: dio,
+              logReporter: (msg, {error, stackTrace}) {
+                d.logger.info('[Retry] $msg', error: error, stackTrace: stackTrace);
+              },
+            ),
           );
           d.restClient = RestClientDio(dio: dio);
         },

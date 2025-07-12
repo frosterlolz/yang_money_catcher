@@ -5,11 +5,11 @@ import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 
 /// {@template TopSideSnackBars.class}
-/// Снекбары, отображаемые с верхней стороны экрана, стилизованы по дизайну.
+/// Снекбары, отображаемые с нижней стороны экрана, стилизованы по дизайну.
 /// {@endtemplate}
-abstract class TopSideSnackBars {
+abstract class BottomSideSnackBars {
   /// {@macro TopSideSnackBars.class}
-  const TopSideSnackBars._();
+  const BottomSideSnackBars._();
 
   static SnackBar success(BuildContext context, {required String message, VoidCallback? onTap}) {
     final appColors = Theme.of(context).colorScheme;
@@ -20,8 +20,7 @@ abstract class TopSideSnackBars {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
       dismissDirection: DismissDirection.up,
       backgroundColor: backgroundColor,
-      behavior: SnackBarBehavior.floating,
-      margin: const HorizontalSpacing.compact().copyWith(bottom: MediaQuery.sizeOf(context).height * 0.78),
+      behavior: SnackBarBehavior.fixed,
       content: GestureDetector(
         onTap: onTap,
         child: _TypedSnackBarContent(
@@ -53,8 +52,7 @@ abstract class TopSideSnackBars {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
       dismissDirection: DismissDirection.up,
       backgroundColor: backgroundColor,
-      behavior: SnackBarBehavior.floating,
-      margin: const HorizontalSpacing.compact().copyWith(bottom: MediaQuery.sizeOf(context).height * 0.78),
+      behavior: SnackBarBehavior.fixed,
       content: GestureDetector(
         onTap: onTap,
         child: _TypedSnackBarContent(

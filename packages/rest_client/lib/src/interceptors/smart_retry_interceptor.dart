@@ -11,7 +11,7 @@ const _attemptsExtraKey = 'retry_attempts_extra';
 
 typedef LogReporter = void Function(String message, {Object? error, StackTrace? stackTrace});
 
-class SmartRetryInterceptor extends Interceptor with RetryRequestMixin {
+class SmartRetryInterceptor extends Interceptor {
   const SmartRetryInterceptor({
     required this.dio,
     this.retriesCount = _effectiveRetriesCount,
@@ -63,7 +63,7 @@ class SmartRetryInterceptor extends Interceptor with RetryRequestMixin {
     }
 
     try {
-      final response = await retryRequest<dynamic>(original: requestOptions, retryClient: dio);
+      final response = await dio.fetch<void>(requestOptions);
 
       handler.resolve(response);
     } on DioException catch (e) {

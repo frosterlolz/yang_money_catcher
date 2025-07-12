@@ -11,9 +11,7 @@ final class AccountsNetworkDataSource$Rest implements AccountsNetworkDataSource 
 
   @override
   Future<AccountDto> createAccount(AccountRequest$Create request) async {
-    // удаляем union type из сериализации
-    final fixedJsonRequest = request.toJson()..remove('type');
-    final response = await _client.post('/createAccount', body: fixedJsonRequest);
+    final response = await _client.post('/createAccount', body: request.toJson());
     if (response == null) throw const ClientException(message: 'Unexpected null response from POST createAccount');
     return AccountDto.fromJson(response);
   }
@@ -46,9 +44,7 @@ final class AccountsNetworkDataSource$Rest implements AccountsNetworkDataSource 
 
   @override
   Future<AccountDto> updateAccount(AccountRequest$Update request) async {
-    // удаляем union type из сериализации
-    final fixedJsonRequest = request.toJson()..remove('type');
-    final response = await _client.put('/accounts/${request.id}', body: fixedJsonRequest);
+    final response = await _client.put('/accounts/${request.id}', body: request.toJson());
     if (response == null) throw const ClientException(message: 'Unexpected null response from POST updateAccount');
     return AccountDto.fromJson(response);
   }
