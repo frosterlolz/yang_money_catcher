@@ -188,7 +188,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
             message: widget.isIncome ? context.l10n.incomeSavedSuccessfully : context.l10n.expenseSavedSuccessfully,
           ),
         );
-        switch(request) {
+        switch (request) {
           case TransactionRequest$Create():
             unawaited(context.maybePop());
           case TransactionRequest$Update():
@@ -319,7 +319,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                   children: [
                     Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
                     Text(
-                        'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}'),
+                      'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}',
+                    ),
                   ],
                 ),
             ],

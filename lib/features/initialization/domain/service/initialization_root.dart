@@ -19,7 +19,6 @@ import 'package:yang_money_catcher/features/account/data/source/network/accounts
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
 import 'package:yang_money_catcher/features/offline_mode/data/repository/offline_mode_repository_impl.dart';
 import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
-import 'package:yang_money_catcher/features/offline_mode/domain/repository/offline_mode_repository.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source_drift.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';

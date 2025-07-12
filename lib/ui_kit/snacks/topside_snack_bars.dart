@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 
 /// {@template TopSideSnackBars.class}
 /// Снекбары, отображаемые с нижней стороны экрана, стилизованы по дизайну.

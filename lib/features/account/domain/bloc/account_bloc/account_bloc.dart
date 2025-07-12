@@ -48,7 +48,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
         }
       }
       if (state.account != null) {
-        emitter(AccountState.idle(state.account!, isOffline: state.isOffline));
+        emitter(AccountState.idle(state.account, isOffline: state.isOffline));
       }
     } on Object catch (e, s) {
       emitter(AccountState.error(state.account, isOffline: state.isOffline, error: e));

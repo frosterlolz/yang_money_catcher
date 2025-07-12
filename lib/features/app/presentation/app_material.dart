@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:yang_money_catcher/core/data/rest_client/interceptors/offline_mode_check_interceptor.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.dart';
 import 'package:yang_money_catcher/features/navigation/service/root_route_observer.dart';
 import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
