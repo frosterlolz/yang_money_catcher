@@ -26,7 +26,8 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         selectedItem = ColorPalette.ufoGreen,
         unselectedItem = ColorPalette.eerieBlack,
         labelTertiary = ColorPalette.arsenic,
-        analyzeNegative = ColorPalette.vividOrange;
+        analyzeNegative = ColorPalette.vividOrange,
+        errorContainer = ColorPalette.alarmRed;
 
   /// Dark theme of the app.
   const AppColorScheme.dark()
@@ -48,7 +49,8 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         selectedItem = ColorPalette.white,
         unselectedItem = ColorPalette.subtitleGrey,
         labelTertiary = ColorPalette.arsenic,
-        analyzeNegative = ColorPalette.vividOrange;
+        analyzeNegative = ColorPalette.vividOrange,
+        errorContainer = ColorPalette.alarmRed;
 
   const AppColorScheme._({
     required this.primary,
@@ -70,6 +72,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     required this.unselectedItem,
     required this.labelTertiary,
     required this.analyzeNegative,
+    required this.errorContainer,
   });
 
   /// The base color for app.
@@ -131,6 +134,8 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
   /// Color for analyze negative column
   final Color analyzeNegative;
 
+  final Color errorContainer;
+
   @override
   ThemeExtension<AppColorScheme> lerp(
     ThemeExtension<AppColorScheme>? other,
@@ -187,6 +192,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
     Color? unselectedItem,
     Color? labelTertiary,
     Color? analyzeNegative,
+    Color? errorContainer,
   }) =>
       AppColorScheme._(
         primary: primary ?? this.primary,
@@ -208,6 +214,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         unselectedItem: unselectedItem ?? this.unselectedItem,
         labelTertiary: labelTertiary ?? this.labelTertiary,
         analyzeNegative: analyzeNegative ?? this.analyzeNegative,
+        errorContainer: errorContainer ?? this.errorContainer,
       );
 }
 

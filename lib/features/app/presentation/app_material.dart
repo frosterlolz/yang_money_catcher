@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.dart';
 import 'package:yang_money_catcher/features/navigation/service/root_route_observer.dart';
+import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
+import 'package:yang_money_catcher/features/offline_mode/presentation/widget/offline_app_bar.dart';
 import 'package:yang_money_catcher/l10n/localization.dart';
 import 'package:yang_money_catcher/ui_kit/themes/app_theme.dart';
 
@@ -51,7 +54,24 @@ class _AppMaterialState extends State<AppMaterial> {
         builder: (context, child) => MediaQuery(
           key: _builderKey,
           data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-          child: child ?? const SizedBox.shrink(),
+          child: BlocBuilder<OfflineModeBloc, OfflineModeState>(
+            builder: (context, offlineModeState) {
+              final currentReason = offlineModeState.reason;
+
+              return Column(
+                children: [
+                  OfflineAppBar(offlineModeReason: currentReason),
+                  Expanded(
+                    child: MediaQuery.removePadding(
+                      context: context,
+                      removeTop: currentReason.isOffline,
+                      child: child ?? const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       );
 }

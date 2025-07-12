@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,7 +47,7 @@ Future<void> showTransactionScreen(
       builder: (_) => BlocProvider(
         create: (_) {
           final bloc = TransactionBloc(
-            TransactionState.processing(initialTransaction),
+            TransactionState.processing(initialTransaction, isOffline: initialTransaction?.remoteId == null),
             transactionsRepository: DependenciesScope.of(context).transactionsRepository,
           );
           if (initialTransaction != null) {
@@ -54,7 +55,10 @@ Future<void> showTransactionScreen(
           }
           return bloc;
         },
-        child: TransactionScreen(isIncome: isIncome, initialTransaction: initialTransaction),
+        child: BlocBuilder<TransactionBloc, TransactionState>(
+          builder: (context, transactionState) =>
+              TransactionScreen(isIncome: isIncome, initialTransaction: transactionState.transaction),
+        ),
       ),
     );
 
@@ -153,21 +157,22 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         unawaited(context.maybePop());
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(TopSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
     }
     return;
   }
 
   Future<void> _save(BuildContext context) async {
     final transactionBloc = context.read<TransactionBloc>();
+    TransactionRequest? request;
     try {
-      final request = _createRequest();
+      request = _createRequest();
       transactionBloc.add(TransactionEvent.update(request));
     } on Object catch (e, s) {
       debugPrint('$e');
       debugPrintStack(stackTrace: s);
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(TopSideSnackBars.error(context, error: e));
+      ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: e));
       return;
     }
     final nextState = await transactionBloc.stream.firstWhere((state) => state is! TransactionState$Processing);
@@ -178,14 +183,20 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         break;
       case TransactionState$Updated():
         ScaffoldMessenger.of(context).showSnackBar(
-          TopSideSnackBars.success(
+          BottomSideSnackBars.success(
             context,
             message: widget.isIncome ? context.l10n.incomeSavedSuccessfully : context.l10n.expenseSavedSuccessfully,
           ),
         );
+        switch (request) {
+          case TransactionRequest$Create():
+            unawaited(context.maybePop());
+          case TransactionRequest$Update():
+            break;
+        }
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(TopSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
     }
   }
 
@@ -302,6 +313,16 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 onDeleteTap: (transactionId) => doProcessing(() => _deleteTransaction(transactionId)),
                 isIncome: widget.isIncome,
               ),
+              if (kDebugMode)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
+                    Text(
+                      'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}',
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

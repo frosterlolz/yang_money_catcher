@@ -97,6 +97,11 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
     }
   }
 
+  Future<void> _refreshAccount() async {
+    final accountBloc = context.read<AccountBloc>()..add(AccountEvent.load(widget.account.id));
+    await accountBloc.stream.firstWhere((state) => state is! AccountState$Processing);
+  }
+
   Future<void> _loadTransactions() async {
     final dtNow = DateTime.now();
     final startDate = switch (_fetchCalendarValue) {
@@ -107,11 +112,19 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
     };
     final filters = TransactionFilters(
       accountId: widget.account.id,
+      accountRemoteId: widget.account.remoteId,
       startDate: startDate,
       endDate: dtNow,
     );
     final transactionsBloc = context.read<TransactionsBloc>()..add(TransactionsEvent.load(filters));
     await transactionsBloc.stream.firstWhere((state) => state is! TransactionsState$Processing);
+  }
+
+  Future<void> _onRefresh() async {
+    await Future.wait([
+      _refreshAccount(),
+      _loadTransactions(),
+    ]).timeout(const Duration(seconds: 20));
   }
 
   void _changeCalendarValue(CalendarValues value) {
@@ -122,7 +135,7 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
 
   @override
   Widget build(BuildContext context) => RefreshIndicator.adaptive(
-        onRefresh: _loadTransactions,
+        onRefresh: _onRefresh,
         child: ListView(
           children: [
             ...ListTile.divideTiles(
@@ -204,7 +217,7 @@ class _AccountBalanceTileState extends State<_AccountBalanceTile> with Processin
     final accountBloc = context.read<AccountBloc>()..add(AccountEvent.update(request));
     unawaited(
       doProcessing(() async {
-        await accountBloc.stream.firstWhere((state) => state is AccountState$Processing);
+        await accountBloc.stream.firstWhere((state) => state is! AccountState$Processing);
       }),
     );
   }

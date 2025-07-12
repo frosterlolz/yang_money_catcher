@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="yang_money_catcher"
+        android:label="YM Catcher"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rest_client/rest_client.dart';
 import 'package:yang_money_catcher/core/utils/extensions/value_notifier_x.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/l10n/localization.dart';
@@ -107,7 +108,11 @@ class _InitializationFailedAppState extends State<InitializationFailedApp> {
                               ),
                               const SizedBox(height: 19.0),
                               Text(
-                                context.l10n.mayBeFailTryItLater,
+                                switch (widget.error) {
+                                  ClientException(:final statusCode) when statusCode == 401 =>
+                                    context.l10n.pleaseProvideCorrectToken,
+                                  _ => context.l10n.mayBeFailTryItLater,
+                                },
                                 style: AppTextStyle.regular16.value,
                               ),
                               if (kDebugMode)

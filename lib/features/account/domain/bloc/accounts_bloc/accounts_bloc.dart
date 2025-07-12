@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -11,39 +13,50 @@ part 'accounts_bloc.freezed.dart';
 typedef _Emitter = Emitter<AccountsState>;
 
 class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
-  AccountsBloc(this._accountRepository) : super(const AccountsState.processing(null)) {
+  AccountsBloc(this._accountRepository) : super(const AccountsState.processing(null, isOffline: true)) {
     on<AccountsEvent>(
       (event, emitter) => switch (event) {
         _Load() => _load(event, emitter),
-        _Delete() => _delete(event, emitter),
+        _InternalUpdate() => _internalUpdate(event, emitter),
       },
     );
+    _accountsSubscription = _accountRepository.watchAccounts().listen(_onAccountsListChanged);
   }
 
   final AccountRepository _accountRepository;
+  StreamSubscription<List<AccountEntity>>? _accountsSubscription;
+
+  @override
+  Future<void> close() async {
+    await _accountsSubscription?.cancel();
+    return super.close();
+  }
 
   Future<void> _load(_Load event, _Emitter emitter) async {
-    emitter(AccountsState.processing(state.accounts));
+    emitter(AccountsState.processing(state.accounts, isOffline: state.isOffline));
     try {
       final accountsStream = _accountRepository.getAccounts();
-      await for (final accounts in accountsStream) {
-        emitter(AccountsState.idle(UnmodifiableListView(accounts)));
+      await for (final accountsResult in accountsStream) {
+        final accounts = UnmodifiableListView(accountsResult.data);
+        switch (accountsResult.isOffline) {
+          case true:
+            emitter(AccountsState.processing(accounts, isOffline: true));
+          case false:
+            emitter(AccountsState.idle(accounts, isOffline: false));
+        }
+      }
+      if (state.accounts != null) {
+        emitter(AccountsState.idle(state.accounts!, isOffline: state.isOffline));
       }
     } on Object catch (e, s) {
-      emitter(AccountsState.error(state.accounts, error: e));
+      emitter(AccountsState.error(state.accounts, isOffline: state.isOffline, error: e));
       onError(e, s);
     }
   }
 
-  Future<void> _delete(_Delete event, _Emitter emitter) async {
-    emitter(AccountsState.processing(state.accounts));
-    try {
-      await _accountRepository.deleteAccount(event.id);
-      final updatedAccounts = state.accounts?.toList()?..removeWhere((account) => account.id == event.id);
-      emitter(AccountsState.idle(UnmodifiableListView(updatedAccounts ?? [])));
-    } on Object catch (e, s) {
-      emitter(AccountsState.error(state.accounts, error: e));
-      onError(e, s);
-    }
+  void _internalUpdate(_InternalUpdate event, _Emitter emitter) {
+    emitter(state.copyWith(accounts: UnmodifiableListView(event.accounts.toList())));
   }
+
+  void _onAccountsListChanged(List<AccountEntity> accounts) => add(_InternalUpdate(accounts));
 }

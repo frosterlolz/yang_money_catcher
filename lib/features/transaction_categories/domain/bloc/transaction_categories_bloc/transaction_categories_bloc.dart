@@ -11,7 +11,8 @@ part 'transaction_categories_bloc.freezed.dart';
 typedef _Emitter = Emitter<TransactionCategoriesState>;
 
 class TransactionCategoriesBloc extends Bloc<TransactionCategoriesEvent, TransactionCategoriesState> {
-  TransactionCategoriesBloc(this._transactionsRepository) : super(const TransactionCategoriesState.processing(null)) {
+  TransactionCategoriesBloc(this._transactionsRepository)
+      : super(const TransactionCategoriesState.processing(null, isOffline: true)) {
     on<TransactionCategoriesEvent>(
       (event, emitter) => switch (event) {
         _Load() => _load(event, emitter),
@@ -22,12 +23,23 @@ class TransactionCategoriesBloc extends Bloc<TransactionCategoriesEvent, Transac
   final TransactionsRepository _transactionsRepository;
 
   Future<void> _load(_Load event, _Emitter emitter) async {
-    emitter(TransactionCategoriesState.processing(state.categories));
+    emitter(TransactionCategoriesState.processing(state.categories, isOffline: state.isOffline));
     try {
-      final categories = await _transactionsRepository.getTransactionCategories();
-      emitter(TransactionCategoriesState.idle(UnmodifiableListView(categories)));
+      final accountsStream = _transactionsRepository.getTransactionCategories();
+      await for (final transactionCategoryResult in accountsStream) {
+        final accounts = UnmodifiableListView(transactionCategoryResult.data);
+        switch (transactionCategoryResult.isOffline) {
+          case true:
+            emitter(TransactionCategoriesState.processing(accounts, isOffline: true));
+          case false:
+            emitter(TransactionCategoriesState.idle(accounts, isOffline: false));
+        }
+      }
+      if (state.categories != null) {
+        emitter(TransactionCategoriesState.idle(state.categories!, isOffline: state.isOffline));
+      }
     } on Object catch (e, s) {
-      emitter(TransactionCategoriesState.error(state.categories, error: e));
+      emitter(TransactionCategoriesState.error(state.categories, isOffline: state.isOffline, error: e));
       onError(e, s);
     }
   }

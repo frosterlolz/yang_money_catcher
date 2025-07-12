@@ -14,6 +14,7 @@ workspace:
   - packages/pretty_logger
   - packages/database
   - packages/pretty_chart
+  - packages/rest_client
 
 dependencies:
   # ✅ Core Flutter SDK
@@ -29,6 +30,8 @@ dependencies:
     path: ./packages/database
   pretty_chart:
     path: ./packages/pretty_chart
+  rest_client:
+    path: ./packages/rest_client
 
   # 🚀 Navigation
   auto_route: 10.1.0
@@ -45,20 +48,25 @@ dependencies:
   async: any
   sensors_plus: ^6.1.1
   fuzzy: ^0.5.1
+  worker_manager: ^7.2.6
 
   # 💅 UI / UX
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.1.0
 
-  # Bloc
+  # ⚙️ State Management
   flutter_bloc: ^9.1.1
   bloc_concurrency: 0.3.0
   bloc_test: 10.0.0
+  rxdart: ^0.28.0
 
   # Local storage
   drift: ^2.27.0
   drift_flutter: 0.2.4
   flutter_launcher_icons: ^0.14.4
+
+  # Network
+  dio: ^5.8.0+1
 
 dependency_overrides:
   analyzer: ">=5.12.0 <7.0.0"

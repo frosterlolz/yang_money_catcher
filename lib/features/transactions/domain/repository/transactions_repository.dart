@@ -1,3 +1,4 @@
+import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
@@ -12,8 +13,8 @@ abstract interface class TransactionsRepository implements TransactionChangesSou
   ///   [request] — данные для создания транзакции.
   ///
   /// Returns:
-  ///   [TransactionEntity] — созданная транзакция.
-  Future<TransactionEntity> createTransaction(TransactionRequest$Create request);
+  ///   [TransactionDetailEntity] — созданная транзакция.
+  Stream<DataResult<TransactionDetailEntity>> createTransaction(TransactionRequest$Create request);
 
   /// Получить полную информацию о конкретной транзакции.
   ///
@@ -22,7 +23,7 @@ abstract interface class TransactionsRepository implements TransactionChangesSou
   ///
   /// Returns:
   ///   [TransactionDetailEntity] — подробные данные транзакции.
-  Future<TransactionDetailEntity?> getTransaction(int id);
+  Stream<DataResult<TransactionDetailEntity>> getTransaction(int id);
 
   /// Обновить существующую транзакцию.
   ///
@@ -31,13 +32,13 @@ abstract interface class TransactionsRepository implements TransactionChangesSou
   ///
   /// Returns:
   ///   [TransactionDetailEntity] — обновлённая транзакция.
-  Future<TransactionDetailEntity> updateTransaction(TransactionRequest$Update request);
+  Stream<DataResult<TransactionDetailEntity>> updateTransaction(TransactionRequest$Update request);
 
   /// Удалить транзакцию по ID.
   ///
   /// Parameters:
   ///   [id] — идентификатор транзакции.
-  Future<void> deleteTransaction(int id);
+  Stream<DataResult<void>> deleteTransaction(int id);
 
   /// Получить список транзакций для указанного счёта в заданном диапазоне дат.
   ///
@@ -45,11 +46,11 @@ abstract interface class TransactionsRepository implements TransactionChangesSou
   ///  [filters] — фильтры для выборки транзакций.
   /// Returns:
   ///   Iterable<TransactionDetailEntity> — список транзакций.
-  Future<Iterable<TransactionDetailEntity>> getTransactions(TransactionFilters filters);
+  Stream<DataResult<Iterable<TransactionDetailEntity>>> getTransactions(TransactionFilters filters);
 
   /// Получить список категорий транзакций
   ///
   /// Returns:
   ///   Iterable<TransactionCategory> — список категорий
-  Future<Iterable<TransactionCategory>> getTransactionCategories();
+  Stream<DataResult<Iterable<TransactionCategory>>> getTransactionCategories();
 }

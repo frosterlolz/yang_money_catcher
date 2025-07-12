@@ -1,3 +1,4 @@
+import 'package:yang_money_catcher/features/account/data/dto/dto.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 
@@ -5,6 +6,29 @@ import 'package:yang_money_catcher/features/account/domain/entity/account_entity
 /// Используется для взаимодействия с локальной базой данных (например, через Drift).
 abstract interface class AccountsLocalDataSource {
   Future<int> fetchAccountsCount();
+
+  /// Обновляет аккаунты в базе данных.
+  ///
+  /// Возвращает список обновленных аккаунтов.
+  Future<List<AccountEntity>> syncAccounts({
+    required List<AccountEntity> localAccounts,
+    required List<AccountDto> remoteAccounts,
+  });
+
+  /// Обновляет аккаунт в базе данных.
+  ///
+  /// Возвращает обновленный аккаунт
+  Future<AccountEntity> syncAccount(AccountEntity account);
+
+  /// Обновляет аккаунт в базе данных.
+  ///
+  /// Возвращает обновленный аккаунт
+  Future<AccountEntity> syncAccountDetails(AccountDetailsDto account, {int? id});
+
+  /// Обновляет аккаунт в базе данных с учетом истории.
+  ///
+  /// Возвращает обновленный аккаунт
+  Future<AccountEntity> syncAccountHistory(int? id, {required AccountHistoryDto accountHistory});
 
   /// Загружает список всех аккаунтов из базы данных.
   ///
@@ -27,6 +51,12 @@ abstract interface class AccountsLocalDataSource {
 
   /// Удаляет аккаунт по его идентификатору [accountId].
   ///
-  /// Возвращает количество удалённых строк (0, если аккаунт не найден).
-  Future<int> deleteAccount(int accountId);
+  /// Возвращает удаленный аккаунт, если было что удалять.
+  Future<AccountEntity?> deleteAccount(int accountId);
+
+  /// Возвращает поток аккаунтов.
+  Stream<List<AccountEntity>> watchAccounts();
+
+  /// Возвращает поток аккаунтов, отслеживающий изменения аккаунта с указанным [id].
+  Stream<AccountDetailEntity> watchAccountDetail(int id);
 }

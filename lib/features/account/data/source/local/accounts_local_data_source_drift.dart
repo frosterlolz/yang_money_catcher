@@ -1,8 +1,11 @@
+import 'package:collection/collection.dart';
 import 'package:database/database.dart';
 import 'package:drift/drift.dart';
+import 'package:yang_money_catcher/features/account/data/dto/dto.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
+import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category_stat.dart';
 
 final class AccountsLocalDataSource$Drift implements AccountsLocalDataSource {
   const AccountsLocalDataSource$Drift(this._accountsDao);
@@ -13,7 +16,80 @@ final class AccountsLocalDataSource$Drift implements AccountsLocalDataSource {
   Future<int> fetchAccountsCount() => _accountsDao.accountsRowCount();
 
   @override
-  Future<int> deleteAccount(int id) => _accountsDao.deleteAccount(id);
+  Future<List<AccountEntity>> syncAccounts({
+    required List<AccountEntity> localAccounts,
+    required List<AccountDto> remoteAccounts,
+  }) async {
+    final companionsToUpsert = remoteAccounts.map((remoteAccount) {
+      final overlap = localAccounts.firstWhereOrNull((localAccount) => localAccount.remoteId == remoteAccount.id);
+      return AccountItemsCompanion(
+        id: overlap == null ? const Value.absent() : Value(overlap.id),
+        remoteId: Value(remoteAccount.id),
+        name: Value(remoteAccount.name),
+        balance: Value(remoteAccount.balance),
+        currency: Value(remoteAccount.currency.key),
+        createdAt: Value(remoteAccount.createdAt),
+        updatedAt: Value(remoteAccount.updatedAt),
+        userId: Value(remoteAccount.userId),
+      );
+    }).toList(growable: false);
+    final idSToDelete = localAccounts
+        .where((local) => local.remoteId != null && !remoteAccounts.any((remote) => remote.id == local.remoteId))
+        .map((local) => local.id)
+        .toList(growable: false);
+    await _accountsDao.syncAccounts(companionsToUpsert: companionsToUpsert, idSToDelete: idSToDelete);
+    return fetchAccounts();
+  }
+
+  @override
+  Future<AccountEntity> syncAccount(AccountEntity account) async {
+    final companion = AccountItemsCompanion(
+      id: Value(account.id),
+      remoteId: Value(account.remoteId),
+      name: Value(account.name),
+      balance: Value(account.balance),
+      currency: Value(account.currency.key),
+      createdAt: Value(account.createdAt),
+      updatedAt: Value(account.updatedAt),
+      userId: Value(account.userId),
+    );
+    final accountItem = await _accountsDao.upsertAccount(companion);
+    return AccountEntity.fromTableItem(accountItem);
+  }
+
+  @override
+  Future<AccountEntity> syncAccountDetails(AccountDetailsDto account, {int? id}) async {
+    final companion = AccountItemsCompanion(
+      id: id == null ? const Value.absent() : Value(id),
+      remoteId: Value(account.id),
+      name: Value(account.name),
+      balance: Value(account.balance),
+      currency: Value(account.currency.key),
+      createdAt: Value(account.createdAt),
+      updatedAt: Value(account.updatedAt),
+    );
+    final accountItem = await _accountsDao.upsertAccount(companion);
+    return AccountEntity.fromTableItem(accountItem);
+  }
+
+  @override
+  Future<AccountEntity> syncAccountHistory(int? id, {required AccountHistoryDto accountHistory}) async {
+    final companion = AccountItemsCompanion(
+      id: id == null ? const Value.absent() : Value(id),
+      remoteId: Value(accountHistory.accountId),
+      name: Value(accountHistory.accountName),
+      currency: Value(accountHistory.currency.key),
+    );
+    final accountItem = await _accountsDao.upsertAccount(companion);
+    return AccountEntity.fromTableItem(accountItem);
+  }
+
+  @override
+  Future<AccountEntity?> deleteAccount(int id) async {
+    final accountItem = await _accountsDao.deleteAccount(id);
+
+    return accountItem == null ? null : AccountEntity.fromTableItem(accountItem);
+  }
 
   @override
   Future<List<AccountEntity>> fetchAccounts() async {
@@ -40,12 +116,28 @@ final class AccountsLocalDataSource$Drift implements AccountsLocalDataSource {
       name: Value(request.name),
       balance: Value(request.balance),
       currency: Value(request.currency.key),
-      createdAt: Value.absentIfNull(now),
       updatedAt: Value(now),
       // TODO(frosterlolz): исправить на корректное значение, если будут пользователи
-      userId: const Value(1),
+      userId: switch (request) {
+        AccountRequest$Create() => const Value(1),
+        AccountRequest$Update() => const Value.absent(),
+      },
     );
     final accountItem = await _accountsDao.upsertAccount(companion);
     return AccountEntity.fromTableItem(accountItem);
   }
+
+  @override
+  Stream<List<AccountEntity>> watchAccounts() => _accountsDao
+      .watchAccounts()
+      .map((accountItemsList) => accountItemsList.map(AccountEntity.fromTableItem).toList(growable: false));
+
+  @override
+  Stream<AccountDetailEntity> watchAccountDetail(int id) => _accountsDao.watchAccount(id).asyncMap((account) async {
+        final accountEntity = AccountEntity.fromTableItem(account);
+        // TODO(frosterlolz): На данный момент НЕ актуальные данные, тк есть вопросы к бэку
+        final incomeStats = <TransactionCategoryStat>[];
+        final expenseStats = <TransactionCategoryStat>[];
+        return AccountDetailEntity.fromLocalSource(accountEntity, incomeStats: incomeStats, expenseStats: expenseStats);
+      });
 }

@@ -16,7 +16,7 @@ part 'transactions_bloc.freezed.dart';
 typedef _Emitter = Emitter<TransactionsState>;
 
 class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
-  TransactionsBloc(this._transactionsRepository) : super(const TransactionsState.processing(null)) {
+  TransactionsBloc(this._transactionsRepository) : super(const TransactionsState.processing(null, isOffline: true)) {
     on<TransactionsEvent>(
       (event, emitter) => switch (event) {
         _Load() => _loadTransactions(event, emitter),
@@ -36,18 +36,30 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
 
   Future<void> _loadTransactions(_Load event, _Emitter emitter) async {
     _updateTransactionChangesSubscription(event.filters);
-    emitter(TransactionsState.processing(state.transactions));
+    emitter(TransactionsState.processing(state.transactions, isOffline: state.isOffline));
     try {
-      final transactions = await _transactionsRepository.getTransactions(event.filters);
-      emitter(TransactionsState.idle(UnmodifiableListView(transactions.toList())));
+      final transactionsResult = _transactionsRepository.getTransactions(event.filters);
+      await for (final transactionsResult in transactionsResult) {
+        final transactions = UnmodifiableListView(transactionsResult.data.toList());
+        switch (transactionsResult.isOffline) {
+          case true:
+            emitter(TransactionsState.processing(transactions, isOffline: transactionsResult.isOffline));
+          case false:
+            emitter(TransactionsState.idle(transactions, isOffline: transactionsResult.isOffline));
+        }
+      }
+      final currentTransactions = state.transactions;
+      if (currentTransactions != null) {
+        emitter(TransactionsState.idle(currentTransactions, isOffline: state.isOffline));
+      }
     } on Object catch (e, s) {
-      emitter(TransactionsState.error(state.transactions, error: e));
+      emitter(TransactionsState.error(state.transactions, isOffline: state.isOffline, error: e));
       onError(e, s);
     }
   }
 
   void _updateTransactions(_Update event, _Emitter emitter) {
-    emitter(TransactionsState.idle(UnmodifiableListView(event.transactions.toList())));
+    emitter(TransactionsState.idle(UnmodifiableListView(event.transactions.toList()), isOffline: state.isOffline));
   }
 
   void _updateTransactionChangesSubscription(TransactionFilters filters) {

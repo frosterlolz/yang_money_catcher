@@ -45,7 +45,7 @@ class TransactionsScreen extends StatelessWidget {
         ),
         body: AccountsLoaderWrapper(
           (accounts) => AccountSelectedWrapper(
-            (account) => TransactionsBodyView(accountId: account.id, isIncome: isIncome),
+            (account) => TransactionsBodyView(account: account, isIncome: isIncome),
             accountId: accounts.first.id,
           ),
         ),

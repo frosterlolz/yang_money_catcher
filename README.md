@@ -1,16 +1,21 @@
-# yang_money_catcher
+# 💰 YangMoneyCatcher
 
-A new Flutter project.
+**YangMoneyCatcher** — мобильное приложение для учета личных финансов. Управляй своими аккаунтами, отслеживай доходы и расходы, анализируй историю операций — всё в одном месте и с поддержкой offline-first подхода.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 📱 О приложении
 
-A few resources to get you started if this is your first Flutter project:
+YangMoneyCatcher позволяет:
+- ✨ Создавать и управлять банковскими аккаунтами
+- 📊 Фиксировать транзакции: доходы и расходы
+- 🔁 Работать без постоянного подключения к интернету (offline-first)
+- 🔄 Синхронизировать изменения с сервером при восстановлении подключения
+- 📦 Хранить несинхронизированные действия в виде событий (event sourcing)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🚀 Быстрый старт
+
+> ⚠️ Перед запуском **обязательно ознакомьтесь** с [инициализацией проекта](docs/initialization.md)
+

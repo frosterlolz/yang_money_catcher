@@ -39,52 +39,77 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
   Future<void> _loadTransaction(_Load event, _Emitter emitter) async {
     final isSameTransaction = state.transaction?.id == event.id;
-    emitter(TransactionState.processing(isSameTransaction ? state.transaction : null));
+    emitter(TransactionState.processing(isSameTransaction ? state.transaction : null, isOffline: state.isOffline));
     if (!isSameTransaction) {
       _updateTransactionChangesSubscription(event.id);
     }
     try {
-      final transaction = await _transactionsRepository.getTransaction(event.id);
-      emitter(TransactionState.idle(transaction));
+      final transactionResultStream = _transactionsRepository.getTransaction(event.id);
+      await for (final transactionResult in transactionResultStream) {
+        switch (transactionResult.isOffline) {
+          case true:
+            emitter(TransactionState.processing(transactionResult.data, isOffline: transactionResult.isOffline));
+          case false:
+            emitter(TransactionState.idle(transactionResult.data, isOffline: transactionResult.isOffline));
+        }
+      }
+      if (state.transaction != null) {
+        emitter(TransactionState.idle(state.transaction, isOffline: state.isOffline));
+      }
     } on Object catch (e, s) {
-      emitter(TransactionState.error(state.transaction, error: e));
+      emitter(TransactionState.error(state.transaction, isOffline: state.isOffline, error: e));
       onError(e, s);
     }
   }
 
   Future<void> _updateTransaction(_Update event, _Emitter emitter) async {
-    emitter(TransactionState.processing(state.transaction));
+    emitter(TransactionState.processing(state.transaction, isOffline: state.isOffline));
     try {
-      switch (event.request) {
-        case final TransactionRequest$Create createRequest:
-          final transaction = await _transactionsRepository.createTransaction(createRequest);
-          final updatedTransactionDetails = await _transactionsRepository.getTransaction(transaction.id);
-          emitter(TransactionState.updated(updatedTransactionDetails));
-        case final TransactionRequest$Update updateRequest:
-          final transaction = await _transactionsRepository.updateTransaction(updateRequest);
-          emitter(TransactionState.updated(transaction));
+      final transactionResultStream = switch (event.request) {
+        final TransactionRequest$Create createRequest => _transactionsRepository.createTransaction(createRequest),
+        final TransactionRequest$Update updateRequest => _transactionsRepository.updateTransaction(updateRequest),
+      };
+      await for (final transactionResult in transactionResultStream) {
+        final isSameTransaction = state.transaction?.id == transactionResult.data.id;
+        if (!isSameTransaction) {
+          _updateTransactionChangesSubscription(transactionResult.data.id);
+        }
+        switch (transactionResult.isOffline) {
+          case true:
+            emitter(TransactionState.processing(transactionResult.data, isOffline: transactionResult.isOffline));
+          case false:
+            emitter(TransactionState.updated(transactionResult.data, isOffline: transactionResult.isOffline));
+        }
       }
     } on Object catch (e, s) {
-      emitter(TransactionState.error(state.transaction, error: e));
+      emitter(TransactionState.error(state.transaction, isOffline: state.isOffline, error: e));
       onError(e, s);
     } finally {
       final currentTransaction = state.transaction;
       if (currentTransaction != null) {
-        emitter(TransactionState.idle(currentTransaction));
+        emitter(TransactionState.idle(currentTransaction, isOffline: state.isOffline));
       }
     }
   }
 
   Future<void> _deleteTransaction(_Delete event, _Emitter emitter) async {
-    emitter(TransactionState.processing(state.transaction));
+    emitter(TransactionState.processing(state.transaction, isOffline: state.isOffline));
     try {
-      await _transactionsRepository.deleteTransaction(event.id);
-      emitter(TransactionState.updated(state.transaction));
+      final resultStream = _transactionsRepository.deleteTransaction(event.id);
+      await for (final deleteResult in resultStream) {
+        switch (deleteResult.isOffline) {
+          case true:
+            emitter(const TransactionState.processing(null, isOffline: true));
+          case false:
+            emitter(const TransactionState.updated(null, isOffline: false));
+        }
+      }
+      await _transactionChangesSubscription?.cancel();
     } on Object catch (e, s) {
-      emitter(TransactionState.error(state.transaction, error: e));
+      emitter(TransactionState.error(state.transaction, isOffline: state.isOffline, error: e));
       onError(e, s);
     } finally {
-      emitter(TransactionState.idle(state.transaction));
+      emitter(TransactionState.idle(state.transaction, isOffline: state.isOffline));
     }
   }
 
@@ -98,6 +123,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   }
 
   void _internalTransactionUpdate(_InternalUpdate event, _Emitter emitter) {
-    emitter(TransactionState.idle(event.transaction));
+    emitter(TransactionState.idle(event.transaction, isOffline: event.transaction?.remoteId == null));
   }
 }
