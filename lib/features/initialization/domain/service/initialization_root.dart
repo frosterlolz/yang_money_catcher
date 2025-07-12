@@ -9,6 +9,7 @@ import 'package:yang_money_catcher/core/config/env_constants.dart';
 import 'package:yang_money_catcher/core/data/rest_client/dio_configurator.dart';
 import 'package:yang_money_catcher/core/data/rest_client/interceptors/auth_interceptor.dart';
 import 'package:yang_money_catcher/core/data/rest_client/interceptors/logging_interceptor.dart';
+import 'package:yang_money_catcher/core/data/rest_client/interceptors/offline_mode_check_interceptor.dart';
 import 'package:yang_money_catcher/core/data/rest_client/transformers/worker_background_transformer.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source_drift.dart';
@@ -16,6 +17,9 @@ import 'package:yang_money_catcher/features/account/data/source/local/accounts_l
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source_drift.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
+import 'package:yang_money_catcher/features/offline_mode/data/repository/offline_mode_repository_impl.dart';
+import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
+import 'package:yang_money_catcher/features/offline_mode/domain/repository/offline_mode_repository.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source_drift.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
@@ -51,11 +55,22 @@ final class InitializationRoot {
           final database = AppDatabase.defaults(name: 'yang_money_catcher_database');
           d.context['drift_database'] = database;
         },
+        'Initialize offline mode feature': (d) async {
+          final offlineModeRepository = OfflineModeRepositoryImpl();
+          final offlineModeBloc = OfflineModeBloc(offlineModeRepository);
+          d.offlineModeBloc = offlineModeBloc;
+
+          final offlineModeCheckInterceptor =
+              OfflineModeCheckInterceptor(onStatusChange: offlineModeRepository.setReason);
+          d.context['offline_mode_check_interceptor'] = offlineModeCheckInterceptor;
+        },
         'Initialize rest client': (d) async {
           final retryClient = const DioConfigurator().create(
             url: EnvConstants.apiUrl,
             transformer: WorkerBackgroundTransformer(),
           );
+          final offlineModeCheckInterceptor =
+              d.context['offline_mode_check_interceptor']! as OfflineModeCheckInterceptor;
           final dio = const DioConfigurator().create(
             url: EnvConstants.apiUrl,
             transformer: WorkerBackgroundTransformer(),
@@ -67,6 +82,7 @@ final class InitializationRoot {
                   d.logger.info('[Retry] $msg', error: error, stackTrace: stackTrace);
                 },
               ),
+              offlineModeCheckInterceptor,
               if (kDebugMode) LoggingInterceptor(d.logger),
             ],
           );

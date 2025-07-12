@@ -39,6 +39,7 @@ abstract class AppThemeData {
       // background: _lightColorScheme.background,
       surface: _lightColorScheme.surface,
       onSurface: _lightColorScheme.onSurface,
+      errorContainer: _lightColorScheme.errorContainer,
     ),
     scaffoldBackgroundColor: _lightColorScheme.background,
     appBarTheme: AppBarTheme(

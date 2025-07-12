@@ -29,7 +29,7 @@ class AccountsBloc extends Bloc<AccountsEvent, AccountsState> {
   @override
   Future<void> close() async {
     await _accountsSubscription?.cancel();
-    await super.close();
+    return super.close();
   }
 
   Future<void> _load(_Load event, _Emitter emitter) async {

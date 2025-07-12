@@ -78,5 +78,14 @@
         "type": "String"
       }
     }
+  },
+  "offlineModeReason": "{reason, select, none{Подключение восстановлено} noInternet{Нет подключения} serverUnavailable{Неизвестная ошибка} other{Неизвестная ошибка}}",
+  "@offlineModeReason": {
+    "description": "Причина выхода в оффлайн режим",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   }
 }

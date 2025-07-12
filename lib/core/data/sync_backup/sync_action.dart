@@ -14,6 +14,7 @@ sealed class SyncAction<T> with _$SyncAction<T> {
     DateTime? createdAt,
     DateTime? updatedAt,
     @Default(0) int attempts,
+    @Default(SyncActionStatus.pending) SyncActionStatus status,
   }) = SyncAction$Create<T>;
 
   const factory SyncAction.update({
@@ -22,6 +23,7 @@ sealed class SyncAction<T> with _$SyncAction<T> {
     DateTime? createdAt,
     DateTime? updatedAt,
     @Default(0) int attempts,
+    @Default(SyncActionStatus.pending) SyncActionStatus status,
   }) = SyncAction$Update<T>;
 
   const factory SyncAction.delete({
@@ -30,6 +32,7 @@ sealed class SyncAction<T> with _$SyncAction<T> {
     DateTime? createdAt,
     DateTime? updatedAt,
     @Default(0) int attempts,
+    @Default(SyncActionStatus.pending) SyncActionStatus status,
   }) = SyncAction$Delete<T>;
 
   const SyncAction._();
@@ -52,6 +55,7 @@ sealed class SyncAction<T> with _$SyncAction<T> {
               data: other.data,
               dataRemoteId: dataRemoteId,
               attempts: nextAttempts,
+              status: SyncActionStatus.failure,
             ),
           SyncAction$Delete() => null,
         },
@@ -66,6 +70,7 @@ sealed class SyncAction<T> with _$SyncAction<T> {
               data: other.data,
               dataRemoteId: dataRemoteId,
               attempts: nextAttempts,
+              status: SyncActionStatus.failure,
             ),
           SyncAction$Update() => copyWith(attempts: nextAttempts),
           SyncAction$Delete() => copyWith(attempts: nextAttempts),
@@ -86,4 +91,11 @@ enum SyncActionType {
   delete;
 
   factory SyncActionType.fromName(String name) => values.firstWhere((e) => e.name == name);
+}
+
+enum SyncActionStatus {
+  pending,
+  failure;
+
+  factory SyncActionStatus.fromName(String name) => values.firstWhere((e) => e.name == name);
 }

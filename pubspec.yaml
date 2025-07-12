@@ -54,10 +54,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.1.0
 
-  # Bloc
+  # ⚙️ State Management
   flutter_bloc: ^9.1.1
   bloc_concurrency: 0.3.0
   bloc_test: 10.0.0
+  rxdart: ^0.28.0
 
   # Local storage
   drift: ^2.27.0
