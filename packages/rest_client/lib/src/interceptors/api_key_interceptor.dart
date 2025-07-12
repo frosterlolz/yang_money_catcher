@@ -1,14 +1,13 @@
 import 'package:dio/dio.dart';
 
 class ApiKeyInterceptor extends InterceptorsWrapper {
-  ApiKeyInterceptor(this._apiKey);
+  ApiKeyInterceptor(this._apiKeyEntry);
 
-  final String _apiKey;
+  final MapEntry<String, String> _apiKeyEntry;
 
   @override
   Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    // TODO(frosterlolz): Change header key if needed
-    options.headers['Api-key'] = _apiKey;
+    options.headers[_apiKeyEntry.key] = _apiKeyEntry.value;
 
     return handler.next(options);
   }

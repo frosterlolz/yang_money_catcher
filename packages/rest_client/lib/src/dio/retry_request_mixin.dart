@@ -5,32 +5,35 @@ import 'package:rest_client/src/dio/dio_x.dart';
 mixin class RetryRequestMixin {
   /// Retry the request
   Future<Response<R>> retryRequest<R>({
-    required Response<R> response,
-    required Map<String, Object?> headers,
+    required RequestOptions original,
     required Dio retryClient,
-  }) =>
-      retryClient.request<R>(
-        response.requestOptions.fullPath,
-        cancelToken: response.requestOptions.cancelToken,
-        data: response.requestOptions.data,
-        onReceiveProgress: response.requestOptions.onReceiveProgress,
-        onSendProgress: response.requestOptions.onSendProgress,
-        queryParameters: response.requestOptions.queryParameters,
-        options: Options(
-          method: response.requestOptions.method,
-          sendTimeout: response.requestOptions.sendTimeout,
-          receiveTimeout: response.requestOptions.receiveTimeout,
-          extra: response.requestOptions.extra,
-          headers: headers,
-          responseType: response.requestOptions.responseType,
-          contentType: response.requestOptions.contentType,
-          validateStatus: response.requestOptions.validateStatus,
-          receiveDataWhenStatusError: response.requestOptions.receiveDataWhenStatusError,
-          followRedirects: response.requestOptions.followRedirects,
-          maxRedirects: response.requestOptions.maxRedirects,
-          requestEncoder: response.requestOptions.requestEncoder,
-          responseDecoder: response.requestOptions.responseDecoder,
-          listFormat: response.requestOptions.listFormat,
-        ),
-      );
+    Map<String, dynamic>? headers,
+  }) {
+    final effectiveHeaders = headers ?? Map<String, dynamic>.from(original.headers);
+
+    return retryClient.request<R>(
+      original.fullPath,
+      cancelToken: original.cancelToken,
+      data: original.data,
+      onReceiveProgress: original.onReceiveProgress,
+      onSendProgress: original.onSendProgress,
+      queryParameters: original.queryParameters,
+      options: Options(
+        method: original.method,
+        sendTimeout: original.sendTimeout,
+        receiveTimeout: original.receiveTimeout,
+        extra: original.extra,
+        headers: effectiveHeaders,
+        responseType: original.responseType,
+        contentType: original.contentType,
+        validateStatus: original.validateStatus,
+        receiveDataWhenStatusError: original.receiveDataWhenStatusError,
+        followRedirects: original.followRedirects,
+        maxRedirects: original.maxRedirects,
+        requestEncoder: original.requestEncoder,
+        responseDecoder: original.responseDecoder,
+        listFormat: original.listFormat,
+      ),
+    );
+  }
 }

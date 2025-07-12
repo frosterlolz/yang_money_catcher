@@ -52,11 +52,21 @@ final class InitializationRoot {
           d.context['drift_database'] = database;
         },
         'Initialize rest client': (d) async {
+          final retryClient = const DioConfigurator().create(
+            url: EnvConstants.apiUrl,
+            transformer: WorkerBackgroundTransformer(),
+          );
           final dio = const DioConfigurator().create(
             url: EnvConstants.apiUrl,
             transformer: WorkerBackgroundTransformer(),
             interceptors: [
               AuthInterceptor(token: EnvConstants.authToken),
+              SmartRetryInterceptor(
+                dio: retryClient,
+                logReporter: (msg, {error, stackTrace}) {
+                  d.logger.info('[Retry] $msg', error: error, stackTrace: stackTrace);
+                },
+              ),
               if (kDebugMode) LoggingInterceptor(d.logger),
             ],
           );
