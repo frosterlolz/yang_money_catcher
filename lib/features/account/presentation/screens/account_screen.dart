@@ -224,8 +224,7 @@ class _AccountBalanceTileState extends State<_AccountBalanceTile> with Processin
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appColorScheme = AppColorScheme.of(context);
+    final colorScheme = AppColorScheme.of(context);
 
     return ListTile(
       onTap: isProcessing ? null : _onBalanceTap,
@@ -251,7 +250,7 @@ class _AccountBalanceTileState extends State<_AccountBalanceTile> with Processin
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: appColorScheme.labelTertiary.withValues(alpha: AppSizes.double03),
+        color: colorScheme.labelTertiary.withValues(alpha: AppSizes.double03),
       ),
     );
   }
@@ -290,8 +289,7 @@ class _AccountCurrencyTileState extends State<_AccountCurrencyTile> with Process
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final appColorScheme = AppColorScheme.of(context);
+    final colorScheme = AppColorScheme.of(context);
 
     return ListTile(
       onTap: isProcessing ? null : _onCurrencyTap,
@@ -308,7 +306,7 @@ class _AccountCurrencyTileState extends State<_AccountCurrencyTile> with Process
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: appColorScheme.labelTertiary.withValues(alpha: AppSizes.double03),
+        color: colorScheme.labelTertiary.withValues(alpha: AppSizes.double03),
       ),
     );
   }

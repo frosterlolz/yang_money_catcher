@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/core/data/rest_client/interceptors/offline_mode_check_interceptor.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
+import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 class OfflineAppBar extends StatelessWidget {
   const OfflineAppBar({required this.offlineModeReason, super.key});
@@ -12,7 +13,7 @@ class OfflineAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.paddingOf(context).top;
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = AppColorScheme.of(context);
 
     return ColoredBox(
       color: offlineModeReason.isOffline ? colorScheme.errorContainer : colorScheme.primary,

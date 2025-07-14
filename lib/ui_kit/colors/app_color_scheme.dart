@@ -32,7 +32,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
   /// Dark theme of the app.
   const AppColorScheme.dark()
       : primary = ColorPalette.ufoGreen,
-        onPrimary = ColorPalette.darkGrey,
+        onPrimary = ColorPalette.white,
         secondary = ColorPalette.appBarFgColor,
         onSecondary = ColorPalette.white,
         inactiveSecondary = ColorPalette.brightGray,
@@ -40,10 +40,10 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
         onSubtitle = ColorPalette.bodyTextGrey,
         grabber = ColorPalette.grabberGrey,
         dividerColor = ColorPalette.lavenderGray,
-        surface = ColorPalette.oxfordBlue,
-        onSurface = ColorPalette.darkGrey,
-        background = ColorPalette.jaguar,
-        onBackground = ColorPalette.darkGrey,
+        surface = ColorPalette.antiFlashWhite,
+        onSurface = ColorPalette.eerieBlack,
+        background = ColorPalette.snow,
+        onBackground = ColorPalette.eerieBlack,
         error = ColorPalette.terraCotta,
         onError = ColorPalette.white,
         selectedItem = ColorPalette.white,

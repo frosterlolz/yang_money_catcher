@@ -22,6 +22,7 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
+import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
 import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
 import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
@@ -144,7 +145,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = AppColorScheme.of(context);
 
     return BlocListener<AccountBloc, AccountState>(
       listenWhen: (o, c) => o.account?.id != c.account?.id,

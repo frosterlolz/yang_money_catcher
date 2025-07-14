@@ -129,7 +129,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
                           trailing: DecoratedBox(
                             decoration: BoxDecoration(
                               borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
-                              color: ColorScheme.of(context).primary,
+                              color: AppColorScheme.of(context).primary,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -147,7 +147,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
                           trailing: DecoratedBox(
                             decoration: BoxDecoration(
                               borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
-                              color: ColorScheme.of(context).primary,
+                              color: AppColorScheme.of(context).primary,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -322,7 +322,7 @@ class _TransactionsSuccessViewState extends State<_TransactionsSuccessView> {
           builder: (context, controller) => DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.double16)),
-              color: ColorScheme.of(context).surface,
+              color: AppColorScheme.of(context).surface,
             ),
             child: Padding(
               padding: const EdgeInsets.only(top: AppSizes.double16),

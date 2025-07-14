@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
+import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 /// {@template TopSideSnackBars.class}
 /// Снекбары, отображаемые с нижней стороны экрана, стилизованы по дизайну.
@@ -11,7 +12,7 @@ abstract class BottomSideSnackBars {
   const BottomSideSnackBars._();
 
   static SnackBar success(BuildContext context, {required String message, VoidCallback? onTap}) {
-    final appColors = Theme.of(context).colorScheme;
+    final appColors = AppColorScheme.of(context);
     final backgroundColor = appColors.secondary;
     final foregroundColor = appColors.onSecondary;
 
@@ -38,7 +39,7 @@ abstract class BottomSideSnackBars {
   }
 
   static SnackBar error(BuildContext context, {required Object error, VoidCallback? onTap}) {
-    final appColors = Theme.of(context).colorScheme;
+    final appColors = AppColorScheme.of(context);
     final backgroundColor = appColors.error;
     final foregroundColor = appColors.onError;
 

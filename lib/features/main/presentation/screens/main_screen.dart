@@ -5,6 +5,7 @@ import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
+import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 /// {@template MainScreen.class}
 /// Главный экран после запуска приложения.
@@ -17,7 +18,7 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = AppColorScheme.of(context);
     final localizations = context.l10n;
     const bottomRoutes = [
       ExpensesRoute(),

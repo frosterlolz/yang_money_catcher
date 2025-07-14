@@ -43,7 +43,7 @@ Future<void> showTransactionScreen(
       isDismissible: false,
       useRootNavigator: false,
       useSafeArea: true,
-      barrierColor: ColorScheme.of(context).primary,
+      barrierColor: AppColorScheme.of(context).primary,
       builder: (_) => BlocProvider(
         create: (_) {
           final bloc = TransactionBloc(
