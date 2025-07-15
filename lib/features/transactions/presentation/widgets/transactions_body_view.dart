@@ -11,7 +11,6 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
 import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
 
@@ -100,45 +99,45 @@ class _TransactionsListView extends StatelessWidget {
     final colorScheme = ColorScheme.of(context);
 
     return RefreshIndicator.adaptive(
-        onRefresh: () => onRefresh(context),
-        child: CustomScrollView(
-          slivers: [
-            if (transactions.isEmpty)
-              SliverFillRemaining(hasScrollBody: false, child: Center(child: _TransactionsEmptyView(isIncome)))
-            else ...[
-              SliverToBoxAdapter(
-                child: ListTile(
-                  title: Text(context.l10n.total),
-                  trailing: Text(
-                    total
-                        .thousandsSeparated(fractionalLength: null)
-                        .withCurrency(transactions.first.account.currency.symbol, 1),
-                  ),
-                  tileColor: colorScheme.primaryContainer,
+      onRefresh: () => onRefresh(context),
+      child: CustomScrollView(
+        slivers: [
+          if (transactions.isEmpty)
+            SliverFillRemaining(hasScrollBody: false, child: Center(child: _TransactionsEmptyView(isIncome)))
+          else ...[
+            SliverToBoxAdapter(
+              child: ListTile(
+                title: Text(context.l10n.total),
+                trailing: Text(
+                  total
+                      .thousandsSeparated(fractionalLength: null)
+                      .withCurrency(transactions.first.account.currency.symbol, 1),
                 ),
+                tileColor: colorScheme.primaryContainer,
               ),
-              SliverList.builder(
-                itemCount: transactions.length,
-                itemBuilder: (context, index) {
-                  final transaction = transactions[index];
-                  return TransactionListTile(
-                    enableTopDivider: true,
-                    enableBottomDivider: index == transactions.length - 1,
-                    emoji: transaction.category.emoji,
-                    title: transaction.category.name,
-                    comment: transaction.comment,
-                    amount: transaction.amount
-                        .amountToNum()
-                        .thousandsSeparated(fractionalLength: null)
-                        .withCurrency(transaction.account.currency.symbol, 1),
-                    onTap: () => _onTransactionTap(context, transaction),
-                  );
-                },
-              ),
-            ],
+            ),
+            SliverList.builder(
+              itemCount: transactions.length,
+              itemBuilder: (context, index) {
+                final transaction = transactions[index];
+                return TransactionListTile(
+                  enableTopDivider: true,
+                  enableBottomDivider: index == transactions.length - 1,
+                  emoji: transaction.category.emoji,
+                  title: transaction.category.name,
+                  comment: transaction.comment,
+                  amount: transaction.amount
+                      .amountToNum()
+                      .thousandsSeparated(fractionalLength: null)
+                      .withCurrency(transaction.account.currency.symbol, 1),
+                  onTap: () => _onTransactionTap(context, transaction),
+                );
+              },
+            ),
           ],
-        ),
-      );
+        ],
+      ),
+    );
   }
 }
 

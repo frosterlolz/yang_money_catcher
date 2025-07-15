@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:database/database.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:pretty_logger/pretty_logger.dart';
 import 'package:rest_client/rest_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,13 +24,12 @@ import 'package:yang_money_catcher/features/settings/data/codecs/settings_codec.
 import 'package:yang_money_catcher/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:yang_money_catcher/features/settings/data/source/local/settings_data_source_local.dart';
 import 'package:yang_money_catcher/features/settings/domain/bloc/settings_bloc/settings_bloc.dart';
-import 'package:yang_money_catcher/features/settings/domain/enity/theme_configuration.dart';
+import 'package:yang_money_catcher/features/settings/domain/enity/settings.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source_drift.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source_drift.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/network/transactions_netrowk_data_source_rest.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 typedef InitializationStep = FutureOr<void> Function(Mutable$Dependencies dependencies);
 
@@ -65,13 +63,7 @@ final class InitializationRoot {
           d.context['drift_database'] = database;
         },
         'Prepare app settings': (d) async {
-          final settingsCodec = SettingsCodec(
-            initialThemeConfiguration: ThemeConfiguration(
-              themeMode: ThemeMode.light,
-              seedColor: const AppColorScheme.light().primary,
-            ),
-            initialLocale: const Locale('ru'),
-          );
+          final settingsCodec = SettingsCodec(Settings.initial);
           final settingsStorage = SettingsDataSource$Local(d.sharedPreferences, settingsCodec: settingsCodec);
           final settingsRepository = SettingsRepositoryImpl(settingsStorage);
           d.settingsRepository = settingsRepository;

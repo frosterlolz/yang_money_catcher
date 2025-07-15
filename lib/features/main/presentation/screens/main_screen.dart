@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/features/settings/domain/bloc/settings_bloc/settings_bloc.dart';
+import 'package:yang_money_catcher/features/settings/domain/enity/haptic_type.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 
@@ -16,6 +17,14 @@ import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 class MainScreen extends StatelessWidget {
   /// {@macro MainScreen.class}
   const MainScreen({super.key});
+
+  void _onTabChanged(BuildContext context, {required int index, required TabsRouter tabRouter}) {
+    final currentIndex = tabRouter.activeIndex;
+    if (currentIndex != index) {
+      context.read<SettingsBloc>().state.settings.hapticType.play();
+    }
+    tabRouter.setActiveIndex(index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +68,7 @@ class MainScreen extends StatelessWidget {
               builder: (context, seedColor) => BottomNavigationBar(
                 iconSize: 30,
                 currentIndex: tabsRouter.activeIndex,
-                onTap: tabsRouter.setActiveIndex,
+                onTap: (index) => _onTabChanged(context, index: index, tabRouter: tabsRouter),
                 items: List.generate(
                   bottomItems.length,
                   (index) {
@@ -74,7 +83,7 @@ class MainScreen extends StatelessWidget {
                         ),
                         child: Padding(
                           padding:
-                          const EdgeInsets.symmetric(horizontal: AppSizes.double20, vertical: AppSizes.double4),
+                              const EdgeInsets.symmetric(horizontal: AppSizes.double20, vertical: AppSizes.double4),
                           child: SvgPicture.asset(
                             bottomBarEntry.value,
                             colorFilter: ColorFilter.mode(

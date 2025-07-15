@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:yang_money_catcher/features/settings/domain/enity/haptic_type.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/settings.dart';
 import 'package:yang_money_catcher/features/settings/domain/repository/settings_repository.dart';
 
@@ -15,6 +16,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<SettingsEvent>(
       (event, emitter) => switch (event) {
         _Update() => _update(event, emitter),
+        _UpdateHaptic() => _updateHaptic(event, emitter),
       },
     );
   }
@@ -26,6 +28,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     try {
       await _settingsRepository.save(event.settings);
       emitter(SettingsState.idle(event.settings));
+    } on Object catch (e, s) {
+      emitter(SettingsState.error(state.settings, error: e));
+      onError(e, s);
+    }
+  }
+
+  Future<void> _updateHaptic(_UpdateHaptic event, _Emitter emitter) async {
+    final currentHaptic = state.settings.hapticType;
+    if (currentHaptic == event.type) return;
+    emitter(SettingsState.processing(state.settings));
+    try {
+      final nextSettings = state.settings.copyWith(hapticType: event.type);
+      await _settingsRepository.save(nextSettings);
+      emitter(SettingsState.idle(nextSettings));
     } on Object catch (e, s) {
       emitter(SettingsState.error(state.settings, error: e));
       onError(e, s);

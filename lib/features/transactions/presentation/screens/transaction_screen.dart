@@ -25,7 +25,6 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/bottom_sheets/item_selector_sheet.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 import 'package:yang_money_catcher/ui_kit/dialogs/text_confirm_dialog.dart';
 import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
@@ -205,131 +204,131 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
     final colorScheme = ColorScheme.of(context);
 
     return AbsorbPointer(
-        absorbing: isProcessing,
-        child: Scaffold(
-          appBar: AppBar(
-            leading: AutoLeadingButton(
-              builder: (_, __, onClose) => IconButton(
-                onPressed: onClose,
-                icon: const Icon(Icons.close),
-              ),
+      absorbing: isProcessing,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: AutoLeadingButton(
+            builder: (_, __, onClose) => IconButton(
+              onPressed: onClose,
+              icon: const Icon(Icons.close),
             ),
-            title: Text(context.l10n.myExpenses),
-            actions: [if (_hasChanges) _SaveTransactionButton(() => doProcessing(() => _save(context)))],
           ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ...ListTile.divideTiles(
-                context: context,
-                tiles: [
-                  // Счет
-                  ListTile(
-                    onTap: _selectAccount,
-                    title: Row(
-                      children: [
-                        Text(context.l10n.account),
-                        if (_account != null)
-                          Expanded(
-                            child: Align(alignment: Alignment.centerRight, child: Text(_account!.name)),
-                          ),
-                      ],
-                    ),
-                    trailing: Icon(
-                      Icons.chevron_right,
-                      color: colorScheme.outline.withValues(alpha: AppSizes.double03),
-                    ),
+          title: Text(context.l10n.myExpenses),
+          actions: [if (_hasChanges) _SaveTransactionButton(() => doProcessing(() => _save(context)))],
+        ),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...ListTile.divideTiles(
+              context: context,
+              tiles: [
+                // Счет
+                ListTile(
+                  onTap: _selectAccount,
+                  title: Row(
+                    children: [
+                      Text(context.l10n.account),
+                      if (_account != null)
+                        Expanded(
+                          child: Align(alignment: Alignment.centerRight, child: Text(_account!.name)),
+                        ),
+                    ],
                   ),
-                  // Статья
-                  ListTile(
-                    onTap: _selectTransactionCategory,
-                    title: Row(
-                      children: [
-                        Text(context.l10n.article),
-                        if (_transactionCategory != null)
-                          Expanded(
-                            child: Align(alignment: Alignment.centerRight, child: Text(_transactionCategory!.name)),
-                          ),
-                      ],
-                    ),
-                    trailing: Icon(
-                      Icons.chevron_right,
-                      color: colorScheme.outline.withValues(alpha: AppSizes.double03),
-                    ),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: colorScheme.outline.withValues(alpha: AppSizes.double03),
                   ),
-                  // Сумма
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 200),
-                    child: _account == null
-                        ? const SizedBox.shrink()
-                        : ListTile(
-                            onTap: () => _selectAmount(_account!.currency),
-                            title: Row(
-                              children: [
-                                Text(context.l10n.amount),
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      _amount
-                                          .thousandsSeparated(fractionalLength: null)
-                                          .withCurrency(_account?.currency.symbol ?? Currency.rub.symbol, 1),
-                                    ),
+                ),
+                // Статья
+                ListTile(
+                  onTap: _selectTransactionCategory,
+                  title: Row(
+                    children: [
+                      Text(context.l10n.article),
+                      if (_transactionCategory != null)
+                        Expanded(
+                          child: Align(alignment: Alignment.centerRight, child: Text(_transactionCategory!.name)),
+                        ),
+                    ],
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: colorScheme.outline.withValues(alpha: AppSizes.double03),
+                  ),
+                ),
+                // Сумма
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  child: _account == null
+                      ? const SizedBox.shrink()
+                      : ListTile(
+                          onTap: () => _selectAmount(_account!.currency),
+                          title: Row(
+                            children: [
+                              Text(context.l10n.amount),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    _amount
+                                        .thousandsSeparated(fractionalLength: null)
+                                        .withCurrency(_account?.currency.symbol ?? Currency.rub.symbol, 1),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
+                        ),
+                ),
+                // Дата
+                ListTile(
+                  onTap: _selectDate,
+                  title: Row(
+                    children: [
+                      Text(context.l10n.date),
+                      const Spacer(),
+                      Text(_transactionDate.ddMMyyyy),
+                    ],
                   ),
-                  // Дата
-                  ListTile(
-                    onTap: _selectDate,
-                    title: Row(
-                      children: [
-                        Text(context.l10n.date),
-                        const Spacer(),
-                        Text(_transactionDate.ddMMyyyy),
-                      ],
-                    ),
+                ),
+                // Время
+                ListTile(
+                  onTap: _selectTime,
+                  title: Row(
+                    children: [
+                      Text(context.l10n.time),
+                      const Spacer(),
+                      Text(_transactionDate.hhmm),
+                    ],
                   ),
-                  // Время
-                  ListTile(
-                    onTap: _selectTime,
-                    title: Row(
-                      children: [
-                        Text(context.l10n.time),
-                        const Spacer(),
-                        Text(_transactionDate.hhmm),
-                      ],
-                    ),
-                  ),
-                  // Комментарий
-                  ListTile(
-                    onTap: _selectComment,
-                    title: _comment?.trim().isEmpty ?? true ? Text(context.l10n.comment) : Text(_comment!),
+                ),
+                // Комментарий
+                ListTile(
+                  onTap: _selectComment,
+                  title: _comment?.trim().isEmpty ?? true ? Text(context.l10n.comment) : Text(_comment!),
+                ),
+              ],
+            ),
+            const Divider(),
+            const SizedBox(height: AppSizes.double32),
+            _DeleteTransactionButton(
+              onDeleteTap: (transactionId) => doProcessing(() => _deleteTransaction(transactionId)),
+              isIncome: widget.isIncome,
+            ),
+            if (kDebugMode)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
+                  Text(
+                    'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}',
                   ),
                 ],
               ),
-              const Divider(),
-              const SizedBox(height: AppSizes.double32),
-              _DeleteTransactionButton(
-                onDeleteTap: (transactionId) => doProcessing(() => _deleteTransaction(transactionId)),
-                isIncome: widget.isIncome,
-              ),
-              if (kDebugMode)
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
-                    Text(
-                      'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}',
-                    ),
-                  ],
-                ),
-            ],
-          ),
+          ],
         ),
-      );
+      ),
+    );
   }
 }
 

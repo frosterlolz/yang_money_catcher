@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 /// {@template SearchTextField.class}
 /// SearchTextField widget.

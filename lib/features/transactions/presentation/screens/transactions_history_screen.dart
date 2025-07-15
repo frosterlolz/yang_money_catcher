@@ -22,7 +22,6 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
 import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
 import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';

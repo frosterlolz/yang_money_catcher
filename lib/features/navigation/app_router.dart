@@ -18,6 +18,7 @@ class AppRouter extends RootStackRouter {
         settingsRoutes,
       ],
     ),
+    hapticSettingsRoute,
     RedirectRoute(path: '*', redirectTo: '/'),
   ];
 }

@@ -110,107 +110,107 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
     final appColorScheme = AppColorScheme.of(context);
 
     return BlocListener<AccountBloc, AccountState>(
-        listenWhen: (o, c) => o.account?.id != c.account?.id,
-        listener: _accountListener,
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: appColorScheme.background,
-            title: Text(context.l10n.analyze),
-          ),
-          body: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ...ListTile.divideTiles(
-                      context: context,
-                      tiles: [
-                        // beginning
-                        ListTile(
-                          onTap: _onSelectStartDate,
-                          title: Text('${context.l10n.period}: ${context.l10n.beginning.toLowerCase()}'),
-                          trailing: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
-                              color: colorScheme.primary,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSizes.double20,
-                                vertical: AppSizes.double6,
-                              ),
-                              child: Text(_dateTimeRange.start.ddMMMMyyyy),
-                            ),
-                          ),
-                        ),
-                        // end
-                        ListTile(
-                          onTap: _onSelectEndDate,
-                          title: Text('${context.l10n.period}: ${context.l10n.end.toLowerCase()}'),
-                          trailing: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
-                              color: colorScheme.primary,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSizes.double20,
-                                vertical: AppSizes.double6,
-                              ),
-                              child: Text(_dateTimeRange.end.ddMMMMyyyy),
-                            ),
-                          ),
-                        ),
-                        // amount
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 200),
-                          child: BlocBuilder<TransactionsBloc, TransactionsState>(
-                            builder: (context, transactionsState) => switch (transactionsState) {
-                              _ when transactionsState.transactions != null => Column(
-                                  children: [
-                                    ListTile(
-                                      title: Text(context.l10n.amount),
-                                      trailing: Text(
-                                        transactionsState.totalAmount.thousandsSeparated().withCurrency(
-                                              transactionsState.transactions?.firstOrNull?.account.currency.symbol ??
-                                                  Currency.rub.symbol,
-                                              1,
-                                            ),
-                                      ),
-                                    ),
-                                    const Divider(),
-                                  ],
-                                ),
-                              _ => const SizedBox.shrink(),
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              BlocBuilder<TransactionsBloc, TransactionsState>(
-                builder: (context, transactionsState) => switch (transactionsState) {
-                  _ when transactionsState.transactions != null => _TransactionsSuccessView(
-                      transactions: transactionsState.transactions!,
-                      totalAmount: transactionsState.totalAmount,
-                    ),
-                  TransactionsState$Error(:final error) => SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: ErrorBodyView.fromError(
-                        error,
-                        onRetryTap: _loadTransactions,
-                      ),
-                    ),
-                  _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
-                },
-              ),
-            ],
-          ),
+      listenWhen: (o, c) => o.account?.id != c.account?.id,
+      listener: _accountListener,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: appColorScheme.background,
+          title: Text(context.l10n.analyze),
         ),
-      );
+        body: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...ListTile.divideTiles(
+                    context: context,
+                    tiles: [
+                      // beginning
+                      ListTile(
+                        onTap: _onSelectStartDate,
+                        title: Text('${context.l10n.period}: ${context.l10n.beginning.toLowerCase()}'),
+                        trailing: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
+                            color: colorScheme.primary,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.double20,
+                              vertical: AppSizes.double6,
+                            ),
+                            child: Text(_dateTimeRange.start.ddMMMMyyyy),
+                          ),
+                        ),
+                      ),
+                      // end
+                      ListTile(
+                        onTap: _onSelectEndDate,
+                        title: Text('${context.l10n.period}: ${context.l10n.end.toLowerCase()}'),
+                        trailing: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
+                            color: colorScheme.primary,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.double20,
+                              vertical: AppSizes.double6,
+                            ),
+                            child: Text(_dateTimeRange.end.ddMMMMyyyy),
+                          ),
+                        ),
+                      ),
+                      // amount
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 200),
+                        child: BlocBuilder<TransactionsBloc, TransactionsState>(
+                          builder: (context, transactionsState) => switch (transactionsState) {
+                            _ when transactionsState.transactions != null => Column(
+                                children: [
+                                  ListTile(
+                                    title: Text(context.l10n.amount),
+                                    trailing: Text(
+                                      transactionsState.totalAmount.thousandsSeparated().withCurrency(
+                                            transactionsState.transactions?.firstOrNull?.account.currency.symbol ??
+                                                Currency.rub.symbol,
+                                            1,
+                                          ),
+                                    ),
+                                  ),
+                                  const Divider(),
+                                ],
+                              ),
+                            _ => const SizedBox.shrink(),
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            BlocBuilder<TransactionsBloc, TransactionsState>(
+              builder: (context, transactionsState) => switch (transactionsState) {
+                _ when transactionsState.transactions != null => _TransactionsSuccessView(
+                    transactions: transactionsState.transactions!,
+                    totalAmount: transactionsState.totalAmount,
+                  ),
+                TransactionsState$Error(:final error) => SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: ErrorBodyView.fromError(
+                      error,
+                      onRetryTap: _loadTransactions,
+                    ),
+                  ),
+                _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -38,6 +38,26 @@
   "selectMainColor": "Выберите основной цвет",
   "sounds": "Звуки",
   "haptics": "Хаптики",
+  "hapticEffect": "Тактильный эффект",
+  "hapticScreenIntro": "Выберите тип тактильного отклика, который вам приятнее всего.",
+  "hapticTitleValue": "{value, select, light{Лёгкий} medium{Средний} heavy{Сильный} selection{Выбор} vibrate{Вибрация} other{Неизвестный}}",
+  "@hapticTitleValue": {
+    "description": "Название типа хаптика по ключу",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "hapticDescriptionValue": "{value, select, light{Мягкий, едва заметный отклик} medium{Чёткий и сбалансированный виброотклик} heavy{Мощный, глубокий отклик} selection{Короткий щелчок при смене значений} vibrate{Стандартная вибрация устройства} other{Описание недоступно}}",
+  "@hapticDescriptionValue": {
+    "description": "Описание типа хаптика по ключу",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "codePassword": "Код пароль",
   "sync": "Синхронизация",
   "language": "Язык",
