@@ -224,11 +224,11 @@ class _AccountBalanceTileState extends State<_AccountBalanceTile> with Processin
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = AppColorScheme.of(context);
+    final colorScheme = ColorScheme.of(context);
 
     return ListTile(
       onTap: isProcessing ? null : _onBalanceTap,
-      tileColor: colorScheme.secondary,
+      tileColor: colorScheme.primaryContainer,
       leading: SvgPicture.asset(SvgIcons.moneyBag),
       title: Row(
         spacing: 5.0,
@@ -250,7 +250,7 @@ class _AccountBalanceTileState extends State<_AccountBalanceTile> with Processin
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: colorScheme.labelTertiary.withValues(alpha: AppSizes.double03),
+        color: colorScheme.outline.withValues(alpha: AppSizes.double03),
       ),
     );
   }
@@ -289,11 +289,11 @@ class _AccountCurrencyTileState extends State<_AccountCurrencyTile> with Process
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = AppColorScheme.of(context);
+    final colorScheme = ColorScheme.of(context);
 
     return ListTile(
       onTap: isProcessing ? null : _onCurrencyTap,
-      tileColor: colorScheme.secondary,
+      tileColor: colorScheme.primaryContainer,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -306,7 +306,7 @@ class _AccountCurrencyTileState extends State<_AccountCurrencyTile> with Process
       ),
       trailing: Icon(
         Icons.chevron_right,
-        color: colorScheme.labelTertiary.withValues(alpha: AppSizes.double03),
+        color: colorScheme.outline.withValues(alpha: AppSizes.double03),
       ),
     );
   }

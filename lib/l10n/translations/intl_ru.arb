@@ -35,6 +35,7 @@
   "myArticles": "Мои статьи",
   "settings": "Настройки",
   "mainColor": "Основной цвет",
+  "selectMainColor": "Выберите основной цвет",
   "sounds": "Звуки",
   "haptics": "Хаптики",
   "codePassword": "Код пароль",

@@ -70,7 +70,7 @@ class TransactionListTile extends StatelessWidget {
             ),
             trailing: Icon(
               Icons.chevron_right,
-              color: AppColorScheme.of(context).labelTertiary.withValues(alpha: AppSizes.double03),
+              color: ColorScheme.of(context).outline.withValues(alpha: AppSizes.double03),
             ),
           ),
           if (enableBottomDivider) const Divider(),

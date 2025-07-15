@@ -13,10 +13,12 @@ class OfflineAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.paddingOf(context).top;
-    final colorScheme = AppColorScheme.of(context);
+    final colorScheme = ColorScheme.of(context);
+    final appColorScheme = AppColorScheme.of(context);
+    final textTheme = TextTheme.of(context);
 
     return ColoredBox(
-      color: offlineModeReason.isOffline ? colorScheme.errorContainer : colorScheme.primary,
+      color: offlineModeReason.isOffline ? colorScheme.error : appColorScheme.primary,
       child: AnimatedSize(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -29,10 +31,10 @@ class OfflineAppBar extends StatelessWidget {
               child: Center(
                 child: Text(
                   context.l10n.offlineModeReason(offlineModeReason.name),
-                  style: TextTheme.of(context).bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: offlineModeReason.isOffline ? colorScheme.onError : colorScheme.onPrimary,
-                      ),
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: offlineModeReason.isOffline ? colorScheme.onError : appColorScheme.onPrimary,
+                  ),
                 ),
               ),
             ),

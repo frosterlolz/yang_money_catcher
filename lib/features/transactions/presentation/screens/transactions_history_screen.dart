@@ -145,7 +145,7 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = AppColorScheme.of(context);
+    final colorScheme = ColorScheme.of(context);
 
     return BlocListener<AccountBloc, AccountState>(
       listenWhen: (o, c) => o.account?.id != c.account?.id,
@@ -170,14 +170,14 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
                       // beginning
                       ListTile(
                         onTap: _onSelectStartDate,
-                        tileColor: colorScheme.secondary,
+                        tileColor: colorScheme.primaryContainer,
                         title: Text(context.l10n.beginning),
                         trailing: Text(_dateTimeRange.start.ddMMMMyyyy),
                       ),
                       // end
                       ListTile(
                         onTap: _onSelectEndDate,
-                        tileColor: colorScheme.secondary,
+                        tileColor: colorScheme.primaryContainer,
                         title: Text(context.l10n.end),
                         trailing: Text(_dateTimeRange.end.ddMMMMyyyy),
                       ),
@@ -185,14 +185,14 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
                       ListTile(
                         key: _sortTileKey,
                         onTap: _onSortTap,
-                        tileColor: colorScheme.secondary,
+                        tileColor: colorScheme.primaryContainer,
                         title: Text(context.l10n.sorting),
                         trailing: Text(context.l10n.sortingValue(_sortType.name)),
                       ),
                       // amount
                       BlocBuilder<TransactionsBloc, TransactionsState>(
                         builder: (context, transitionsState) => ListTile(
-                          tileColor: colorScheme.secondary,
+                          tileColor: colorScheme.primaryContainer,
                           title: Text(context.l10n.amount),
                           trailing: switch (transitionsState) {
                             _ when transitionsState.transactions != null => Text(

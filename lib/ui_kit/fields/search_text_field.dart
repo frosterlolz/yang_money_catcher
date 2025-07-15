@@ -37,7 +37,7 @@ class _SearchTextFieldState extends State<SearchTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final appColorScheme = AppColorScheme.of(context);
+    final colorScheme = ColorScheme.of(context);
 
     return TextField(
       controller: _controller,
@@ -52,9 +52,9 @@ class _SearchTextFieldState extends State<SearchTextField> {
           child: const Icon(Icons.search),
         ),
         filled: true,
-        fillColor: appColorScheme.inactiveSecondary,
+        fillColor: colorScheme.surface,
         hintText: 'Найти статью',
-        hintStyle: TextTheme.of(context).bodyLarge?.copyWith(color: appColorScheme.labelTertiary),
+        hintStyle: TextTheme.of(context).bodyLarge?.copyWith(color: colorScheme.outline),
       ),
     );
   }

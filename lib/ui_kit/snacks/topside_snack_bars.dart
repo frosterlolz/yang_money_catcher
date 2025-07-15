@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 /// {@template TopSideSnackBars.class}
 /// Снекбары, отображаемые с нижней стороны экрана, стилизованы по дизайну.
@@ -12,13 +11,13 @@ abstract class BottomSideSnackBars {
   const BottomSideSnackBars._();
 
   static SnackBar success(BuildContext context, {required String message, VoidCallback? onTap}) {
-    final appColors = AppColorScheme.of(context);
-    final backgroundColor = appColors.secondary;
-    final foregroundColor = appColors.onSecondary;
+    final colorScheme = ColorScheme.of(context);
+    final backgroundColor = colorScheme.primaryContainer;
+    final foregroundColor = colorScheme.onPrimaryContainer;
 
     return SnackBar(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
-      dismissDirection: DismissDirection.up,
+      dismissDirection: DismissDirection.down,
       backgroundColor: backgroundColor,
       behavior: SnackBarBehavior.fixed,
       content: GestureDetector(
@@ -39,9 +38,9 @@ abstract class BottomSideSnackBars {
   }
 
   static SnackBar error(BuildContext context, {required Object error, VoidCallback? onTap}) {
-    final appColors = AppColorScheme.of(context);
-    final backgroundColor = appColors.error;
-    final foregroundColor = appColors.onError;
+    final colorScheme = ColorScheme.of(context);
+    final backgroundColor = colorScheme.error;
+    final foregroundColor = colorScheme.onError;
 
     final String titleText = switch (error) {
       AppException$Simple(:final message) when message != null => message,
@@ -50,7 +49,7 @@ abstract class BottomSideSnackBars {
 
     return SnackBar(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
-      dismissDirection: DismissDirection.up,
+      dismissDirection: DismissDirection.down,
       backgroundColor: backgroundColor,
       behavior: SnackBarBehavior.fixed,
       content: GestureDetector(

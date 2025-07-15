@@ -105,12 +105,16 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
   }
 
   @override
-  Widget build(BuildContext context) => BlocListener<AccountBloc, AccountState>(
+  Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
+    final appColorScheme = AppColorScheme.of(context);
+
+    return BlocListener<AccountBloc, AccountState>(
         listenWhen: (o, c) => o.account?.id != c.account?.id,
         listener: _accountListener,
         child: Scaffold(
           appBar: AppBar(
-            backgroundColor: AppColorScheme.of(context).background,
+            backgroundColor: appColorScheme.background,
             title: Text(context.l10n.analyze),
           ),
           body: CustomScrollView(
@@ -129,7 +133,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
                           trailing: DecoratedBox(
                             decoration: BoxDecoration(
                               borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
-                              color: AppColorScheme.of(context).primary,
+                              color: colorScheme.primary,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -147,7 +151,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
                           trailing: DecoratedBox(
                             decoration: BoxDecoration(
                               borderRadius: const BorderRadius.all(Radius.circular(AppSizes.double16)),
-                              color: AppColorScheme.of(context).primary,
+                              color: colorScheme.primary,
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -207,6 +211,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
           ),
         ),
       );
+  }
 }
 
 mixin _TransactionAnalyzeFormMixin on State<TransactionsAnalyzeScreen> {

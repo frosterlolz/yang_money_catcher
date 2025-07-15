@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 abstract class ColorPalette {
   static const white = Colors.white;
   static const snow = Color(0xFFFEF7FF);
-  static const corpLight = Color(0xFFE8F6F8);
   static const aeroBlue = Color(0xffD4FAE6);
   static const brightGray = Color(0xFFECE6F0);
   static const antiFlashWhite = Color(0xffF3EDF7);

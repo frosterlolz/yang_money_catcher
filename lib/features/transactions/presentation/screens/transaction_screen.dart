@@ -43,7 +43,7 @@ Future<void> showTransactionScreen(
       isDismissible: false,
       useRootNavigator: false,
       useSafeArea: true,
-      barrierColor: AppColorScheme.of(context).primary,
+      barrierColor: ColorScheme.of(context).primary,
       builder: (_) => BlocProvider(
         create: (_) {
           final bloc = TransactionBloc(
@@ -201,7 +201,10 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
   }
 
   @override
-  Widget build(BuildContext context) => AbsorbPointer(
+  Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
+
+    return AbsorbPointer(
         absorbing: isProcessing,
         child: Scaffold(
           appBar: AppBar(
@@ -234,7 +237,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
-                      color: AppColorScheme.of(context).labelTertiary.withValues(alpha: AppSizes.double03),
+                      color: colorScheme.outline.withValues(alpha: AppSizes.double03),
                     ),
                   ),
                   // Статья
@@ -251,7 +254,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                     ),
                     trailing: Icon(
                       Icons.chevron_right,
-                      color: AppColorScheme.of(context).labelTertiary.withValues(alpha: AppSizes.double03),
+                      color: colorScheme.outline.withValues(alpha: AppSizes.double03),
                     ),
                   ),
                   // Сумма
@@ -327,6 +330,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
           ),
         ),
       );
+  }
 }
 
 mixin _TransactionFormMixin on State<TransactionScreen> {
@@ -557,7 +561,7 @@ class _DeleteTransactionButtonState extends State<_DeleteTransactionButton> with
               padding: const HorizontalSpacing.compact(),
               child: ElevatedButton(
                 onPressed: () => doProcessing(() => widget.onDeleteTap.call(transactionState.transaction!.id)),
-                style: ElevatedButton.styleFrom(backgroundColor: AppColorScheme.of(context).error),
+                style: ElevatedButton.styleFrom(backgroundColor: ColorScheme.of(context).error),
                 child: isProcessing
                     ? const TypedProgressIndicator.small()
                     : Text(widget.isIncome ? context.l10n.deleteIncome : context.l10n.deleteExpense),

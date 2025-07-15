@@ -96,7 +96,10 @@ class _TransactionsListView extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => RefreshIndicator.adaptive(
+  Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
+
+    return RefreshIndicator.adaptive(
         onRefresh: () => onRefresh(context),
         child: CustomScrollView(
           slivers: [
@@ -111,7 +114,7 @@ class _TransactionsListView extends StatelessWidget {
                         .thousandsSeparated(fractionalLength: null)
                         .withCurrency(transactions.first.account.currency.symbol, 1),
                   ),
-                  tileColor: AppColorScheme.of(context).secondary,
+                  tileColor: colorScheme.primaryContainer,
                 ),
               ),
               SliverList.builder(
@@ -136,6 +139,7 @@ class _TransactionsListView extends StatelessWidget {
           ],
         ),
       );
+  }
 }
 
 /// {@template _TransactionsEmptyView.class}
