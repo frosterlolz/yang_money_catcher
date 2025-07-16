@@ -16,8 +16,8 @@ final class PinAuthenticationRepositoryImpl implements PinAuthenticationReposito
       _pinConfigStorage.changeBiometricPreference(preference);
 
   @override
-  Future<PinAuthenticationStatus> changePinCode({String? oldPinCode, required String newPinCode}) async {
-    final isChanged = await _pinConfigStorage.changePinCode(newPinCode: newPinCode, oldPinCode: oldPinCode);
+  Future<PinAuthenticationStatus> changePinCode(String pin) async {
+    final isChanged = await _pinConfigStorage.changePinCode(pin);
     return isChanged ? PinAuthenticationStatus.authenticated : PinAuthenticationStatus.unauthenticated;
   }
 

@@ -47,5 +47,7 @@
 	<true/>
 	<key>NSMotionUsageDescription</key>
     <string>This app requires access to the barometer to provide altitude information.</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Face ID needed to handle local auth with biometrics</string>
 </dict>
 </plist>

@@ -31,14 +31,18 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
   Future<void> _signIn(_SignIn event, _Emitter emitter) async {
     emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
     try {
-      final nextStatus = await _pinAuthenticationRepository.checkAuthenticationStatus(event.pin);
-      emitter(PinAuthenticationState.idle(status: nextStatus, biometricPreference: state.biometricPreference));
+      final nextStatus = event.forceWithBiometric
+          ? PinAuthenticationStatus.authenticated
+          : await _pinAuthenticationRepository.checkAuthenticationStatus(event.pin);
+      emitter(PinAuthenticationState.success(status: nextStatus, biometricPreference: state.biometricPreference));
     } on Object catch (e, s) {
       emitter(
         PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
       );
 
       onError(e, s);
+    } finally {
+      emitter(PinAuthenticationState.idle(status: state.status, biometricPreference: state.biometricPreference));
     }
   }
 
@@ -54,8 +58,7 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
       );
     }
     try {
-      final nextStatus =
-          await _pinAuthenticationRepository.changePinCode(newPinCode: event.newPin, oldPinCode: event.oldPin);
+      final nextStatus = await _pinAuthenticationRepository.changePinCode(event.v);
       emitter(PinAuthenticationState.success(status: nextStatus, biometricPreference: state.biometricPreference));
     } on PinException$Invalid catch (e, s) {
       emitter(
@@ -90,7 +93,7 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
   Future<void> _signUp(_SignUp event, _Emitter emitter) async {
     emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
     try {
-      final nextStatus = await _pinAuthenticationRepository.changePinCode(newPinCode: event.pin);
+      final nextStatus = await _pinAuthenticationRepository.changePinCode(event.pin);
       emitter(PinAuthenticationState.idle(status: nextStatus, biometricPreference: state.biometricPreference));
     } on Object catch (e, s) {
       emitter(
@@ -122,8 +125,10 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
   Future<void> _verifyAccess(_VerifyAccess event, _Emitter emitter) async {
     emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
     try {
-      final verificationStatus = await _pinAuthenticationRepository.checkAuthenticationStatus(event.pin);
-      if (verificationStatus != PinAuthenticationStatus.unauthenticated) {
+      final nextStatus = event.forceWithBiometric
+          ? PinAuthenticationStatus.authenticated
+          : await _pinAuthenticationRepository.checkAuthenticationStatus(event.pin);
+      if (nextStatus != PinAuthenticationStatus.unauthenticated) {
         emitter(PinAuthenticationState.success(status: state.status, biometricPreference: state.biometricPreference));
       }
     } on Object catch (e, s) {

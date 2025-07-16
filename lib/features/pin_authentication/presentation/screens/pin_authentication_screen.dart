@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_exception.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
+import 'package:yang_money_catcher/features/pin_authentication/domain/service/local_auth_service.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_field.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_keyboard.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
@@ -25,8 +26,7 @@ class PinAuthenticationScreen extends StatefulWidget {
   /// Причина показа данного экрана
   final PinAuthenticationReason reason;
 
-  /// Возвращает введенный пин-код
-  final ValueChanged<String>? onSuccess;
+  final VoidCallback? onSuccess;
 
   @override
   State<PinAuthenticationScreen> createState() => _PinAuthenticationScreenState();
@@ -36,10 +36,18 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
   String _pin = '';
   String? _errorMessage;
 
+  late final LocalAuthService _localAuthService;
+
+  @override
+  void initState() {
+    super.initState();
+    _localAuthService = LocalAuthService();
+  }
+
   void _authenticationStateListener(BuildContext context, PinAuthenticationState state) {
     switch (state) {
       case PinAuthenticationState$Success():
-        widget.onSuccess?.call(_pin);
+        widget.onSuccess?.call();
       case PinAuthenticationState$Processing():
       case PinAuthenticationState$Idle():
         break;
@@ -70,8 +78,25 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
     _changePin(nextPin);
   }
 
-  void _onBiometricTap() {
-    // TODO(frosterlolz): implement
+  Future<void> _onBiometricTap() async {
+    final reasonMessage = switch (widget.reason) {
+      PinAuthenticationReason.signIn => context.l10n.biometricReasonSignIn,
+      PinAuthenticationReason.verifyAccess => context.l10n.biometricReasonVerifyAccess,
+    };
+    final isVerified = await _localAuthService.authenticate(reasonMessage);
+    _changePin('****');
+    if (mounted && !isVerified) {
+      await _onCompleteError(context.l10n.biometricCheckFailed);
+      return;
+    }
+    if (!mounted || !isVerified) return;
+    context.read<PinAuthenticationBloc>().add(
+      switch (widget.reason) {
+        PinAuthenticationReason.signIn => PinAuthenticationEvent.signIn('', forceWithBiometric: isVerified),
+        PinAuthenticationReason.verifyAccess =>
+            PinAuthenticationEvent.verifyAccess('', forceWithBiometric: isVerified),
+      },
+    );
   }
 
   Future<void> _onCompleteError(String message) async {
@@ -82,8 +107,8 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
 
   bool _changePin(String v) {
     if (_pin == v || v.length > _pinLength || !mounted) return false;
-    setState(() => _pin = v);
-    if (_pin.trim().isNotEmpty && _pin.length < _pinLength) {
+    setState(() => _pin = v.trim());
+    if (_pin.isNotEmpty && _pin.length < _pinLength) {
       _setErrorMessage(null);
     }
     return _pin.length == _pinLength;

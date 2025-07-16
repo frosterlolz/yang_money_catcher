@@ -3,7 +3,7 @@ import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin
 abstract interface class PinAuthenticationRepository {
   Future<BiometricPreference> readBiometricPreference();
   Future<void> changeBiometricPreference(BiometricPreference preference);
-  Future<PinAuthenticationStatus> changePinCode({String? oldPinCode, required String newPinCode});
+  Future<PinAuthenticationStatus> changePinCode(String pin);
   Future<PinAuthenticationStatus> checkAuthenticationStatus([String? pinCode]);
   Future<void> resetPin();
 }

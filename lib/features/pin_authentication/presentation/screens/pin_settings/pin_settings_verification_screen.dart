@@ -10,8 +10,7 @@ class PinSettingsVerificationScreen extends StatelessWidget {
   /// {@macro PinSettingsVerificationScreen.class}
   const PinSettingsVerificationScreen({super.key, required this.onSuccess});
 
-  /// Возвращает введенный код-пароль
-  final ValueChanged<String> onSuccess;
+  final VoidCallback onSuccess;
 
   @override
   Widget build(BuildContext context) =>

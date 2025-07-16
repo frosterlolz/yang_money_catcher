@@ -11,13 +11,7 @@ abstract interface class PinConfigStorage {
   Future<bool> hasPinCode();
 
   /// Изменяет Pin-код
-  /// [oldPinCode] - старый Pin-код, если ранее был установлен- обязательно указывать
-  /// [newPinCode] - новый Pin-код
-  /// Если [oldPinCode] указан и он совпадает с текущим Pin-кодом в сторедже, то [newPinCode] устанавливается
-  Future<bool> changePinCode({
-    String? oldPinCode,
-    required String newPinCode,
-  });
+  Future<bool> changePinCode(String pin);
 
   /// Проверяет Pin-код
   Future<bool> checkPinCode(String pinCode);

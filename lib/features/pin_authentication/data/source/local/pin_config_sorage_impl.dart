@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/codecs/pin_config_codec.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/source/local/pin_config_storage.dart';
-import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_exception.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_hasher.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 
@@ -34,15 +33,9 @@ final class PinConfigStorageImpl implements PinConfigStorage {
   }
 
   @override
-  Future<bool> changePinCode({String? oldPinCode, required String newPinCode}) async {
+  Future<bool> changePinCode(String pin) async {
     final oldConfig = await _readPinConfig();
-    final storedHash = oldConfig.pinCode;
-    final isFirstTime = storedHash == null;
-    if (isFirstTime) return _writePinCode(newPinCode, oldConfig);
-
-    final isOldPinCorrect = oldPinCode != null && _pinHasher.verify(oldPinCode, storedHash);
-    if (!isOldPinCorrect) throw PinException$Invalid('Invalid old pin $oldPinCode');
-    return _writePinCode(newPinCode, oldConfig);
+    return _writePinCode(pin, oldConfig);
   }
 
   @override

@@ -50,6 +50,7 @@ dependencies:
   fuzzy: ^0.5.1
   worker_manager: ^7.2.6
   crypto: ^3.0.6
+  local_auth: ^2.3.0
 
   # 💅 UI / UX
   cupertino_icons: ^1.0.8

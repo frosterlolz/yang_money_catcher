@@ -30,27 +30,12 @@ class PinSettingsStackScreen extends StatefulWidget {
 }
 
 class _PinSettingsStackScreenState extends State<PinSettingsStackScreen> {
-  String? _pin;
   late PinSettingsScreenStatus _status;
 
   @override
   void initState() {
     super.initState();
     _status = PinSettingsScreenStatus.other;
-  }
-
-  void _onPinVerificationChanged(String? pin) {
-    if (pin == null) {
-      _changeSettingsPinStatus(PinSettingsScreenStatus.changePin);
-      return;
-    }
-    _changePin(pin);
-    _changeSettingsPinStatus(PinSettingsScreenStatus.verified);
-  }
-
-  void _changePin(String v) {
-    if (_pin == v || !mounted) return;
-    setState(() => _pin = v);
   }
 
   void _changeSettingsPinStatus(PinSettingsScreenStatus v) {
@@ -73,15 +58,15 @@ class _PinSettingsStackScreenState extends State<PinSettingsStackScreen> {
                       _status == PinSettingsScreenStatus.createPin)
                     PinSettingsRoute(
                       pinSettingsScreenStatus: _status,
-                      validPin: _pin,
-                      onPinChanged: _onPinVerificationChanged,
+                      onPinSettingsScreenStatusChanged: _changeSettingsPinStatus,
                     )
                   else
                     switch (authenticationStatus) {
                       PinAuthenticationStatus.disabled => PinSettingsPreviewRoute(
                           onSuccess: () => _changeSettingsPinStatus(PinSettingsScreenStatus.createPin),
                         ),
-                      _ => PinSettingsVerificationRoute(onSuccess: _onPinVerificationChanged),
+                      _ => PinSettingsVerificationRoute(
+                          onSuccess: () => _changeSettingsPinStatus(PinSettingsScreenStatus.verified)),
                     },
                 ],
               ),

@@ -32,60 +32,68 @@ class _AppMaterialState extends State<AppMaterial> {
   void initState() {
     super.initState();
     _appRouter = AppRouter();
-    // TODO(frosterlolz): для соло локализации
-    Intl.defaultLocale = 'ru';
+    final initialSettings = context.read<SettingsBloc>().state.settings;
+    Intl.defaultLocale = initialSettings.locale.languageCode;
+  }
+
+  void _appSettingsListener(BuildContext context, SettingsState state) {
+    final currentLocale = state.settings.locale;
+    Intl.defaultLocale = currentLocale.languageCode;
   }
 
   @override
-  Widget build(BuildContext context) => BlocSelector<SettingsBloc, SettingsState, Settings>(
-        selector: (state) => state.settings,
-        builder: (context, settings) {
-          final themeMode = settings.themeConfig.themeMode;
-          final seedColor = settings.themeConfig.seedColor;
-          final locale = settings.locale;
+  Widget build(BuildContext context) => BlocListener<SettingsBloc, SettingsState>(
+        listener: _appSettingsListener,
+        child: BlocSelector<SettingsBloc, SettingsState, Settings>(
+          selector: (state) => state.settings,
+          builder: (context, settings) {
+            final themeMode = settings.themeConfig.themeMode;
+            final seedColor = settings.themeConfig.seedColor;
+            final locale = settings.locale;
 
-          final lightTheme = AppThemeData.lightFromSeed(seedColor);
-          final darkTheme = AppThemeData.darkFromSeed(seedColor);
+            final lightTheme = AppThemeData.lightFromSeed(seedColor);
+            final darkTheme = AppThemeData.darkFromSeed(seedColor);
 
-          return MaterialApp.router(
-            /// Localization
-            localizationsDelegates: Localization.localizationDelegates,
-            supportedLocales: Localization.supportedLocales,
-            locale: locale,
+            return MaterialApp.router(
+              /// Localization
+              localizationsDelegates: Localization.localizationDelegates,
+              supportedLocales: Localization.supportedLocales,
+              locale: locale,
 
-            /// Theme
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: themeMode,
+              /// Theme
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              themeMode: themeMode,
 
-            /// Navigation
-            routerConfig: _appRouter.config(
-              navigatorObservers: () => [RootRouteObserver()],
-            ),
-            debugShowCheckedModeBanner: kDebugMode,
-            builder: (context, child) => MediaQuery(
-              key: _builderKey,
-              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-              child: BlocBuilder<OfflineModeBloc, OfflineModeState>(
-                builder: (context, offlineModeState) {
-                  final currentReason = offlineModeState.reason;
-
-                  return Column(
-                    children: [
-                      OfflineAppBar(offlineModeReason: currentReason),
-                      Expanded(
-                        child: MediaQuery.removePadding(
-                          context: context,
-                          removeTop: currentReason.isOffline,
-                          child: child ?? const SizedBox.shrink(),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              /// Navigation
+              routerConfig: _appRouter.config(
+                navigatorObservers: () => [RootRouteObserver()],
               ),
-            ),
-          );
-        },
+              debugShowCheckedModeBanner: kDebugMode,
+              builder: (context, child) => MediaQuery(
+                key: _builderKey,
+                data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                child: BlocBuilder<OfflineModeBloc, OfflineModeState>(
+                  builder: (context, offlineModeState) {
+                    final currentReason = offlineModeState.reason;
+
+                    return Column(
+                      children: [
+                        OfflineAppBar(offlineModeReason: currentReason),
+                        Expanded(
+                          child: MediaQuery.removePadding(
+                            context: context,
+                            removeTop: currentReason.isOffline,
+                            child: child ?? const SizedBox.shrink(),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        ),
       );
 }

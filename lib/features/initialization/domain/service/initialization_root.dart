@@ -142,8 +142,6 @@ final class InitializationRoot {
             transactionsLocalStorage: transactionsLocalDataSource,
             accountEventsSyncDataSource: accountEventsSyncDataSource,
           );
-          // TODO(frosterlolz): мок данные не треюбуются, БЭК подключен
-          // await accountsRepository.generateMockData();
           d.accountRepository = accountsRepository;
         },
         'Prepare transactions feature': (d) async {
@@ -160,9 +158,6 @@ final class InitializationRoot {
             transactionsSyncDataSource: transactionEventsSyncDataSource,
             accountsLocalDataSource: accountsLocalDataSource,
           );
-          // TODO(frosterlolz): мок данные не треюбуются, БЭК подключен
-          // await transactionsRepository.fillTransactionCategories();
-          // await transactionsRepository.generateMockData();
           d.transactionsRepository = transactionsRepository;
         },
       };

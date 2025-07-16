@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-// TODO(frosterlolz): отредактировать палитру!
-
 /// Color names from: https://www.color-name.com/hex/....
 
 /// IMPORTANT! Don't use this directly for UI elements decorating.

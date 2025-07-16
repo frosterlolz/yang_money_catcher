@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_exception.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
+import 'package:yang_money_catcher/features/pin_authentication/domain/service/local_auth_service.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/screens/pin_settings/pin_settings.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_field.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_keyboard.dart';
@@ -22,14 +23,12 @@ class PinSettingsScreen extends StatefulWidget {
   /// {@macro PinSettingsScreen.class}
   const PinSettingsScreen({
     super.key,
-    this.validPin,
     required this.pinSettingsScreenStatus,
-    required this.onPinChanged,
+    required this.onPinSettingsScreenStatusChanged,
   });
 
-  final String? validPin;
   final PinSettingsScreenStatus pinSettingsScreenStatus;
-  final ValueChanged<String?> onPinChanged;
+  final ValueChanged<PinSettingsScreenStatus> onPinSettingsScreenStatusChanged;
 
   @override
   State<PinSettingsScreen> createState() => _PinSettingsScreenState();
@@ -82,12 +81,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> with _PinSettings
         case PinSettingsScreenStatus.createPin:
           context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.signUp(_pin));
         case PinSettingsScreenStatus.changePin:
-          context.read<PinAuthenticationBloc>().add(
-                PinAuthenticationEvent.changePin(
-                  newPin: _pin,
-                  oldPin: widget.validPin ?? (throw StateError('Old pin is null')),
-                ),
-              );
+          context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changePin(_pin));
         case PinSettingsScreenStatus.verified || PinSettingsScreenStatus.other:
           throw StateError('Invalid status inside {PinSettingsScreen._onPinRepeatComplete}');
       }
@@ -102,7 +96,7 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> with _PinSettings
       case PinAuthenticationState$Idle():
         _setErrorMessage(null);
       case PinAuthenticationState$Success():
-        widget.onPinChanged(_pin);
+        widget.onPinSettingsScreenStatusChanged(PinSettingsScreenStatus.verified);
       case PinAuthenticationState$Error(:final error):
         final message = switch (error) {
           PinException$Invalid() => context.l10n.pinIsIncorrect,
@@ -135,9 +129,9 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> with _PinSettings
               onComplete: _onPinRepeatComplete,
               errorMessage: _errorMessage,
             ),
-            _PinSettingsScreen(
+            _PinSettingsPanelScreen(
               key: const ValueKey('pin_settings'),
-              onChangePinTap: () => widget.onPinChanged.call(null),
+              onChangePinTap: () => widget.onPinSettingsScreenStatusChanged.call(PinSettingsScreenStatus.changePin),
             ),
           ],
         ),
@@ -272,21 +266,34 @@ class _PinInputPageState extends State<_PinInputPage> {
   }
 }
 
-/// {@template _PinSettingsScreen.class}
-/// _PinSettingsScreen widget.
+/// {@template _PinSettingsPanelScreen.class}
+/// _PinSettingsPanelScreen widget.
 /// {@endtemplate}
-class _PinSettingsScreen extends StatelessWidget {
-  /// {@macro _PinSettingsScreen.class}
-  const _PinSettingsScreen({super.key, required this.onChangePinTap});
+class _PinSettingsPanelScreen extends StatefulWidget {
+  /// {@macro _PinSettingsPanelScreen.class}
+  const _PinSettingsPanelScreen({super.key, required this.onChangePinTap});
 
   final VoidCallback onChangePinTap;
+
+  @override
+  State<_PinSettingsPanelScreen> createState() => _PinSettingsPanelScreenState();
+}
+
+class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
+  late final LocalAuthService _localAuthService;
+
+  @override
+  void initState() {
+    super.initState();
+    _localAuthService = LocalAuthService();
+  }
 
   void _onPinResetTap(BuildContext context) {
     context.read<PinAuthenticationBloc>().add(const PinAuthenticationEvent.resetPin());
   }
 
-  void _onBiometricPreferenceTap(BuildContext context, {required bool isEnabled}) {
-    // TODO(frosterlolz): implement
+  void _onBiometricPreferenceTap(BuildContext context, {required BiometricPreference preference}) {
+    context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changeBiometricStatus(preference));
   }
 
   @override
@@ -313,7 +320,7 @@ class _PinSettingsScreen extends StatelessWidget {
               children: [
                 TextButton(onPressed: () => _onPinResetTap(context), child: Text(context.l10n.pinDisable)),
                 const Divider(indent: AppSizes.double10, endIndent: AppSizes.double10),
-                TextButton(onPressed: onChangePinTap, child: Text(context.l10n.pinChange)),
+                TextButton(onPressed: widget.onChangePinTap, child: Text(context.l10n.pinChange)),
               ],
             ),
           ),
@@ -323,17 +330,28 @@ class _PinSettingsScreen extends StatelessWidget {
           ),
           BlocSelector<PinAuthenticationBloc, PinAuthenticationState, BiometricPreference>(
             selector: (state) => state.biometricPreference,
-            builder: (context, biometricPreference) => SwitchListTile(
-              tileColor: colorScheme.tertiary,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
-              ),
-              title: Text(
-                context.l10n.pinBiometricUnlock(biometricPreference.name),
-                style: textTheme.bodyMedium?.copyWith(color: colorScheme.onTertiary),
-              ),
-              value: false,
-              onChanged: (v) => _onBiometricPreferenceTap(context, isEnabled: v),
+            builder: (context, biometricPreference) => FutureBuilder(
+              future: _localAuthService.getBiometricAvailableType(),
+              builder: (context, snapshot) {
+                final availableBiometricType = snapshot.data;
+                if (availableBiometricType == null) return const SizedBox.shrink();
+
+                return SwitchListTile(
+                  tileColor: colorScheme.tertiary,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
+                  ),
+                  title: Text(
+                    context.l10n.pinBiometricUnlock(availableBiometricType.name),
+                    style: textTheme.bodyMedium?.copyWith(color: colorScheme.onTertiary),
+                  ),
+                  value: biometricPreference != BiometricPreference.disabled,
+                  onChanged: (v) => _onBiometricPreferenceTap(
+                    context,
+                    preference: v ? availableBiometricType : BiometricPreference.disabled,
+                  ),
+                );
+              },
             ),
           ),
         ],
