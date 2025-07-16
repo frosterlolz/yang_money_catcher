@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:database/database.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pretty_logger/pretty_logger.dart';
 import 'package:rest_client/rest_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +21,9 @@ import 'package:yang_money_catcher/features/account/data/source/network/accounts
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
 import 'package:yang_money_catcher/features/offline_mode/data/repository/offline_mode_repository_impl.dart';
 import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
+import 'package:yang_money_catcher/features/pin_authentication/data/repository/pin_authentication_repository_impl.dart';
+import 'package:yang_money_catcher/features/pin_authentication/data/source/local/pin_config_sorage_impl.dart';
+import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
 import 'package:yang_money_catcher/features/settings/data/codecs/settings_codec.dart';
 import 'package:yang_money_catcher/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:yang_money_catcher/features/settings/data/source/local/settings_data_source_local.dart';
@@ -59,6 +63,13 @@ final class InitializationRoot {
         'Prepare database': (d) async {
           final prefs = SharedPreferencesAsync();
           d.sharedPreferences = prefs;
+          const secureStorage = FlutterSecureStorage(
+            aOptions: AndroidOptions(
+              encryptedSharedPreferences: true,
+              resetOnError: true,
+            ),
+          );
+          d.secureStorage = secureStorage;
           final database = AppDatabase.defaults(name: 'yang_money_catcher_database');
           d.context['drift_database'] = database;
         },
@@ -73,6 +84,16 @@ final class InitializationRoot {
             settingsRepository: settingsRepository,
           );
           d.settingsBloc = settingsBloc;
+        },
+        'Initialize pin-authentication feature': (d) async {
+          final pinConfigStorage = PinConfigStorageImpl(d.secureStorage);
+          final pinAuthRepository = PinAuthenticationRepositoryImpl(pinConfigStorage);
+          final status = await pinAuthRepository.checkAuthenticationStatus();
+          final biometricPreference = await pinAuthRepository.readBiometricPreference();
+          final initialState = PinAuthenticationState.idle(status: status, biometricPreference: biometricPreference);
+          final pinAuthenticationBloc =
+              PinAuthenticationBloc(initialState, pinAuthenticationRepository: pinAuthRepository);
+          d.pinAuthenticationBloc = pinAuthenticationBloc;
         },
         'Initialize offline mode feature': (d) async {
           final offlineModeRepository = OfflineModeRepositoryImpl();

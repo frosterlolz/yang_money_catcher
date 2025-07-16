@@ -17,6 +17,7 @@ class App extends StatelessWidget {
         dependencies: result.dependencies,
         child: MultiBlocProvider(
           providers: [
+            BlocProvider(create: (_) => result.dependencies.pinAuthenticationBloc),
             BlocProvider(create: (_) => result.dependencies.settingsBloc),
             BlocProvider(create: (_) => result.dependencies.offlineModeBloc),
             BlocProvider(

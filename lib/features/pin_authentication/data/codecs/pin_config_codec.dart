@@ -23,7 +23,7 @@ class _PinConfigEncoder extends Converter<PinConfig, JsonMap> {
   @override
   JsonMap convert(PinConfig input) => {
         'pinCode': input.pinCode,
-        'isBiometricEnabled': input.isBiometricEnabled,
+        'biometricPreference': input.biometricPreference.name,
       };
 }
 
@@ -32,13 +32,14 @@ class _PinConfigDecoder extends Converter<JsonMap, PinConfig> {
 
   @override
   PinConfig convert(JsonMap input) {
-    if (input case {'pinCode': final String? pinCode, 'isBiometricEnabled': final bool isBiometricEnabled}) {
-      return PinConfig(
-        pinCode: pinCode,
-        isBiometricEnabled: isBiometricEnabled,
-      );
-    }
+    final pinCode = input['pinCode'] as String?;
+    final biometricPreference = input['biometricPreference'] as String?;
 
-    throw FormatException('Invalid pin configuration format: $input');
+    return PinConfig(
+      pinCode: pinCode,
+      biometricPreference: biometricPreference == null
+          ? BiometricPreference.disabled
+          : BiometricPreference.values.byName(biometricPreference),
+    );
   }
 }

@@ -5,20 +5,23 @@ sealed class PinAuthenticationState with _$PinAuthenticationState {
   const PinAuthenticationState._();
 
   const factory PinAuthenticationState.processing({
-    required PinConfig pinConfig,
-    required int pinBuffer,
+    required PinAuthenticationStatus status,
+    required BiometricPreference biometricPreference,
   }) = PinAuthenticationState$Processing;
 
+  const factory PinAuthenticationState.success({
+    required PinAuthenticationStatus status,
+    required BiometricPreference biometricPreference,
+  }) = PinAuthenticationState$Success;
+
   const factory PinAuthenticationState.idle({
-    required PinConfig pinConfig,
-    required int pinBuffer,
+    required PinAuthenticationStatus status,
+    required BiometricPreference biometricPreference,
   }) = PinAuthenticationState$Idle;
 
   const factory PinAuthenticationState.error({
-    required PinConfig pinConfig,
-    required int pinBuffer,
+    required PinAuthenticationStatus status,
+    required BiometricPreference biometricPreference,
     required Object error,
   }) = PinAuthenticationState$Error;
-
-  bool get isAuthenticated => pinBuffer == pinConfig.pinCode;
 }

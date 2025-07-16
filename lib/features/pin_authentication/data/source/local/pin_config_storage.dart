@@ -1,9 +1,11 @@
+import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
+
 abstract interface class PinConfigStorage {
   /// Проверяет, включена ли биометрия
-  Future<bool> isBiometricEnabled();
+  Future<BiometricPreference> fetchBiometricPreference();
 
   /// Включает/выключает биометрию
-  Future<void> changeBiometricEnabled(bool isEnabled);
+  Future<void> changeBiometricPreference(BiometricPreference preference);
 
   /// Проверяет, установлен ли Pin-код
   Future<bool> hasPinCode();
@@ -13,10 +15,13 @@ abstract interface class PinConfigStorage {
   /// [newPinCode] - новый Pin-код
   /// Если [oldPinCode] указан и он совпадает с текущим Pin-кодом в сторедже, то [newPinCode] устанавливается
   Future<bool> changePinCode({
-    int? oldPinCode,
-    required int newPinCode,
+    String? oldPinCode,
+    required String newPinCode,
   });
 
   /// Проверяет Pin-код
-  Future<bool> checkPinCode(int pinCode);
+  Future<bool> checkPinCode(String pinCode);
+
+  /// Сбрасывает Pin-код
+  Future<void> resetPin();
 }

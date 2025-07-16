@@ -5,11 +5,11 @@ class PinHasher {
   const PinHasher();
 
   /// Возвращает SHA-256 хеш в виде строки
-  String hashPin(int pinCode) {
-    final bytes = utf8.encode(pinCode.toString());
+  String hashPin(String pinCode) {
+    final bytes = utf8.encode(pinCode);
     return sha256.convert(bytes).toString();
   }
 
   /// Проверяет, что PIN совпадает с хешем
-  bool verify(int pinCode, String hashed) => hashPin(pinCode) == hashed;
+  bool verify(String pinCode, String hashed) => hashPin(pinCode) == hashed;
 }
