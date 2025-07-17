@@ -179,7 +179,11 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
                     onTap: _onKeyTap,
                     onDelTap: _onDelTap,
                     onBiometricTap: _onBiometricTap,
-                    biometricPreference: biometricPreference,
+                    biometricPreference: switch (widget.reason) {
+                      PinAuthenticationReason.signIn => biometricPreference,
+                      // Отключаем биометрический ввод при проверке доступа
+                      PinAuthenticationReason.verifyAccess => BiometricPreference.disabled,
+                    },
                   ),
                 ),
               ),

@@ -6,6 +6,7 @@ import 'package:yang_money_catcher/features/navigation/app_router.dart';
 import 'package:yang_money_catcher/features/navigation/service/root_route_observer.dart';
 import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
 import 'package:yang_money_catcher/features/offline_mode/presentation/widget/offline_app_bar.dart';
+import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/secure_blur_overlay_wrapper.dart';
 import 'package:yang_money_catcher/features/settings/domain/bloc/settings_bloc/settings_bloc.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/settings.dart';
 import 'package:yang_money_catcher/l10n/localization.dart';
@@ -77,17 +78,19 @@ class _AppMaterialState extends State<AppMaterial> {
                   builder: (context, offlineModeState) {
                     final currentReason = offlineModeState.reason;
 
-                    return Column(
-                      children: [
-                        OfflineAppBar(offlineModeReason: currentReason),
-                        Expanded(
-                          child: MediaQuery.removePadding(
-                            context: context,
-                            removeTop: currentReason.isOffline,
-                            child: child ?? const SizedBox.shrink(),
+                    return SecureBlurOverlayWrapper(
+                      child: Column(
+                        children: [
+                          OfflineAppBar(offlineModeReason: currentReason),
+                          Expanded(
+                            child: MediaQuery.removePadding(
+                              context: context,
+                              removeTop: currentReason.isOffline,
+                              child: child ?? const SizedBox.shrink(),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),
