@@ -38,10 +38,27 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
 
   late final LocalAuthService _localAuthService;
 
+  bool get _shouldApproveBiometric => switch (widget.reason) {
+        PinAuthenticationReason.signIn => true,
+        // Не даем пользоваться биометрией при запросе доступа к чувствительным настройкам
+        PinAuthenticationReason.verifyAccess => false,
+      };
+
   @override
   void initState() {
     super.initState();
     _localAuthService = LocalAuthService();
+    _initBiometricAuthentication();
+  }
+
+  Future<void> _initBiometricAuthentication() async {
+    if (!_shouldApproveBiometric) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isBiometricEnabled =
+          context.read<PinAuthenticationBloc>().state.biometricPreference != BiometricPreference.disabled;
+      if (!isBiometricEnabled) return;
+      _onBiometricTap();
+    });
   }
 
   void _authenticationStateListener(BuildContext context, PinAuthenticationState state) {
@@ -79,6 +96,8 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
   }
 
   Future<void> _onBiometricTap() async {
+    final isBiometricAvailable = await _localAuthService.checkBiometricsAvailability();
+    if (!isBiometricAvailable || !mounted) return;
     final reasonMessage = switch (widget.reason) {
       PinAuthenticationReason.signIn => context.l10n.biometricReasonSignIn,
       PinAuthenticationReason.verifyAccess => context.l10n.biometricReasonVerifyAccess,
@@ -179,11 +198,7 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
                     onTap: _onKeyTap,
                     onDelTap: _onDelTap,
                     onBiometricTap: _onBiometricTap,
-                    biometricPreference: switch (widget.reason) {
-                      PinAuthenticationReason.signIn => biometricPreference,
-                      // Отключаем биометрический ввод при проверке доступа
-                      PinAuthenticationReason.verifyAccess => BiometricPreference.disabled,
-                    },
+                    biometricPreference: _shouldApproveBiometric ? biometricPreference : BiometricPreference.disabled,
                   ),
                 ),
               ),
