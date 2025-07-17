@@ -1,6 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
+import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 
 /// {@template SecureBlurOverlayWrapper.class}
 /// SecureBlurOverlayWrapper widget.
@@ -35,26 +38,35 @@ class _SecureBlurOverlayWrapperState extends State<SecureBlurOverlayWrapper> wit
     switch (state) {
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
-        setState(() => _shouldBlur = true);
+        _changeBlurVisibility(true);
       case AppLifecycleState.resumed:
-        setState(() => _shouldBlur = false);
+        _changeBlurVisibility(false);
       case AppLifecycleState.hidden:
       case AppLifecycleState.detached:
         break;
     }
   }
 
+  void _changeBlurVisibility(bool shouldShow) {
+    final isPinAuthEnabled = context.read<PinAuthenticationBloc>().state.status != PinAuthenticationStatus.disabled;
+    if (shouldShow == _shouldBlur || !isPinAuthEnabled || !mounted) return;
+    setState(() => _shouldBlur = shouldShow);
+  }
+
   @override
-  Widget build(BuildContext context) => Stack(
-        children: [
-          widget.child,
-          if (_shouldBlur)
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(color: Colors.black.withValues(alpha: 0.1)),
+  Widget build(BuildContext context) => BlocSelector<PinAuthenticationBloc, PinAuthenticationState, bool>(
+        selector: (state) => state.status != PinAuthenticationStatus.disabled,
+        builder: (context, isPinAuthEnabled) => Stack(
+          children: [
+            widget.child,
+            if (isPinAuthEnabled && _shouldBlur)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(color: Colors.black.withValues(alpha: 0.1)),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       );
 }
