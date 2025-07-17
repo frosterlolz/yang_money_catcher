@@ -112,6 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ListTile(
                     title: Text(context.l10n.language),
                     trailing: const Icon(Icons.arrow_right),
+                    onTap: () => context.pushRoute(const LanguageSettingsRoute()),
                   ),
                   ListTile(
                     title: Text(context.l10n.appAbout),

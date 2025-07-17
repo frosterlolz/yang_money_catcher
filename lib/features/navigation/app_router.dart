@@ -31,6 +31,7 @@ class AppRouter extends RootStackRouter {
             ),
             hapticSettingsRoute,
             pinSettingsRoutes,
+            languageSettingsRoute,
           ],
         ),
       ],

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show Locale;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/haptic_type.dart';
@@ -17,6 +18,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       (event, emitter) => switch (event) {
         _Update() => _update(event, emitter),
         _UpdateHaptic() => _updateHaptic(event, emitter),
+        _UpdateLocale() => _updateLocale(event, emitter),
       },
     );
   }
@@ -40,6 +42,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emitter(SettingsState.processing(state.settings));
     try {
       final nextSettings = state.settings.copyWith(hapticType: event.type);
+      await _settingsRepository.save(nextSettings);
+      emitter(SettingsState.idle(nextSettings));
+    } on Object catch (e, s) {
+      emitter(SettingsState.error(state.settings, error: e));
+      onError(e, s);
+    }
+  }
+
+  Future<void> _updateLocale(_UpdateLocale event, _Emitter emitter) async {
+    final currentLocale = state.settings.locale;
+    if (currentLocale == event.locale) return;
+    emitter(SettingsState.processing(state.settings));
+    try {
+      final nextSettings = state.settings.copyWith(locale: event.locale);
       await _settingsRepository.save(nextSettings);
       emitter(SettingsState.idle(nextSettings));
     } on Object catch (e, s) {

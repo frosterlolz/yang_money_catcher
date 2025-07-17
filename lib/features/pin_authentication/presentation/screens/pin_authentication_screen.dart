@@ -91,12 +91,12 @@ class _PinAuthenticationScreenState extends State<PinAuthenticationScreen> {
     }
     if (!mounted || !isVerified) return;
     context.read<PinAuthenticationBloc>().add(
-      switch (widget.reason) {
-        PinAuthenticationReason.signIn => PinAuthenticationEvent.signIn('', forceWithBiometric: isVerified),
-        PinAuthenticationReason.verifyAccess =>
-            PinAuthenticationEvent.verifyAccess('', forceWithBiometric: isVerified),
-      },
-    );
+          switch (widget.reason) {
+            PinAuthenticationReason.signIn => PinAuthenticationEvent.signIn('', forceWithBiometric: isVerified),
+            PinAuthenticationReason.verifyAccess =>
+              PinAuthenticationEvent.verifyAccess('', forceWithBiometric: isVerified),
+          },
+        );
   }
 
   Future<void> _onCompleteError(String message) async {
