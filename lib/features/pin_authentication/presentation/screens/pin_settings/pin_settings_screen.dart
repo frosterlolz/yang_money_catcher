@@ -1,6 +1,7 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pretty_logger/pretty_logger.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_exception.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
@@ -68,22 +69,28 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> with _PinSettings
 
   Future<void> _onPinRepeatComplete(String pin) async {
     _setErrorMessage(null);
-    if (pin.trim().length > _repeatPin.length) {
-      throw StateError('Invalid pin length');
-    }
-    _setRepeatPin(pin);
-    final isValid = _validate(context);
-    if (!isValid) {
-      return _setErrorMessage(isValid ? null : context.l10n.pinsDoNotMatch);
-    }
+    final trimmedPin = pin.trim();
+    try {
+      if (trimmedPin.length > _pin.length) {
+        throw StateError('Invalid pin length');
+      }
+      _setRepeatPin(pin);
+      final isValid = _validate(context);
+      if (!isValid) {
+        return _setErrorMessage(isValid ? null : context.l10n.pinsDoNotMatch);
+      }
 
-    switch (widget.pinSettingsScreenStatus) {
-      case PinSettingsScreenStatus.createPin:
-        context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.signUp(_pin));
-      case PinSettingsScreenStatus.changePin:
-        context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changePin(_pin));
-      case PinSettingsScreenStatus.verified || PinSettingsScreenStatus.other:
-        throw StateError('Invalid status inside {PinSettingsScreen._onPinRepeatComplete}');
+      switch (widget.pinSettingsScreenStatus) {
+        case PinSettingsScreenStatus.createPin:
+          context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.signUp(_pin));
+        case PinSettingsScreenStatus.changePin:
+          context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changePin(_pin));
+        case PinSettingsScreenStatus.verified || PinSettingsScreenStatus.other:
+          throw StateError('Invalid status inside {PinSettingsScreen._onPinRepeatComplete}');
+      }
+    } on Object catch (e, s) {
+      logger.warn('$e', stackTrace: s);
+      _setErrorMessage(context.l10n.somethingWentWrong);
     }
   }
 
