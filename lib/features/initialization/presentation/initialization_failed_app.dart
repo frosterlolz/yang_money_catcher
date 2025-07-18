@@ -147,7 +147,7 @@ class _InitializationFailedAppState extends State<InitializationFailedApp> {
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.all(Radius.circular(12)),
                           ),
-                          backgroundColor: ColorPalette.corpDark,
+                          backgroundColor: ColorPalette.ufoGreen,
                           foregroundColor: ColorPalette.white,
                           padding: const EdgeInsets.symmetric(vertical: 12.5),
                           textStyle: AppTextStyle.medium15.value,

@@ -1,8 +1,29 @@
 {
+  "yes": "Да",
+  "no": "Нет",
+  "localeTitle": "{name, select, ru{Русский} en{English - (Английский)} other{Неизвестно}}",
+  "@localeTitle": {
+    "description": "Название языка по ключу",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "appCurrentlyUnavailable": "В данный момент приложение не доступно",
+  "areYouSure": "Вы уверены?",
   "mayBeFailTryItLater": "Возможно произошла техническая ошибка, попробуйте снова позднее",
   "pleaseProvideCorrectToken": "Пожалуйста, передайте корректный токен",
   "reload": "Перезапустить",
+  "themeModeName": "{name, select, light{Светлая тема} dark{Тёмная тема} system{Тема системы} other{Светлая тема}}",
+  "@themeModeName": {
+    "description": "Название темы по ключу",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "expenses": "Расходы",
   "expense": "Расход",
   "myExpenses": "Мои расходы",
@@ -25,6 +46,60 @@
   "unknownArticle": "Неизвестная статья",
   "myArticles": "Мои статьи",
   "settings": "Настройки",
+  "mainColor": "Основной цвет",
+  "selectMainColor": "Выберите основной цвет",
+  "sounds": "Звуки",
+  "haptics": "Хаптики",
+  "hapticEffect": "Тактильный эффект",
+  "hapticScreenIntro": "Выберите тип тактильного отклика, который вам приятнее всего.",
+  "hapticTitleValue": "{value, select, light{Лёгкий} medium{Средний} heavy{Сильный} selection{Выбор} vibrate{Вибрация} other{Неизвестный}}",
+  "@hapticTitleValue": {
+    "description": "Название типа хаптика по ключу",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "hapticDescriptionValue": "{value, select, light{Мягкий, едва заметный отклик} medium{Чёткий и сбалансированный виброотклик} heavy{Мощный, глубокий отклик} selection{Короткий щелчок при смене значений} vibrate{Стандартная вибрация устройства} other{Описание недоступно}}",
+  "@hapticDescriptionValue": {
+    "description": "Описание типа хаптика по ключу",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "codePassword": "Код пароль",
+  "pinScreenTitle": "Код-пароль",
+  "pinScreenDescription": "После установки код-пароля вы сможете входить в приложение с его помощью.",
+  "pinScreenEnableButton": "Включить код-пароль",
+  "pinDisable": "Отключить код-пароль",
+  "resetPin": "Сбросить код-пароль",
+  "resetPinDescriptionDemo": "Пароль удалится, а могло бы что-то еще, но это демо-версия, поэтому ничего страшного не будет.",
+  "pinSettingsDescriptionDemo": "Важно: если вы забудете код доступа, Вам придётся его сбросить и вы ничего не потеряете.",
+  "pinChange": "Изменить код-пароль",
+  "pinBiometricUnlock": "{value, select, face{Разблокировка по Face ID} fingerprint{Разблокировка по Touch ID} other{Разблокировка по биометрии}}",
+  "@pinBiometricUnlock": {
+    "description": "Разблокировка по face или fingerprint",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "pinScreenForgotInfo": "Если забудете код — не беда, его всегда можно сбросить.",
+  "pinScreenBiometricNote": "Вы также сможете использовать Face ID или отпечаток для входа.",
+  "biometricReasonSignIn": "Авторизация в приложении",
+  "biometricReasonVerifyAccess": "Получение доступа к конфиденциальным настройкам",
+  "biometricCheckFailed": "Не удалось авторизоваться по биометрии",
+  "pinsDoNotMatch": "Код-пароли не совпадают",
+  "pinIsIncorrect": "Неверный код-пароль",
+  "enterPinCode": "Введите код-пароль",
+  "repeatPinCode": "Повторите код-пароль",
+  "sync": "Синхронизация",
+  "language": "Язык",
+  "appAbout": "О программе",
   "somethingWentWrong": "Что-то пошло не так",
   "tryItAgain": "Попробуйте ещё раз",
   "retry": "Повторить",

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 /// {@template TransactionListTile.class}
 /// TransactionListTile widget.
@@ -70,7 +69,7 @@ class TransactionListTile extends StatelessWidget {
             ),
             trailing: Icon(
               Icons.chevron_right,
-              color: AppColorScheme.of(context).labelTertiary.withValues(alpha: AppSizes.double03),
+              color: ColorScheme.of(context).outline.withValues(alpha: AppSizes.double03),
             ),
           ),
           if (enableBottomDivider) const Divider(),
