@@ -3,20 +3,24 @@ import 'package:flutter/foundation.dart' show immutable;
 @immutable
 class PinConfig {
   const PinConfig({
-    required this.pinCode,
-    required this.biometricPreference,
+    required this.pinHash,
+    required this.pinLength,
+    required this.shouldAllowBiometric,
   });
 
-  final String? pinCode;
-  final BiometricPreference biometricPreference;
+  final String? pinHash;
+  final int pinLength;
+  final bool shouldAllowBiometric;
 
   PinConfig copyWith({
-    String? pinCode,
-    BiometricPreference? biometricPreference,
+    String? pinHash,
+    bool? shouldAllowBiometric,
+    int? pinLength,
   }) =>
       PinConfig(
-        pinCode: pinCode ?? this.pinCode,
-        biometricPreference: biometricPreference ?? this.biometricPreference,
+        pinHash: pinHash ?? this.pinHash,
+        pinLength: pinLength ?? this.pinLength,
+        shouldAllowBiometric: shouldAllowBiometric ?? this.shouldAllowBiometric,
       );
 
   @override
@@ -24,11 +28,12 @@ class PinConfig {
       identical(this, other) ||
       other is PinConfig &&
           runtimeType == other.runtimeType &&
-          pinCode == other.pinCode &&
-          biometricPreference == other.biometricPreference;
+          pinHash == other.pinHash &&
+          shouldAllowBiometric == other.shouldAllowBiometric &&
+          pinLength == other.pinLength;
 
   @override
-  int get hashCode => Object.hash(pinCode, biometricPreference);
+  int get hashCode => Object.hash(pinHash, shouldAllowBiometric, pinLength);
 }
 
 enum PinAuthenticationStatus { authenticated, unauthenticated, disabled }

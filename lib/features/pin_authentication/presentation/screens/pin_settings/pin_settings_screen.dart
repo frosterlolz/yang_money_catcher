@@ -6,14 +6,10 @@ import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_a
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/service/local_auth_service.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/screens/pin_settings/pin_settings.dart';
-import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_field.dart';
-import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_keyboard.dart';
+import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_view.dart';
 import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
-
-const _pinLength = 4;
-const _errorAnimationDuration = Duration(milliseconds: 400);
 
 /// {@template PinSettingsScreen.class}
 /// PinSettingsScreen widget.
@@ -62,32 +58,33 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> with _PinSettings
         PinSettingsScreenStatus.verified => 2,
       };
 
-  void _onPinEnterComplete(String pin) {
-    if (pin.trim().length > _pinLength) {
+  void _onPinEnterComplete(String pin, {required int pinMaxLength}) {
+    if (pin.trim().length > pinMaxLength) {
       throw StateError('Invalid pin length');
     }
-    _setPin(pin);
+    _setPin(pin, maxLength: pinMaxLength);
     _controller.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
   }
 
   Future<void> _onPinRepeatComplete(String pin) async {
-    if (pin.trim().length > _pinLength) {
+    _setErrorMessage(null);
+    if (pin.trim().length > _repeatPin.length) {
       throw StateError('Invalid pin length');
     }
     _setRepeatPin(pin);
     final isValid = _validate(context);
-    if (isValid) {
-      switch (widget.pinSettingsScreenStatus) {
-        case PinSettingsScreenStatus.createPin:
-          context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.signUp(_pin));
-        case PinSettingsScreenStatus.changePin:
-          context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changePin(_pin));
-        case PinSettingsScreenStatus.verified || PinSettingsScreenStatus.other:
-          throw StateError('Invalid status inside {PinSettingsScreen._onPinRepeatComplete}');
-      }
+    if (!isValid) {
+      return _setErrorMessage(isValid ? null : context.l10n.pinsDoNotMatch);
     }
-    await Future<void>.delayed(_errorAnimationDuration);
-    _setRepeatPin('');
+
+    switch (widget.pinSettingsScreenStatus) {
+      case PinSettingsScreenStatus.createPin:
+        context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.signUp(_pin));
+      case PinSettingsScreenStatus.changePin:
+        context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changePin(_pin));
+      case PinSettingsScreenStatus.verified || PinSettingsScreenStatus.other:
+        throw StateError('Invalid status inside {PinSettingsScreen._onPinRepeatComplete}');
+    }
   }
 
   void _pinAuthStateListener(BuildContext context, PinAuthenticationState state) {
@@ -107,26 +104,24 @@ class _PinSettingsScreenState extends State<PinSettingsScreen> with _PinSettings
   }
 
   @override
-  Widget build(BuildContext context) => BlocListener<PinAuthenticationBloc, PinAuthenticationState>(
+  Widget build(BuildContext context) => BlocConsumer<PinAuthenticationBloc, PinAuthenticationState>(
         listener: _pinAuthStateListener,
-        child: PageView(
+        builder: (context, pinAuthState) => PageView(
           physics: const NeverScrollableScrollPhysics(),
           controller: _controller,
           children: [
-            _PinInputPage(
+            PinInputView(
               key: const ValueKey('primary_pin_input'),
-              currentPin: _pin,
-              pinLength: _pinLength,
+              pinLength: pinAuthState.pinLength,
               title: context.l10n.enterPinCode,
-              onComplete: _onPinEnterComplete,
+              onComplete: (pin, [_]) => _onPinEnterComplete(pin, pinMaxLength: pinAuthState.pinLength),
               errorMessage: _errorMessage,
             ),
-            _PinInputPage(
+            PinInputView(
               key: const ValueKey('secondary_pin_input'),
-              currentPin: _repeatPin,
-              pinLength: _pinLength,
+              pinLength: pinAuthState.pinLength,
               title: context.l10n.repeatPinCode,
-              onComplete: _onPinRepeatComplete,
+              onComplete: (pin, [_]) => _onPinRepeatComplete(pin),
               errorMessage: _errorMessage,
             ),
             _PinSettingsPanelScreen(
@@ -144,125 +139,26 @@ mixin _PinSettingsScreenMixin on State<PinSettingsScreen> {
   String? _errorMessage;
 
   bool _validate(BuildContext context) {
-    bool isValid = false;
-    isValid = _pin.length < _pinLength || _repeatPin.length < _pinLength;
-    if (isValid) {
-      _setErrorMessage(null);
-      return isValid;
-    }
-    isValid = _pin == _repeatPin;
-    _setErrorMessage(isValid ? null : context.l10n.pinsDoNotMatch);
-    return isValid;
+    final isValid = _repeatPin.length < _pin.length;
+    if (isValid) return isValid;
+    return _pin == _repeatPin;
   }
 
-  void _setPin(String v) {
-    if (_pin.trim() == v.trim() || v.length > _pinLength || !mounted) return;
+  void _setPin(String v, {int? maxLength}) {
+    final trimmedPin = v.trim();
+    if (_pin == trimmedPin || !mounted) return;
+    if (maxLength != null && trimmedPin.length > maxLength) return;
     setState(() => _pin = v);
   }
 
   void _setRepeatPin(String v) {
-    if (_repeatPin.trim() == v.trim() || v.length > _pinLength || !mounted) return;
+    if (_repeatPin.trim() == v.trim() || v.length > _pin.length || !mounted) return;
     setState(() => _repeatPin = v);
   }
 
   void _setErrorMessage(String? v) {
     if (_errorMessage == v || !mounted) return;
     setState(() => _errorMessage = v);
-  }
-}
-
-/// {@template _PinInputPage.class}
-/// View для ввода пин-кода
-/// {@endtemplate}
-class _PinInputPage extends StatefulWidget {
-  /// {@macro _PinInputPage.class}
-  const _PinInputPage({
-    super.key,
-    required this.title,
-    required this.currentPin,
-    required this.onComplete,
-    required this.pinLength,
-    this.errorMessage,
-  });
-
-  final String title;
-  final String currentPin;
-  final int pinLength;
-  final ValueChanged<String> onComplete;
-  final String? errorMessage;
-
-  @override
-  State<_PinInputPage> createState() => _PinInputPageState();
-}
-
-class _PinInputPageState extends State<_PinInputPage> {
-  late String _pin;
-
-  String? get _errorMessage => _pin.isNotEmpty && _pin.length < widget.pinLength ? null : widget.errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    _pin = widget.currentPin;
-  }
-
-  @override
-  void didUpdateWidget(covariant _PinInputPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.currentPin != oldWidget.currentPin) {
-      _changePin(widget.currentPin);
-    }
-  }
-
-  void _onKeyTap(String v) {
-    final nextPin = _pin + v;
-    _changePin(nextPin);
-  }
-
-  void _onDelTap() {
-    if (_pin.isEmpty) return;
-    final nextPin = _pin.substring(0, _pin.length - 1);
-    _changePin(nextPin);
-  }
-
-  void _changePin(String v) {
-    if (_pin.trim() == v.trim() || v.length > widget.pinLength || !mounted) return;
-    setState(() => _pin = v);
-    if (_pin.length == widget.pinLength) {
-      widget.onComplete(_pin);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = TextTheme.of(context);
-    final colorScheme = ColorScheme.of(context);
-
-    return Column(
-      spacing: AppSizes.double10,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const Spacer(),
-        Text(widget.title, style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface)),
-        PinInputField(
-          pinLength: widget.pinLength,
-          filledLength: _pin.length,
-          isError: _errorMessage != null,
-          errorAnimationDuration: _errorAnimationDuration,
-        ),
-        Text(_errorMessage ?? '', style: textTheme.bodyMedium?.copyWith(color: colorScheme.error)),
-        const Spacer(),
-        FractionallySizedBox(
-          widthFactor: 0.8,
-          child: PinInputKeyboard(
-            onTap: _onKeyTap,
-            onDelTap: _onDelTap,
-            onBiometricTap: () {},
-            biometricPreference: BiometricPreference.disabled,
-          ),
-        ),
-      ],
-    );
   }
 }
 
@@ -292,8 +188,8 @@ class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
     context.read<PinAuthenticationBloc>().add(const PinAuthenticationEvent.resetPin());
   }
 
-  void _onBiometricPreferenceTap(BuildContext context, {required BiometricPreference preference}) {
-    context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changeBiometricStatus(preference));
+  void _onBiometricPreferenceTap(BuildContext context, {required bool shouldAllowBiometric}) {
+    context.read<PinAuthenticationBloc>().add(PinAuthenticationEvent.changeBiometricStatus(shouldAllowBiometric));
   }
 
   @override
@@ -328,12 +224,14 @@ class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
             padding: const EdgeInsets.only(left: AppSizes.double10),
             child: Text(context.l10n.pinSettingsDescriptionDemo),
           ),
-          BlocSelector<PinAuthenticationBloc, PinAuthenticationState, BiometricPreference>(
-            selector: (state) => state.biometricPreference,
-            builder: (context, biometricPreference) => FutureBuilder(
+          BlocSelector<PinAuthenticationBloc, PinAuthenticationState, bool>(
+            selector: (state) => state.shouldAllowBiometric,
+            builder: (context, shouldAllowBiometric) => FutureBuilder(
               future: _localAuthService.getBiometricAvailableType(),
               builder: (context, snapshot) {
                 final availableBiometricType = snapshot.data;
+                final isBiometricAvailable =
+                    availableBiometricType != null && availableBiometricType != BiometricPreference.disabled;
                 if (availableBiometricType == null) return const SizedBox.shrink();
 
                 return SwitchListTile(
@@ -345,10 +243,10 @@ class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
                     context.l10n.pinBiometricUnlock(availableBiometricType.name),
                     style: textTheme.bodyMedium?.copyWith(color: colorScheme.onTertiary),
                   ),
-                  value: biometricPreference != BiometricPreference.disabled,
+                  value: shouldAllowBiometric,
                   onChanged: (v) => _onBiometricPreferenceTap(
                     context,
-                    preference: v ? availableBiometricType : BiometricPreference.disabled,
+                    shouldAllowBiometric: v ? isBiometricAvailable : false,
                   ),
                 );
               },

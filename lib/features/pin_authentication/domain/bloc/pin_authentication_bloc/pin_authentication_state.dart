@@ -6,22 +6,26 @@ sealed class PinAuthenticationState with _$PinAuthenticationState {
 
   const factory PinAuthenticationState.processing({
     required PinAuthenticationStatus status,
-    required BiometricPreference biometricPreference,
+    required int pinLength,
+    required bool shouldAllowBiometric,
   }) = PinAuthenticationState$Processing;
 
   const factory PinAuthenticationState.success({
     required PinAuthenticationStatus status,
-    required BiometricPreference biometricPreference,
+    required int pinLength,
+    required bool shouldAllowBiometric,
   }) = PinAuthenticationState$Success;
 
   const factory PinAuthenticationState.idle({
     required PinAuthenticationStatus status,
-    required BiometricPreference biometricPreference,
+    required int pinLength,
+    required bool shouldAllowBiometric,
   }) = PinAuthenticationState$Idle;
 
   const factory PinAuthenticationState.error({
     required PinAuthenticationStatus status,
-    required BiometricPreference biometricPreference,
+    required int pinLength,
+    required bool shouldAllowBiometric,
     required Object error,
   }) = PinAuthenticationState$Error;
 }

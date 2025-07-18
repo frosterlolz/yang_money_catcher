@@ -9,23 +9,18 @@ final class PinAuthenticationRepositoryImpl implements PinAuthenticationReposito
   final PinConfigStorage _pinConfigStorage;
 
   @override
-  Future<BiometricPreference> readBiometricPreference() => _pinConfigStorage.fetchBiometricPreference();
+  Future<void> changeBiometricPreference(bool shouldAllowBiometric) =>
+      _pinConfigStorage.changeBiometricPreference(shouldAllowBiometric);
 
   @override
-  Future<void> changeBiometricPreference(BiometricPreference preference) =>
-      _pinConfigStorage.changeBiometricPreference(preference);
-
-  @override
-  Future<PinAuthenticationStatus> changePinCode(String pin) async {
-    final isChanged = await _pinConfigStorage.changePinCode(pin);
-    return isChanged ? PinAuthenticationStatus.authenticated : PinAuthenticationStatus.unauthenticated;
-  }
+  Future<PinConfig> changePinCode(String pin) => _pinConfigStorage.changePinCode(pin);
 
   @override
   Future<PinAuthenticationStatus> checkAuthenticationStatus([String? pinCode]) async {
     if (pinCode == null) {
-      final hasPin = await _pinConfigStorage.hasPinCode();
-      return hasPin ? PinAuthenticationStatus.unauthenticated : PinAuthenticationStatus.disabled;
+      final pinConfig = await _pinConfigStorage.fetchPinConfig();
+
+      return pinConfig.pinHash == null ? PinAuthenticationStatus.disabled : PinAuthenticationStatus.unauthenticated;
     }
     final pinChecked = await _pinConfigStorage.checkPinCode(pinCode);
     if (!pinChecked) throw const PinException$Invalid('Invalid pin {checkAuthenticationStatus}');
@@ -33,5 +28,5 @@ final class PinAuthenticationRepositoryImpl implements PinAuthenticationReposito
   }
 
   @override
-  Future<void> resetPin() => _pinConfigStorage.resetPin();
+  Future<PinConfig> resetPin() => _pinConfigStorage.resetPin();
 }

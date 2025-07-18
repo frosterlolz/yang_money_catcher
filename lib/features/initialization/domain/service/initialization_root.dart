@@ -87,10 +87,14 @@ final class InitializationRoot {
         },
         'Initialize pin-authentication feature': (d) async {
           final pinConfigStorage = PinConfigStorageImpl(d.secureStorage);
+          final pinConfig = await pinConfigStorage.fetchPinConfig();
           final pinAuthRepository = PinAuthenticationRepositoryImpl(pinConfigStorage);
           final status = await pinAuthRepository.checkAuthenticationStatus();
-          final biometricPreference = await pinAuthRepository.readBiometricPreference();
-          final initialState = PinAuthenticationState.idle(status: status, biometricPreference: biometricPreference);
+          final initialState = PinAuthenticationState.idle(
+            status: status,
+            shouldAllowBiometric: pinConfig.shouldAllowBiometric,
+            pinLength: pinConfig.pinLength,
+          );
           final pinAuthenticationBloc =
               PinAuthenticationBloc(initialState, pinAuthenticationRepository: pinAuthRepository);
           d.pinAuthenticationBloc = pinAuthenticationBloc;

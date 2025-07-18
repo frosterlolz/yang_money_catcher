@@ -8,10 +8,12 @@ import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin
 /// {@endtemplate}
 class PinConfigCodec extends Codec<PinConfig, JsonMap> {
   /// {@macro pin_config_codec}
-  const PinConfigCodec();
+  const PinConfigCodec(this.fallbackPinLength);
+
+  final int fallbackPinLength;
 
   @override
-  Converter<JsonMap, PinConfig> get decoder => const _PinConfigDecoder();
+  Converter<JsonMap, PinConfig> get decoder => _PinConfigDecoder(fallbackPinLength);
 
   @override
   Converter<PinConfig, JsonMap> get encoder => const _PinConfigEncoder();
@@ -22,24 +24,21 @@ class _PinConfigEncoder extends Converter<PinConfig, JsonMap> {
 
   @override
   JsonMap convert(PinConfig input) => {
-        'pinCode': input.pinCode,
-        'biometricPreference': input.biometricPreference.name,
+        'pinCode': input.pinHash,
+        'shouldAllowBiometric': input.shouldAllowBiometric,
+        'pinLength': input.pinLength,
       };
 }
 
 class _PinConfigDecoder extends Converter<JsonMap, PinConfig> {
-  const _PinConfigDecoder();
+  const _PinConfigDecoder(this._fallbackPinLength);
+
+  final int _fallbackPinLength;
 
   @override
-  PinConfig convert(JsonMap input) {
-    final pinCode = input['pinCode'] as String?;
-    final biometricPreference = input['biometricPreference'] as String?;
-
-    return PinConfig(
-      pinCode: pinCode,
-      biometricPreference: biometricPreference == null
-          ? BiometricPreference.disabled
-          : BiometricPreference.values.byName(biometricPreference),
-    );
-  }
+  PinConfig convert(JsonMap input) => PinConfig(
+        pinHash: input['pinCode'] as String?,
+        shouldAllowBiometric: (input['shouldAllowBiometric'] as bool?) ?? true,
+        pinLength: (input['pinLength'] as int?) ?? _fallbackPinLength,
+      );
 }

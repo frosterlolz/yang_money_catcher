@@ -8,10 +8,11 @@ import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_ha
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 
 const _pinConfigStorageKey = 'pin_config';
+const _effectivePinLength = 4;
 
 final class PinConfigStorageImpl implements PinConfigStorage {
-  const PinConfigStorageImpl(this._storage)
-      : _codec = const PinConfigCodec(),
+  PinConfigStorageImpl(this._storage, {int? defaultPinLength})
+      : _codec = PinConfigCodec(defaultPinLength ?? _effectivePinLength),
         _pinHasher = const PinHasher();
 
   final FlutterSecureStorage _storage;
@@ -19,58 +20,49 @@ final class PinConfigStorageImpl implements PinConfigStorage {
   final PinHasher _pinHasher;
 
   @override
-  Future<void> changeBiometricPreference(BiometricPreference preference) async {
-    final oldConfig = await _readPinConfig();
-    if (oldConfig.biometricPreference == preference) return;
-    final newConfig = oldConfig.copyWith(biometricPreference: preference);
+  Future<PinConfig> fetchPinConfig() async {
+    final configJson = await _storage.read(key: _pinConfigStorageKey);
+    return _codec.decode(configJson == null ? {} : jsonDecode(configJson) as JsonMap);
+  }
+
+  @override
+  Future<void> changeBiometricPreference(bool shouldAllowBiometric) async {
+    final oldConfig = await fetchPinConfig();
+    if (oldConfig.shouldAllowBiometric == shouldAllowBiometric) return;
+    final newConfig = oldConfig.copyWith(shouldAllowBiometric: shouldAllowBiometric);
     await _writePinConfig(newConfig);
   }
 
   @override
-  Future<BiometricPreference> fetchBiometricPreference() async {
-    final pinConfig = await _readPinConfig();
-    return pinConfig.biometricPreference;
-  }
-
-  @override
-  Future<bool> changePinCode(String pin) async {
-    final oldConfig = await _readPinConfig();
-    return _writePinCode(pin, oldConfig);
+  Future<PinConfig> changePinCode(String pin) async {
+    final oldConfig = await fetchPinConfig();
+    final newHash = _pinHasher.hashPin(pin);
+    // Нечего менять- коды совпадают
+    if (oldConfig.pinHash == newHash) return oldConfig;
+    final newConfig = oldConfig.copyWith(pinHash: newHash, pinLength: pin.length);
+    await _writePinConfig(newConfig);
+    return newConfig;
   }
 
   @override
   Future<bool> checkPinCode(String pinCode) async {
-    final pinConfig = await _readPinConfig();
-    final storedHash = pinConfig.pinCode;
+    final pinConfig = await fetchPinConfig();
+    final storedHash = pinConfig.pinHash;
     if (storedHash == null) return false;
     return _pinHasher.verify(pinCode, storedHash);
   }
 
   @override
-  Future<bool> hasPinCode() async {
-    final pinConfig = await _readPinConfig();
-    return pinConfig.pinCode != null;
-  }
-
-  @override
-  Future<void> resetPin() async {
-    final oldConfig = await _readPinConfig();
-    final newConfig = PinConfig(pinCode: null, biometricPreference: oldConfig.biometricPreference);
+  Future<PinConfig> resetPin() async {
+    final oldConfig = await fetchPinConfig();
+    if (oldConfig.pinHash == null) return oldConfig;
+    final newConfig = PinConfig(
+      pinHash: null,
+      pinLength: _codec.fallbackPinLength,
+      shouldAllowBiometric: oldConfig.shouldAllowBiometric,
+    );
     await _writePinConfig(newConfig);
-  }
-
-  Future<bool> _writePinCode(String pinCode, PinConfig oldConfig) async {
-    final newHash = _pinHasher.hashPin(pinCode);
-    // Нечего менять- коды совпадают
-    if (oldConfig.pinCode == newHash) return true;
-    final newConfig = oldConfig.copyWith(pinCode: newHash);
-    await _writePinConfig(newConfig);
-    return true;
-  }
-
-  Future<PinConfig> _readPinConfig() async {
-    final configJson = await _storage.read(key: _pinConfigStorageKey);
-    return _codec.decode(configJson == null ? {} : jsonDecode(configJson) as JsonMap);
+    return newConfig;
   }
 
   Future<void> _writePinConfig(PinConfig config) async {

@@ -29,61 +29,130 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
   final PinAuthenticationRepository _pinAuthenticationRepository;
 
   Future<void> _signIn(_SignIn event, _Emitter emitter) async {
-    emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
+    emitter(
+      PinAuthenticationState.processing(
+        status: state.status,
+        shouldAllowBiometric: state.shouldAllowBiometric,
+        pinLength: state.pinLength,
+      ),
+    );
     try {
       final nextStatus = event.forceWithBiometric
           ? PinAuthenticationStatus.authenticated
           : await _pinAuthenticationRepository.checkAuthenticationStatus(event.pin);
-      emitter(PinAuthenticationState.success(status: nextStatus, biometricPreference: state.biometricPreference));
+      emitter(
+        PinAuthenticationState.success(
+          status: nextStatus,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+        ),
+      );
     } on Object catch (e, s) {
       emitter(
-        PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
+        PinAuthenticationState.error(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+          error: e,
+        ),
       );
 
       onError(e, s);
     } finally {
-      emitter(PinAuthenticationState.idle(status: state.status, biometricPreference: state.biometricPreference));
+      emitter(
+        PinAuthenticationState.idle(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+        ),
+      );
     }
   }
 
   Future<void> _changePin(_ChangePin event, _Emitter emitter) async {
-    emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
+    emitter(
+      PinAuthenticationState.processing(
+        status: state.status,
+        shouldAllowBiometric: state.shouldAllowBiometric,
+        pinLength: state.pinLength,
+      ),
+    );
     if (state.status != PinAuthenticationStatus.authenticated) {
       return emitter(
         PinAuthenticationState.error(
           status: state.status,
-          biometricPreference: state.biometricPreference,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
           error: const PinException$Forbidden('Cannot change pin from other state except Authenticated'),
         ),
       );
     }
     try {
-      final nextStatus = await _pinAuthenticationRepository.changePinCode(event.v);
-      emitter(PinAuthenticationState.success(status: nextStatus, biometricPreference: state.biometricPreference));
+      final newConfig = await _pinAuthenticationRepository.changePinCode(event.v);
+      emitter(
+        PinAuthenticationState.success(
+          status: PinAuthenticationStatus.authenticated,
+          pinLength: newConfig.pinLength,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+        ),
+      );
     } on PinException$Invalid catch (e, s) {
       emitter(
-        PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
+        PinAuthenticationState.error(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+          error: e,
+        ),
       );
       logger.warn(e.internalMessage, error: e, stackTrace: s);
     } on Object catch (e, s) {
       emitter(
-        PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
+        PinAuthenticationState.error(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+          error: e,
+        ),
       );
 
       onError(e, s);
     } finally {
-      emitter(PinAuthenticationState.idle(status: state.status, biometricPreference: state.biometricPreference));
+      emitter(
+        PinAuthenticationState.idle(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+        ),
+      );
     }
   }
 
   Future<void> _changeBiometricStatus(_ChangeBiometricStatus event, _Emitter emitter) async {
-    emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
+    emitter(
+      PinAuthenticationState.processing(
+        status: state.status,
+        shouldAllowBiometric: state.shouldAllowBiometric,
+        pinLength: state.pinLength,
+      ),
+    );
     try {
-      await _pinAuthenticationRepository.changeBiometricPreference(event.preference);
-      emitter(PinAuthenticationState.idle(status: state.status, biometricPreference: event.preference));
+      await _pinAuthenticationRepository.changeBiometricPreference(event.shouldAllowBiometric);
+      emitter(
+        PinAuthenticationState.idle(
+          status: state.status,
+          shouldAllowBiometric: event.shouldAllowBiometric,
+          pinLength: state.pinLength,
+        ),
+      );
     } on Object catch (e, s) {
       emitter(
-        PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
+        PinAuthenticationState.error(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+          error: e,
+        ),
       );
 
       onError(e, s);
@@ -91,13 +160,30 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
   }
 
   Future<void> _signUp(_SignUp event, _Emitter emitter) async {
-    emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
+    emitter(
+      PinAuthenticationState.processing(
+        status: state.status,
+        shouldAllowBiometric: state.shouldAllowBiometric,
+        pinLength: state.pinLength,
+      ),
+    );
     try {
-      final nextStatus = await _pinAuthenticationRepository.changePinCode(event.pin);
-      emitter(PinAuthenticationState.idle(status: nextStatus, biometricPreference: state.biometricPreference));
+      final newConfig = await _pinAuthenticationRepository.changePinCode(event.pin);
+      emitter(
+        PinAuthenticationState.idle(
+          status: PinAuthenticationStatus.authenticated,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: newConfig.pinLength,
+        ),
+      );
     } on Object catch (e, s) {
       emitter(
-        PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
+        PinAuthenticationState.error(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+          error: e,
+        ),
       );
 
       onError(e, s);
@@ -105,39 +191,74 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
   }
 
   Future<void> _resetPin(_ResetPin event, _Emitter emitter) async {
-    emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
+    emitter(
+      PinAuthenticationState.processing(
+        status: state.status,
+        shouldAllowBiometric: state.shouldAllowBiometric,
+        pinLength: state.pinLength,
+      ),
+    );
     try {
-      await _pinAuthenticationRepository.resetPin();
+      final newConfig = await _pinAuthenticationRepository.resetPin();
       emitter(
         PinAuthenticationState.idle(
           status: PinAuthenticationStatus.disabled,
-          biometricPreference: state.biometricPreference,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: newConfig.pinLength,
         ),
       );
     } on Object catch (e, s) {
       emitter(
-        PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
+        PinAuthenticationState.error(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+          error: e,
+        ),
       );
       onError(e, s);
     }
   }
 
   Future<void> _verifyAccess(_VerifyAccess event, _Emitter emitter) async {
-    emitter(PinAuthenticationState.processing(status: state.status, biometricPreference: state.biometricPreference));
+    emitter(
+      PinAuthenticationState.processing(
+        status: state.status,
+        shouldAllowBiometric: state.shouldAllowBiometric,
+        pinLength: state.pinLength,
+      ),
+    );
     try {
       final nextStatus = event.forceWithBiometric
           ? PinAuthenticationStatus.authenticated
           : await _pinAuthenticationRepository.checkAuthenticationStatus(event.pin);
       if (nextStatus != PinAuthenticationStatus.unauthenticated) {
-        emitter(PinAuthenticationState.success(status: state.status, biometricPreference: state.biometricPreference));
+        emitter(
+          PinAuthenticationState.success(
+            status: state.status,
+            shouldAllowBiometric: state.shouldAllowBiometric,
+            pinLength: state.pinLength,
+          ),
+        );
       }
     } on Object catch (e, s) {
       emitter(
-        PinAuthenticationState.error(status: state.status, biometricPreference: state.biometricPreference, error: e),
+        PinAuthenticationState.error(
+          status: state.status,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+          error: e,
+        ),
       );
       onError(e, s);
     } finally {
-      emitter(PinAuthenticationState.idle(status: state.status, biometricPreference: state.biometricPreference));
+      emitter(
+        PinAuthenticationState.idle(
+          status: state.status,
+          pinLength: state.pinLength,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+        ),
+      );
     }
   }
 }

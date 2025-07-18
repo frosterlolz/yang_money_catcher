@@ -12,6 +12,6 @@ sealed class PinAuthenticationEvent with _$PinAuthenticationEvent {
     @Default(false) bool forceWithBiometric,
   }) = _VerifyAccess;
   const factory PinAuthenticationEvent.changePin(String v) = _ChangePin;
-  const factory PinAuthenticationEvent.changeBiometricStatus(BiometricPreference preference) = _ChangeBiometricStatus;
+  const factory PinAuthenticationEvent.changeBiometricStatus(bool shouldAllowBiometric) = _ChangeBiometricStatus;
   const factory PinAuthenticationEvent.resetPin() = _ResetPin;
 }

@@ -66,7 +66,8 @@ class _PinSettingsStackScreenState extends State<PinSettingsStackScreen> {
                           onSuccess: () => _changeSettingsPinStatus(PinSettingsScreenStatus.createPin),
                         ),
                       _ => PinSettingsVerificationRoute(
-                          onSuccess: () => _changeSettingsPinStatus(PinSettingsScreenStatus.verified)),
+                          onSuccess: () => _changeSettingsPinStatus(PinSettingsScreenStatus.verified),
+                        ),
                     },
                 ],
               ),
