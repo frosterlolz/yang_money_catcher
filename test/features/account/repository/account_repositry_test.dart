@@ -12,9 +12,9 @@ import 'package:yang_money_catcher/features/account/data/source/network/accounts
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_history.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
-import 'package:yang_money_catcher/features/account/helpers/mock_models.dart';
 
 import '../../transactions/repository/transactions_test.mocks.dart';
+import '../mock_entity_helper/account_entities.dart';
 import 'account_repositry_test.mocks.dart';
 
 @GenerateNiceMocks([
@@ -43,9 +43,9 @@ void main() {
   });
 
   group('getAccounts', () {
-    final localAccounts = [makeFakeAccount(id: 1, name: 'Local', balance: '100.0')];
-    final remoteAccountsDto = [makeFakeAccountDto(id: 1, name: 'Remote', balance: '200.0')];
-    final syncedAccounts = [makeFakeAccount(id: 1, name: 'Remote', balance: '200.0')];
+    final localAccounts = [MockAccountEntitiesHelper.account(id: 1, name: 'Local', balance: '100.0')];
+    final remoteAccountsDto = [MockAccountEntitiesHelper.accountDto(id: 1, name: 'Remote', balance: '200.0')];
+    final syncedAccounts = [MockAccountEntitiesHelper.account(id: 1, name: 'Remote', balance: '200.0')];
 
     test('emits offline then online result on success', () async {
       when(mockAccountsDataSource$Local.fetchAccounts()).thenAnswer((_) async => localAccounts);
@@ -95,15 +95,15 @@ void main() {
 
   group('createAccount', () {
     test('emits offline then online result on success', () async {
-      final request = makeFakeCreateRequest();
-      final localAccount = makeFakeAccount(id: 1, name: 'Local');
-      final syncedAccount = makeFakeAccount(id: 1, name: 'Remote');
+      final request = MockAccountEntitiesHelper.createRequest();
+      final localAccount = MockAccountEntitiesHelper.account(id: 1, name: 'Local');
+      final syncedAccount = MockAccountEntitiesHelper.account(id: 1, name: 'Remote');
 
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
       when(mockAccountEventsSyncDataSource.fetchEvents(any))
           .thenAnswer((_) async => [SyncAction.create(data: localAccount, dataRemoteId: null)]);
       when(mockAccountsDataSource$Network.createAccount(any))
-          .thenAnswer((_) async => makeFakeAccountDto(id: 10, name: 'Remote'));
+          .thenAnswer((_) async => MockAccountEntitiesHelper.accountDto(id: 10, name: 'Remote'));
       when(mockAccountsDataSource$Local.syncAccount(any)).thenAnswer((_) async => syncedAccount);
       when(mockAccountEventsSyncDataSource.removeAction(any)).thenAnswer((_) async => {});
 
@@ -117,8 +117,8 @@ void main() {
     });
 
     test('throws StateError if _syncActions returns null', () async {
-      final request = makeFakeCreateRequest();
-      final localAccount = makeFakeAccount(id: 1, name: 'Local');
+      final request = MockAccountEntitiesHelper.createRequest();
+      final localAccount = MockAccountEntitiesHelper.account(id: 1, name: 'Local');
 
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
       when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
@@ -135,8 +135,8 @@ void main() {
     });
 
     test('throws AppException on RestClientException during sync', () async {
-      final request = makeFakeCreateRequest();
-      final localAccount = makeFakeAccount(id: 1, name: 'Local');
+      final request = MockAccountEntitiesHelper.createRequest();
+      final localAccount = MockAccountEntitiesHelper.account(id: 1, name: 'Local');
 
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
       when(mockAccountEventsSyncDataSource.fetchEvents(any))
@@ -165,9 +165,9 @@ void main() {
 
   group('updateAccount', () {
     test('emits offline then online result on success', () async {
-      final request = makeFakeUpdateRequest();
-      final localAccount = makeFakeAccount(id: 1, name: 'Local Updated');
-      final syncedAccount = makeFakeAccount(id: 1, name: 'Remote Updated');
+      final request = MockAccountEntitiesHelper.updateRequest();
+      final localAccount = MockAccountEntitiesHelper.account(id: 1, name: 'Local Updated');
+      final syncedAccount = MockAccountEntitiesHelper.account(id: 1, name: 'Remote Updated');
 
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
 
@@ -175,7 +175,7 @@ void main() {
           .thenAnswer((_) async => [SyncAction.update(data: localAccount, dataRemoteId: null)]);
 
       when(mockAccountsDataSource$Network.updateAccount(any))
-          .thenAnswer((_) async => makeFakeAccountDto(id: 1, name: 'Remote Updated'));
+          .thenAnswer((_) async => MockAccountEntitiesHelper.accountDto(id: 1, name: 'Remote Updated'));
 
       when(mockAccountsDataSource$Local.syncAccount(any)).thenAnswer((_) async => syncedAccount);
 
@@ -191,9 +191,10 @@ void main() {
     });
 
     test('throws StateError if _syncActions returns null', () async {
-      final request = makeFakeUpdateRequest();
+      final request = MockAccountEntitiesHelper.updateRequest();
 
-      when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => makeFakeAccount());
+      when(mockAccountsDataSource$Local.updateAccount(request))
+          .thenAnswer((_) async => MockAccountEntitiesHelper.account());
 
       when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
 
@@ -204,8 +205,8 @@ void main() {
     });
 
     test('throws AppException on RestClientException during sync', () async {
-      final request = makeFakeUpdateRequest();
-      final localAccount = makeFakeAccount();
+      final request = MockAccountEntitiesHelper.updateRequest();
+      final localAccount = MockAccountEntitiesHelper.account();
 
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
 
@@ -225,7 +226,7 @@ void main() {
   group('deleteAccount', () {
     test('emits offline then online result when account exists', () async {
       const accountId = 1;
-      final localAccount = makeFakeAccount(id: accountId);
+      final localAccount = MockAccountEntitiesHelper.account(id: accountId);
 
       when(mockAccountsDataSource$Local.deleteAccount(accountId)).thenAnswer((_) async => localAccount);
 
@@ -256,7 +257,7 @@ void main() {
 
     test('throws AppException on RestClientException during sync', () async {
       const accountId = 1;
-      final localAccount = makeFakeAccount(id: accountId);
+      final localAccount = MockAccountEntitiesHelper.account(id: accountId);
 
       when(mockAccountsDataSource$Local.deleteAccount(accountId)).thenAnswer((_) async => localAccount);
 
@@ -274,9 +275,9 @@ void main() {
 
   group('getAccountDetail', () {
     const accountId = 1;
-    final localAccount = makeFakeAccount(id: accountId, remoteId: 10);
-    final accountDetailDto = makeFakeAccountDetailDto(10);
-    final syncedAccount = makeFakeAccount(id: 10);
+    final localAccount = MockAccountEntitiesHelper.account(id: accountId, remoteId: 10);
+    final accountDetailDto = MockAccountEntitiesHelper.accountDetailsDto(10);
+    final syncedAccount = MockAccountEntitiesHelper.account(id: 10);
 
     test('emits offline then online detail on success', () async {
       when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccount);
@@ -297,7 +298,7 @@ void main() {
     });
 
     test('throws StateError if local account has no remoteId', () async {
-      final localAccountNoRemote = makeFakeAccount(id: accountId, remoteId: null);
+      final localAccountNoRemote = MockAccountEntitiesHelper.account(id: accountId, remoteId: null);
 
       when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccountNoRemote);
 
@@ -337,9 +338,9 @@ void main() {
   group('getAccountHistory', () {
     test('emits offline then online history on success', () async {
       const accountId = 1;
-      final localAccount = makeFakeAccount(id: accountId);
-      final accountHistoryDto = makeFakeAccountHistoryDto(accountId);
-      final syncedAccount = makeFakeAccount(id: accountId);
+      final localAccount = MockAccountEntitiesHelper.account(id: accountId);
+      final accountHistoryDto = MockAccountEntitiesHelper.accountHistoryDto(accountId);
+      final syncedAccount = MockAccountEntitiesHelper.account(id: accountId);
 
       when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
 
@@ -365,7 +366,7 @@ void main() {
 
     test('throws AppException on StructuredBackendException', () async {
       const accountId = 1;
-      final localAccount = makeFakeAccount(id: accountId);
+      final localAccount = MockAccountEntitiesHelper.account(id: accountId);
 
       when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
 
@@ -389,8 +390,8 @@ void main() {
   group('watchAccounts', () {
     test('returns stream from local data source', () async {
       final accounts = [
-        makeFakeAccount(id: 1, name: 'Account 1'),
-        makeFakeAccount(id: 2, name: 'Account 2'),
+        MockAccountEntitiesHelper.account(id: 1, name: 'Account 1'),
+        MockAccountEntitiesHelper.account(id: 2, name: 'Account 2'),
       ];
 
       when(mockAccountsDataSource$Local.watchAccounts()).thenAnswer((_) => Stream.value(accounts));

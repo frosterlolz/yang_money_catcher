@@ -218,7 +218,7 @@ final class AccountRepositoryImpl with SyncHandlerMixin implements AccountReposi
   Future<AccountEntity> _updateAccountWithSync(AccountEntity account$Local) async {
     final nowUtc = DateTime.now().toUtc();
     try {
-      return handleWithSync(
+      return await handleWithSync(
         action: SyncAction.update(
           dataRemoteId: null,
           createdAt: nowUtc,

@@ -217,7 +217,7 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
   Future<TransactionDetailEntity> _updateTransactionWithSync(TransactionEntity transaction$Local) async {
     final nowUtc = DateTime.now().toUtc();
     try {
-      return handleWithSync<TransactionDetailEntity, TransactionEntity>(
+      return await handleWithSync<TransactionDetailEntity, TransactionEntity>(
         action: SyncAction.update(
           data: transaction$Local,
           dataRemoteId: null,
