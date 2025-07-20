@@ -1,16 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:rest_client/rest_client.dart';
+import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
+import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
+import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source.dart';
-import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
+import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
+import 'package:yang_money_catcher/features/account/domain/entity/account_history.dart';
 import 'package:yang_money_catcher/features/account/domain/repository/account_repository.dart';
-import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
+import 'package:yang_money_catcher/features/account/helpers/mock_models.dart';
 
 import '../../transactions/repository/transactions_test.mocks.dart';
-import '../mock_entity_helper/account_entities.dart';
 import 'account_repositry_test.mocks.dart';
 
 @GenerateNiceMocks([
@@ -20,90 +24,397 @@ import 'account_repositry_test.mocks.dart';
 ])
 void main() {
   late AccountRepository repository;
-  late AccountsLocalDataSource mockAccountsStorage;
-  late TransactionsLocalDataSource mockTransactionsLocalDataSource;
-  late AccountEventsSyncDataSource mockAccountEventsSyncDataSource;
+  late MockAccountsLocalDataSource mockAccountsDataSource$Local;
+  late MockTransactionsLocalDataSource mockTransactionsLocalDataSource;
+  late MockAccountEventsSyncDataSource mockAccountEventsSyncDataSource;
+  late MockAccountsNetworkDataSource mockAccountsDataSource$Network;
 
   setUp(() {
-    mockAccountsStorage = MockAccountsLocalDataSource();
+    mockAccountsDataSource$Local = MockAccountsLocalDataSource();
     mockTransactionsLocalDataSource = MockTransactionsLocalDataSource();
     mockAccountEventsSyncDataSource = MockAccountEventsSyncDataSource();
+    mockAccountsDataSource$Network = MockAccountsNetworkDataSource();
     repository = AccountRepositoryImpl(
-      accountsNetworkDataSource: MockAccountsNetworkDataSource(),
-      accountsLocalStorage: mockAccountsStorage,
+      accountsNetworkDataSource: mockAccountsDataSource$Network,
+      accountsLocalStorage: mockAccountsDataSource$Local,
       transactionsLocalStorage: mockTransactionsLocalDataSource,
       accountEventsSyncDataSource: mockAccountEventsSyncDataSource,
     );
   });
 
-  test('Создание нового аккаунта', () async {
-    final request = MockAccountEntitiesHelper.sampleCreateRequest();
-    final accountEntity = MockAccountEntitiesHelper.entityFromRequest(request);
-    when(mockAccountsStorage.updateAccount(request)).thenAnswer((_) async => accountEntity);
-    final account = await repository.createAccount(request).first;
+  group('getAccounts', () {
+    final localAccounts = [makeFakeAccount(id: 1, name: 'Local', balance: '100.0')];
+    final remoteAccountsDto = [makeFakeAccountDto(id: 1, name: 'Remote', balance: '200.0')];
+    final syncedAccounts = [makeFakeAccount(id: 1, name: 'Remote', balance: '200.0')];
 
-    expect(account.data.name, equals(accountEntity.name));
-    expect(account.data.balance, equals(account.data.balance));
+    test('emits offline then online result on success', () async {
+      when(mockAccountsDataSource$Local.fetchAccounts()).thenAnswer((_) async => localAccounts);
+      when(mockAccountsDataSource$Network.getAccounts()).thenAnswer((_) async => remoteAccountsDto);
+      when(mockAccountsDataSource$Local.syncAccounts(localAccounts: localAccounts, remoteAccounts: remoteAccountsDto))
+          .thenAnswer((_) async => syncedAccounts);
+
+      final results = await repository.getAccounts().toList();
+
+      expect(results[0].isOffline, isTrue);
+      expect(results[0].data.first.name, 'Local');
+
+      expect(results[1].isOffline, isFalse);
+      expect(results[1].data.first.name, 'Remote');
+    });
+
+    test('throws AppException on StructuredBackendException', () async {
+      when(mockAccountsDataSource$Local.fetchAccounts()).thenAnswer((_) async => localAccounts);
+
+      when(mockAccountsDataSource$Network.getAccounts()).thenThrow(
+        const StructuredBackendException(
+          error: {
+            'message': 'Something went wrong',
+          },
+        ),
+      );
+
+      final stream = repository.getAccounts();
+
+      await expectLater(
+        stream,
+        emitsInOrder([
+          predicate<DataResult<Iterable<AccountEntity>>>(
+            (result) => result.isOffline && result.data.first.name == 'Local',
+            'emits offline result with local data',
+          ),
+          emitsError(
+            predicate<Object>((error) {
+              if (error is! AppException$Simple) return false;
+              return error.message == 'Something went wrong';
+            }),
+          ),
+        ]),
+      );
+    });
   });
 
-  test('Получение списка аккаунтов', () async {
-    final firstRequest = MockAccountEntitiesHelper.sampleCreateRequest();
-    final secondRequest = MockAccountEntitiesHelper.sampleCreateRequest().copyWith(name: 'B', balance: '1500');
-    final firstAccountEntity = MockAccountEntitiesHelper.entityFromRequest(firstRequest);
-    final secondAccountEntity = MockAccountEntitiesHelper.entityFromRequest(secondRequest, id: 2);
-    when(mockAccountsStorage.updateAccount(firstRequest)).thenAnswer((_) async => firstAccountEntity);
-    when(mockAccountsStorage.updateAccount(secondRequest)).thenAnswer((_) async => secondAccountEntity);
-    await repository.createAccount(firstRequest).first;
-    await repository.createAccount(secondRequest).first;
+  group('createAccount', () {
+    test('emits offline then online result on success', () async {
+      final request = makeFakeCreateRequest();
+      final localAccount = makeFakeAccount(id: 1, name: 'Local');
+      final syncedAccount = makeFakeAccount(id: 1, name: 'Remote');
 
-    when(mockAccountsStorage.fetchAccounts()).thenAnswer((_) async => [firstAccountEntity, secondAccountEntity]);
-    final accounts = await repository.getAccounts().first;
+      when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
+      when(mockAccountEventsSyncDataSource.fetchEvents(any))
+          .thenAnswer((_) async => [SyncAction.create(data: localAccount, dataRemoteId: null)]);
+      when(mockAccountsDataSource$Network.createAccount(any))
+          .thenAnswer((_) async => makeFakeAccountDto(id: 10, name: 'Remote'));
+      when(mockAccountsDataSource$Local.syncAccount(any)).thenAnswer((_) async => syncedAccount);
+      when(mockAccountEventsSyncDataSource.removeAction(any)).thenAnswer((_) async => {});
 
-    expect(accounts.data.length, equals(secondAccountEntity.id));
+      final results = await repository.createAccount(request).toList();
+
+      expect(results[0].isOffline, isTrue);
+      expect(results[0].data.name, 'Local');
+
+      expect(results[1].isOffline, isFalse);
+      expect(results[1].data.name, 'Remote');
+    });
+
+    test('throws StateError if _syncActions returns null', () async {
+      final request = makeFakeCreateRequest();
+      final localAccount = makeFakeAccount(id: 1, name: 'Local');
+
+      when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
+      when(mockAccountEventsSyncDataSource.fetchEvents(any))
+          .thenAnswer((_) async => []); // ничего не вернёт — вернётся null
+
+      final stream = repository.createAccount(request);
+
+      await expectLater(
+        stream,
+        emitsInOrder([
+          isA<DataResult<AccountEntity>>().having((r) => r.isOffline, 'isOffline', isTrue),
+          emitsError(isA<StateError>()),
+        ]),
+      );
+    });
+
+    test('throws AppException on RestClientException during sync', () async {
+      final request = makeFakeCreateRequest();
+      final localAccount = makeFakeAccount(id: 1, name: 'Local');
+
+      when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
+      when(mockAccountEventsSyncDataSource.fetchEvents(any))
+          .thenAnswer((_) async => [SyncAction.create(data: localAccount, dataRemoteId: null)]);
+      when(mockAccountsDataSource$Network.createAccount(any)).thenThrow(
+        const StructuredBackendException(
+          error: {
+            'message': 'Server error',
+          },
+        ),
+      );
+
+      final stream = repository.createAccount(request);
+
+      await expectLater(
+        stream,
+        emitsInOrder([
+          isA<DataResult<AccountEntity>>().having((r) => r.isOffline, 'isOffline', isTrue),
+          emitsError(
+            predicate<Object>((e) => e is AppException$Simple && e.message == 'Server error'),
+          ),
+        ]),
+      );
+    });
   });
 
-  test('Обновление аккаунта', () async {
-    final createRequest = MockAccountEntitiesHelper.sampleCreateRequest();
-    final accountEntity = MockAccountEntitiesHelper.entityFromRequest(createRequest);
-    when(mockAccountsStorage.updateAccount(createRequest)).thenAnswer((_) async => accountEntity);
-    final created = await repository.createAccount(createRequest).first;
+  group('updateAccount', () {
+    test('emits offline then online result on success', () async {
+      final request = makeFakeUpdateRequest(); // Создай аналогичную функцию, как makeFakeCreateRequest
+      final localAccount = makeFakeAccount(id: 1, name: 'Local Updated');
+      final syncedAccount = makeFakeAccount(id: 1, name: 'Remote Updated');
 
-    final updateRequest = AccountRequest$Update(
-      id: created.data.id,
-      name: 'Updated name',
-      balance: created.data.balance,
-      currency: created.data.currency,
-    );
-    final updatedAccount = accountEntity.copyWith(name: updateRequest.name);
-    when(mockAccountsStorage.updateAccount(updateRequest)).thenAnswer((_) async => updatedAccount);
-    final updated = await repository.updateAccount(updateRequest).first;
+      // Локальное обновление аккаунта возвращает локальную версию
+      when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
 
-    expect(updated.data.name, equals(updatedAccount.name));
+      // Получаем список синхронизационных действий (имитируем успешный fetchEvents)
+      when(mockAccountEventsSyncDataSource.fetchEvents(any))
+          .thenAnswer((_) async => [SyncAction.update(data: localAccount, dataRemoteId: null)]);
+
+      // Обновляем аккаунт на сервере — возвращаем DTO с обновленными данными
+      when(mockAccountsDataSource$Network.updateAccount(any))
+          .thenAnswer((_) async => makeFakeAccountDto(id: 1, name: 'Remote Updated'));
+
+      // Синхронизация локального аккаунта с серверным результатом
+      when(mockAccountsDataSource$Local.syncAccount(any)).thenAnswer((_) async => syncedAccount);
+
+      // Удаление отработанных синхронизационных действий
+      when(mockAccountEventsSyncDataSource.removeAction(any)).thenAnswer((_) async => {});
+
+      final results = await repository.updateAccount(request).toList();
+
+      expect(results[0].isOffline, isTrue);
+      expect(results[0].data.name, 'Local Updated');
+
+      expect(results[1].isOffline, isFalse);
+      expect(results[1].data.name, 'Remote Updated');
+    });
+
+    test('throws StateError if _syncActions returns null', () async {
+      final request = makeFakeUpdateRequest();
+
+      when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => makeFakeAccount());
+
+      // Имитируем, что fetchEvents возвращает null
+      when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
+
+      expect(
+        () async => repository.updateAccount(request).toList(),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('throws AppException on RestClientException during sync', () async {
+      final request = makeFakeUpdateRequest();
+      final localAccount = makeFakeAccount();
+
+      when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
+
+      when(mockAccountEventsSyncDataSource.fetchEvents(any))
+          .thenAnswer((_) async => [SyncAction.update(data: localAccount, dataRemoteId: null)]);
+
+      // Имитируем ошибку сети при обновлении аккаунта на сервере
+      when(mockAccountsDataSource$Network.updateAccount(any))
+          .thenThrow(const ClientException(message: 'Network error'));
+
+      expect(
+        () async => repository.updateAccount(request).toList(),
+        throwsA(isA<ClientException>()),
+      );
+    });
   });
 
-  test('Получение деталей аккаунта', () async {
-    final createRequest = MockAccountEntitiesHelper.sampleCreateRequest();
-    final accountEntity = MockAccountEntitiesHelper.entityFromRequest(createRequest);
-    when(mockAccountsStorage.updateAccount(createRequest)).thenAnswer((_) async => accountEntity);
-    final created = await repository.createAccount(createRequest).first;
+  group('deleteAccount', () {
+    test('emits offline then online result when account exists', () async {
+      const accountId = 1;
+      final localAccount = makeFakeAccount(id: accountId);
 
-    when(mockAccountsStorage.fetchAccount(accountEntity.id)).thenAnswer((_) async => accountEntity);
-    when(mockTransactionsLocalDataSource.fetchTransactions(accountEntity.id)).thenAnswer((_) async => []);
-    when(mockTransactionsLocalDataSource.fetchTransactionCategories()).thenAnswer((_) async => []);
-    final detail = await repository.getAccountDetail(created.data.id).first;
+      when(mockAccountsDataSource$Local.deleteAccount(accountId)).thenAnswer((_) async => localAccount);
 
-    expect(detail.data.name, equals(accountEntity.name));
+      when(mockAccountEventsSyncDataSource.fetchEvents(any))
+          .thenAnswer((_) async => [const SyncAction.delete(dataId: accountId, dataRemoteId: accountId)]);
+
+      when(mockAccountsDataSource$Network.deleteAccount(any)).thenAnswer((_) async => {});
+      when(mockAccountsDataSource$Local.syncAccount(any)).thenAnswer((_) async => localAccount);
+      when(mockAccountEventsSyncDataSource.removeAction(any)).thenAnswer((_) async => {});
+
+      final results = await repository.deleteAccount(accountId).toList();
+
+      expect(results.length, 2);
+      expect(results[0].isOffline, isTrue);
+      expect(results[1].isOffline, isFalse);
+    });
+
+    test('does not emit online if deleted account is null', () async {
+      const accountId = 1;
+
+      when(mockAccountsDataSource$Local.deleteAccount(accountId)).thenAnswer((_) async => null);
+
+      final results = await repository.deleteAccount(accountId).toList();
+
+      expect(results.length, 1);
+      expect(results[0].isOffline, isTrue);
+    });
+
+    test('throws AppException on RestClientException during sync', () async {
+      const accountId = 1;
+      final localAccount = makeFakeAccount(id: accountId);
+
+      when(mockAccountsDataSource$Local.deleteAccount(accountId)).thenAnswer((_) async => localAccount);
+
+      when(mockAccountEventsSyncDataSource.fetchEvents(any))
+          .thenAnswer((_) async => [const SyncAction.delete(dataId: accountId, dataRemoteId: accountId)]);
+
+      when(mockAccountsDataSource$Network.deleteAccount(any)).thenThrow(const ClientException(message: 'error'));
+
+      expect(
+        () => repository.deleteAccount(accountId).toList(),
+        throwsA(isA<ClientException>()),
+      );
+    });
   });
 
-  test('Получение истории аккаунта', () async {
-    final request = MockAccountEntitiesHelper.sampleCreateRequest();
-    final accountEntity = MockAccountEntitiesHelper.entityFromRequest(request);
-    when(mockAccountsStorage.updateAccount(request)).thenAnswer((_) async => accountEntity);
-    final created = await repository.createAccount(request).first;
+  group('getAccountDetail', () {
+    const accountId = 1;
+    final localAccount = makeFakeAccount(id: accountId, remoteId: 10);
+    final accountDetailDto = makeFakeAccountDetailDto(10);
+    final syncedAccount = makeFakeAccount(id: 10);
 
-    when(mockAccountsStorage.fetchAccount(created.data.id)).thenAnswer((_) async => accountEntity);
-    final history = await repository.getAccountHistory(created.data.id).first;
+    test('emits offline then online detail on success', () async {
+      when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccount);
 
-    expect(history.data.accountId, equals(created.data.id));
+      when(mockAccountsDataSource$Network.getAccount(localAccount.remoteId)).thenAnswer((_) async => accountDetailDto);
+
+      when(mockAccountsDataSource$Local.syncAccountDetails(accountDetailDto, id: accountId))
+          .thenAnswer((_) async => syncedAccount);
+
+      final results = await repository.getAccountDetail(accountId).toList();
+
+      expect(results.length, 2);
+      expect(results[0].isOffline, isTrue);
+      expect(results[0].data.id, localAccount.id);
+
+      expect(results[1].isOffline, isFalse);
+      expect(results[1].data.id, syncedAccount.id);
+    });
+
+    test('throws StateError if local account has no remoteId', () async {
+      final localAccountNoRemote = makeFakeAccount(id: accountId, remoteId: null);
+
+      when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccountNoRemote);
+
+      expect(
+        () => repository.getAccountDetail(accountId).toList(),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('throws StateError if local account is null', () async {
+      when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => null);
+
+      expect(
+        () => repository.getAccountDetail(accountId).toList(),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('throws AppException on StructuredBackendException', () async {
+      when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccount);
+
+      when(mockAccountsDataSource$Network.getAccount(localAccount.remoteId)).thenThrow(
+        const StructuredBackendException(
+          error: {
+            'message': 'Backend error',
+          },
+        ),
+      );
+
+      expect(
+        () => repository.getAccountDetail(accountId).toList(),
+        throwsA(isA<AppException$Simple>()),
+      );
+    });
+  });
+
+  group('getAccountHistory', () {
+    test('emits offline then online history on success', () async {
+      const accountId = 1;
+      final localAccount = makeFakeAccount(id: accountId);
+      final accountHistoryDto = makeFakeAccountHistoryDto(accountId);
+      final syncedAccount = makeFakeAccount(id: accountId);
+
+      // Имитируем вызов _syncActions() - если он вызывается внутри репо и не мокается,
+      // лучше замокать через when или передать через конструктор мок
+      when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
+
+      when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccount);
+
+      when(mockAccountsDataSource$Network.getAccountHistory(accountId)).thenAnswer((_) async => accountHistoryDto);
+
+      when(mockAccountsDataSource$Local.syncAccountHistory(localAccount.id, accountHistory: accountHistoryDto))
+          .thenAnswer((_) async => syncedAccount);
+
+      final results = await repository.getAccountHistory(accountId).toList();
+
+      expect(results.length, 2);
+
+      // Проверяем offline результат
+      expect(results[0].isOffline, isTrue);
+      expect(results[0].data, isA<AccountHistory>());
+      expect(results[0].data.accountId, accountId); // Если есть такое поле или проверяем по локальному аккаунту
+
+      // Проверяем online результат
+      expect(results[1].isOffline, isFalse);
+      expect(results[1].data, isA<AccountHistory>());
+      expect(results[1].data.accountId, accountId);
+    });
+
+    test('throws AppException on StructuredBackendException', () async {
+      const accountId = 1;
+      final localAccount = makeFakeAccount(id: accountId);
+
+      when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
+
+      when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccount);
+
+      when(mockAccountsDataSource$Network.getAccountHistory(accountId)).thenThrow(
+        const StructuredBackendException(
+          error: {
+            'message': 'Backend error',
+          },
+        ),
+      );
+
+      expect(
+        () => repository.getAccountHistory(accountId).toList(),
+        throwsA(isA<AppException$Simple>()),
+      );
+    });
+  });
+
+  group('watchAccounts', () {
+    test('returns stream from local data source', () async {
+      final accounts = [
+        makeFakeAccount(id: 1, name: 'Account 1'),
+        makeFakeAccount(id: 2, name: 'Account 2'),
+      ];
+
+      // Мокаем локальный источник — пусть возвращает поток с этим списком
+      when(mockAccountsDataSource$Local.watchAccounts()).thenAnswer((_) => Stream.value(accounts));
+
+      // Вызываем метод репозитория
+      final stream = repository.watchAccounts();
+
+      // Проверяем, что из стрима вышел ожидаемый список аккаунтов
+      final emitted = await stream.first;
+
+      expect(emitted, accounts);
+    });
   });
 }
