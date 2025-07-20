@@ -121,8 +121,7 @@ void main() {
       final localAccount = makeFakeAccount(id: 1, name: 'Local');
 
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
-      when(mockAccountEventsSyncDataSource.fetchEvents(any))
-          .thenAnswer((_) async => []); // ничего не вернёт — вернётся null
+      when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
 
       final stream = repository.createAccount(request);
 
@@ -166,25 +165,20 @@ void main() {
 
   group('updateAccount', () {
     test('emits offline then online result on success', () async {
-      final request = makeFakeUpdateRequest(); // Создай аналогичную функцию, как makeFakeCreateRequest
+      final request = makeFakeUpdateRequest();
       final localAccount = makeFakeAccount(id: 1, name: 'Local Updated');
       final syncedAccount = makeFakeAccount(id: 1, name: 'Remote Updated');
 
-      // Локальное обновление аккаунта возвращает локальную версию
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => localAccount);
 
-      // Получаем список синхронизационных действий (имитируем успешный fetchEvents)
       when(mockAccountEventsSyncDataSource.fetchEvents(any))
           .thenAnswer((_) async => [SyncAction.update(data: localAccount, dataRemoteId: null)]);
 
-      // Обновляем аккаунт на сервере — возвращаем DTO с обновленными данными
       when(mockAccountsDataSource$Network.updateAccount(any))
           .thenAnswer((_) async => makeFakeAccountDto(id: 1, name: 'Remote Updated'));
 
-      // Синхронизация локального аккаунта с серверным результатом
       when(mockAccountsDataSource$Local.syncAccount(any)).thenAnswer((_) async => syncedAccount);
 
-      // Удаление отработанных синхронизационных действий
       when(mockAccountEventsSyncDataSource.removeAction(any)).thenAnswer((_) async => {});
 
       final results = await repository.updateAccount(request).toList();
@@ -201,7 +195,6 @@ void main() {
 
       when(mockAccountsDataSource$Local.updateAccount(request)).thenAnswer((_) async => makeFakeAccount());
 
-      // Имитируем, что fetchEvents возвращает null
       when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
 
       expect(
@@ -219,7 +212,6 @@ void main() {
       when(mockAccountEventsSyncDataSource.fetchEvents(any))
           .thenAnswer((_) async => [SyncAction.update(data: localAccount, dataRemoteId: null)]);
 
-      // Имитируем ошибку сети при обновлении аккаунта на сервере
       when(mockAccountsDataSource$Network.updateAccount(any))
           .thenThrow(const ClientException(message: 'Network error'));
 
@@ -349,8 +341,6 @@ void main() {
       final accountHistoryDto = makeFakeAccountHistoryDto(accountId);
       final syncedAccount = makeFakeAccount(id: accountId);
 
-      // Имитируем вызов _syncActions() - если он вызывается внутри репо и не мокается,
-      // лучше замокать через when или передать через конструктор мок
       when(mockAccountEventsSyncDataSource.fetchEvents(any)).thenAnswer((_) async => []);
 
       when(mockAccountsDataSource$Local.fetchAccount(accountId)).thenAnswer((_) async => localAccount);
@@ -364,12 +354,10 @@ void main() {
 
       expect(results.length, 2);
 
-      // Проверяем offline результат
       expect(results[0].isOffline, isTrue);
       expect(results[0].data, isA<AccountHistory>());
-      expect(results[0].data.accountId, accountId); // Если есть такое поле или проверяем по локальному аккаунту
+      expect(results[0].data.accountId, accountId);
 
-      // Проверяем online результат
       expect(results[1].isOffline, isFalse);
       expect(results[1].data, isA<AccountHistory>());
       expect(results[1].data.accountId, accountId);
@@ -405,13 +393,10 @@ void main() {
         makeFakeAccount(id: 2, name: 'Account 2'),
       ];
 
-      // Мокаем локальный источник — пусть возвращает поток с этим списком
       when(mockAccountsDataSource$Local.watchAccounts()).thenAnswer((_) => Stream.value(accounts));
 
-      // Вызываем метод репозитория
       final stream = repository.watchAccounts();
 
-      // Проверяем, что из стрима вышел ожидаемый список аккаунтов
       final emitted = await stream.first;
 
       expect(emitted, accounts);
