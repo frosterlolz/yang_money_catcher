@@ -1,9 +1,7 @@
 import 'package:auto_route/annotations.dart';
-import 'package:flutter/material.dart';
 import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/core/assets/res/app_images.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 
 /// {@template PinSettingsPreviewScreen.class}
 /// PinSettingsPreviewScreen widget.

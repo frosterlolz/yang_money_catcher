@@ -8,7 +8,8 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 
 abstract class MockTransactionsEntitiesHelper {
-  static TransactionCategory category(int id, {String name = '', String emoji = '', bool isIncome = true}) => TransactionCategory(
+  static TransactionCategory category(int id, {String name = '', String emoji = '', bool isIncome = true}) =>
+      TransactionCategory(
         id: id,
         name: name,
         emoji: emoji,
@@ -23,7 +24,8 @@ abstract class MockTransactionsEntitiesHelper {
         comment: 'Test',
       );
 
-  static TransactionRequest$Update sampleUpdateRequest({int id = 1, String comment = 'Test'}) => TransactionRequest$Update(
+  static TransactionRequest$Update sampleUpdateRequest({int id = 1, String comment = 'Test'}) =>
+      TransactionRequest$Update(
         id: id,
         accountId: 1,
         categoryId: 1,

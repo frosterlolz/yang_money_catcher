@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
+import 'package:yang_money_catcher/core/presentation/common/error_util.dart';
 import 'package:yang_money_catcher/core/presentation/common/input_formatters.dart';
 import 'package:yang_money_catcher/core/presentation/common/processing_state_mixin.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
@@ -23,12 +24,6 @@ import 'package:yang_money_catcher/features/transaction_categories/presentation/
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transaction_bloc/transaction_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/bottom_sheets/item_selector_sheet.dart';
-import 'package:yang_money_catcher/ui_kit/dialogs/text_confirm_dialog.dart';
-import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
-import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
-import 'package:yang_money_catcher/ui_kit/snacks/topside_snack_bars.dart';
 
 Future<void> showTransactionScreen(
   BuildContext context, {
@@ -138,6 +133,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         initialValue: _comment,
         onConfirmTap: context.maybePop,
         title: context.l10n.inputComment,
+        confirmButtonTitle: context.l10n.save,
+        cancelButtonTitle: context.l10n.cancel,
       ),
     );
     if (comment == null) return;
@@ -156,7 +153,9 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         unawaited(context.maybePop());
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(
+          BottomSideSnackBars.error(context, titleText: ErrorUtil.messageFromObject(context, error: error)),
+        );
     }
     return;
   }
@@ -171,7 +170,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       debugPrint('$e');
       debugPrintStack(stackTrace: s);
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: e));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(BottomSideSnackBars.error(context, titleText: ErrorUtil.messageFromObject(context, error: e)));
       return;
     }
     final nextState = await transactionBloc.stream.firstWhere((state) => state is! TransactionState$Processing);
@@ -195,7 +195,9 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         }
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(
+          BottomSideSnackBars.error(context, titleText: ErrorUtil.messageFromObject(context, error: error)),
+        );
     }
   }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.dart';
 import 'package:yang_money_catcher/features/navigation/service/root_route_observer.dart';
 import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
@@ -10,7 +10,6 @@ import 'package:yang_money_catcher/features/offline_mode/presentation/widget/off
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/secure_blur_overlay_wrapper.dart';
 import 'package:yang_money_catcher/features/settings/domain/bloc/settings_bloc/settings_bloc.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/settings.dart';
-import 'package:yang_money_catcher/ui_kit/themes/app_theme.dart';
 
 /// {@template AppMaterial.class}
 /// AppMaterial widget.

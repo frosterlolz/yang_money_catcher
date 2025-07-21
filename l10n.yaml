@@ -1,5 +1,0 @@
-arb-dir: lib/l10n/translations
-template-arb-file: intl_ru.arb
-output-localization-file: app_localizations.g.dart
-output-dir: lib/l10n
-synthetic-package: false

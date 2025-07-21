@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
+import 'package:yang_money_catcher/core/presentation/common/error_util.dart';
 import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/string_x.dart';
@@ -11,8 +12,6 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
-import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
-import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
 
 /// {@template TransactionsView.class}
 /// Тело экрана со списком транзакций
@@ -64,8 +63,12 @@ class _TransactionsBodyViewState extends State<TransactionsBodyView> {
                 total: transactionsState.totalAmount,
                 onRefresh: _loadTransactions,
               ),
-            AccountState$Error(:final error) =>
-              ErrorBodyView.fromError(error, onRetryTap: () => _loadTransactions(context)),
+            AccountState$Error(:final error) => ErrorBodyView(
+                title: ErrorUtil.messageFromObject(context, error: error),
+                retryButtonText: context.l10n.tryItAgain,
+                description: context.l10n.retry,
+                onRetryTap: () => _loadTransactions(context),
+              ),
             _ => const LoadingBodyView(),
           };
         },

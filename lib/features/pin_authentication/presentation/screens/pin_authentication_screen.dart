@@ -1,11 +1,10 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_exception.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_view.dart';
-import 'package:yang_money_catcher/ui_kit/common/conditional_wrapper.dart';
 
 enum PinAuthenticationReason { signIn, verifyAccess }
 

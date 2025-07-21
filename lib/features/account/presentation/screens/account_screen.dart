@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:localization/localization.dart';
 import 'package:pretty_chart/pretty_chart.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
+import 'package:yang_money_catcher/core/presentation/common/error_util.dart';
 import 'package:yang_money_catcher/core/presentation/common/processing_state_mixin.dart';
 import 'package:yang_money_catcher/core/presentation/common/visibility_by_tilt_mixin.dart';
 import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
@@ -22,14 +23,6 @@ import 'package:yang_money_catcher/features/initialization/presentation/dependen
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/buttons/calendar_segmented_button.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
-import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
-import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
-import 'package:yang_money_catcher/ui_kit/dialogs/text_confirm_dialog.dart';
-import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
-import 'package:yang_money_catcher/ui_kit/placeholders/noise_placeholder.dart';
 
 const _chartMaxHeight = 233.0;
 
@@ -57,8 +50,12 @@ class AccountScreen extends StatelessWidget implements AutoRouteWrapper {
           (accounts) => BlocBuilder<AccountBloc, AccountState>(
             builder: (context, accountState) => switch (accountState) {
               _ when accountState.account != null => _AccountSuccessView(accountState.account!),
-              AccountState$Error(:final error) =>
-                ErrorBodyView.fromError(error, onRetryTap: () => _onRetryTap(context, accounts.first.id)),
+              AccountState$Error(:final error) => ErrorBodyView(
+                  title: ErrorUtil.messageFromObject(context, error: error),
+                  retryButtonText: context.l10n.tryItAgain,
+                  description: context.l10n.retry,
+                  onRetryTap: () => _onRetryTap(context, accounts.first.id),
+                ),
               _ => const LoadingBodyView(),
             },
           ),
@@ -161,7 +158,12 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
                   return AnimatedCrossFade(
                     firstChild: errorWithNothingToShow == null
                         ? const TypedProgressIndicator.small()
-                        : ErrorBodyView.fromError(errorWithNothingToShow, onRetryTap: _loadTransactions),
+                        : ErrorBodyView(
+                            title: ErrorUtil.messageFromObject(context, error: errorWithNothingToShow),
+                            retryButtonText: context.l10n.tryItAgain,
+                            description: context.l10n.retry,
+                            onRetryTap: _loadTransactions,
+                          ),
                     secondChild: _AccountTransactionsAnalyzeChart(
                       transactions: transactionsState.transactions ?? [],
                       calendarValues: _fetchCalendarValue,
@@ -206,6 +208,8 @@ class _AccountBalanceTileState extends State<_AccountBalanceTile> with Processin
         initialValue: widget.account.name,
         onConfirmTap: context.maybePop,
         title: context.l10n.account,
+        confirmButtonTitle: context.l10n.save,
+        cancelButtonTitle: context.l10n.cancel,
       ),
     );
     if (accountName == null || !mounted) return;

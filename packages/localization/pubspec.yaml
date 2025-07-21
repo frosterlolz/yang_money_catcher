@@ -1,5 +1,5 @@
 name: localization
-description: 'Undependent localization for main project'
+description: 'Independent localization for main project'
 publish_to: none
 version: 0.0.1
 

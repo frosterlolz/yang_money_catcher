@@ -16,12 +16,11 @@ workspace:
   - packages/pretty_chart
   - packages/rest_client
   - packages/localization
+  - packages/ui_kit
 
 dependencies:
   # ✅ Core Flutter SDK
   flutter:
-    sdk: flutter
-  flutter_localizations:
     sdk: flutter
 
   # 🧱 Workspace / Local packages
@@ -35,6 +34,8 @@ dependencies:
     path: ./packages/rest_client
   localization:
     path: ./packages/localization
+  ui_kit:
+    path: ./packages/ui_kit
 
   # 🚀 Navigation
   auto_route: 10.1.0

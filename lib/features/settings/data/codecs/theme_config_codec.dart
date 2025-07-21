@@ -1,8 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/core/types/json_types.dart';
-import 'package:yang_money_catcher/core/utils/extensions/color_x.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/theme_configuration.dart';
 
 /// {@template theme_configuration_codec}

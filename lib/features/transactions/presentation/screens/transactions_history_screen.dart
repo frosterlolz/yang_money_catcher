@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
+import 'package:yang_money_catcher/core/presentation/common/error_util.dart';
 import 'package:yang_money_catcher/core/utils/extensions/date_time_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/key_x.dart';
 import 'package:yang_money_catcher/core/utils/extensions/num_x.dart';
@@ -22,9 +23,6 @@ import 'package:yang_money_catcher/features/transactions/domain/entity/transacti
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/screens/transaction_screen.dart';
 import 'package:yang_money_catcher/features/transactions/presentation/widgets/transaction_list_tile.dart';
-import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
-import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
-import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
 
 /// {@template TransactionsHistoryScreen.class}
 /// TransactionsHistoryScreen widget.
@@ -217,7 +215,12 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
                     _TransactionsSliverList(transactionsState.transactions!, sortType: _sortType),
                   TransactionsState$Error(:final error) => SliverFillRemaining(
                       hasScrollBody: false,
-                      child: ErrorBodyView.fromError(error, onRetryTap: _loadTransactions),
+                      child: ErrorBodyView(
+                        title: ErrorUtil.messageFromObject(context, error: error),
+                        retryButtonText: context.l10n.tryItAgain,
+                        description: context.l10n.retry,
+                        onRetryTap: _loadTransactions,
+                      ),
                     ),
                   _ => const SliverFillRemaining(hasScrollBody: false, child: LoadingBodyView()),
                 },

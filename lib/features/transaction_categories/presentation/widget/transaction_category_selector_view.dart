@@ -1,12 +1,11 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
+import 'package:yang_money_catcher/core/presentation/common/error_util.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/accounts_bloc/accounts_bloc.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/bloc/transaction_categories_bloc/transaction_categories_bloc.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
-import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
-import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
 
 /// {@template TransactionCategorySelectorView.class}
 /// TransactionCategorySelectorView widget.
@@ -33,7 +32,12 @@ class TransactionCategorySelectorView extends StatelessWidget {
                 transactionCategories,
                 currentTransactionCategoryId: currentTransactionCategoryId,
               ),
-            AccountsState$Error(:final error) => ErrorBodyView.fromError(error, onRetryTap: () => _onRetryTap(context)),
+            AccountsState$Error(:final error) => ErrorBodyView(
+                title: ErrorUtil.messageFromObject(context, error: error),
+                retryButtonText: context.l10n.tryItAgain,
+                description: context.l10n.retry,
+                onRetryTap: () => _onRetryTap(context),
+              ),
             _ => const LoadingBodyView(),
           };
         },

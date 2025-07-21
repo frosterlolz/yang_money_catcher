@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
+import 'package:ui_kit/ui_kit.dart';
 
 /// {@template TransactionListTile.class}
 /// TransactionListTile widget.

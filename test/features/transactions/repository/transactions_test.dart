@@ -411,8 +411,7 @@ void main() {
         statusCode: 500,
       );
 
-      when(transactionsLocalDataSource.fetchTransactionCategories())
-          .thenAnswer((_) async => <TransactionCategory>[]);
+      when(transactionsLocalDataSource.fetchTransactionCategories()).thenAnswer((_) async => <TransactionCategory>[]);
 
       when(transactionsNetworkDataSource.getTransactionCategories()).thenThrow(structuredException);
 

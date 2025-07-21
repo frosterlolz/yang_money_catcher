@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 /// {@template PinInputField.class}
 /// PinInputField widget.
@@ -105,7 +104,7 @@ class _PinInputFieldState extends State<PinInputField> with SingleTickerProvider
               value: _isSelected(index),
               groupValue: true,
               onChanged: null,
-              fillColor: WidgetStatePropertyAll(_radioColor ?? AppColorScheme.of(context).primary),
+              fillColor: WidgetStatePropertyAll(_radioColor ?? ColorScheme.of(context).primary),
             ),
           ),
         ),
