@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 
 /// {@template TopSideSnackBars.class}

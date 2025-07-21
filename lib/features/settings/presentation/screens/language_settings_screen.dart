@@ -1,9 +1,8 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localization/localization.dart';
 import 'package:yang_money_catcher/features/settings/domain/bloc/settings_bloc/settings_bloc.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/l10n/localization.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 

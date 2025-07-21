@@ -1,10 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/service/local_auth_service.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_field.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_keyboard.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 
 const _pinLength = 4;

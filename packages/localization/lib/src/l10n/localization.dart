@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:yang_money_catcher/l10n/app_localizations.g.dart';
+import 'package:localization/src/l10n/app_localizations.g.dart';
 
 /// {@template localization}
 /// Localization class which is used to localize app.

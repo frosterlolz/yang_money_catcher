@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:localization/localization.dart';
 import 'package:yang_money_catcher/core/presentation/common/input_formatters.dart';
 import 'package:yang_money_catcher/core/presentation/common/processing_state_mixin.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
@@ -22,7 +23,6 @@ import 'package:yang_money_catcher/features/transaction_categories/presentation/
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transaction_bloc/transaction_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/bottom_sheets/item_selector_sheet.dart';
 import 'package:yang_money_catcher/ui_kit/dialogs/text_confirm_dialog.dart';

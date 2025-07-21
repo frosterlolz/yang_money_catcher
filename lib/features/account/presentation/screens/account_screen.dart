@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:localization/localization.dart';
 import 'package:pretty_chart/pretty_chart.dart';
 import 'package:yang_money_catcher/core/assets/res/svg_icons.dart';
 import 'package:yang_money_catcher/core/presentation/common/processing_state_mixin.dart';
@@ -21,7 +22,6 @@ import 'package:yang_money_catcher/features/initialization/presentation/dependen
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transactions_bloc/transactions_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_filters.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 import 'package:yang_money_catcher/ui_kit/buttons/calendar_segmented_button.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';

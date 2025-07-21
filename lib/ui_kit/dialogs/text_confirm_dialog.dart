@@ -1,6 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
+import 'package:localization/localization.dart';
 
 /// {@template TextConfirmDialog.class}
 /// TextConfirmDialog widget.

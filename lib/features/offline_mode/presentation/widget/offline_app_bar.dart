@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
 import 'package:yang_money_catcher/core/data/rest_client/interceptors/offline_mode_check_interceptor.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 class OfflineAppBar extends StatelessWidget {

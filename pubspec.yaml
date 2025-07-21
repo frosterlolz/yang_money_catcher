@@ -15,6 +15,7 @@ workspace:
   - packages/database
   - packages/pretty_chart
   - packages/rest_client
+  - packages/localization
 
 dependencies:
   # ✅ Core Flutter SDK
@@ -32,6 +33,8 @@ dependencies:
     path: ./packages/pretty_chart
   rest_client:
     path: ./packages/rest_client
+  localization:
+    path: ./packages/localization
 
   # 🚀 Navigation
   auto_route: 10.1.0
