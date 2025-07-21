@@ -5,39 +5,68 @@ import 'package:flutter/material.dart';
 /// App text style.
 // ignore_for_file: prefer-match-file-name
 enum AppTextStyle {
-  regular11(TextStyle(fontSize: 11)),
-  regular12(TextStyle(fontSize: 12)),
-  regular13(TextStyle(fontSize: 13)),
-  regular14(TextStyle(fontSize: 14)),
-  regular15(TextStyle(fontSize: 15)),
-  regular16(TextStyle(fontSize: 16)),
-  regular18(TextStyle(fontSize: 18)),
-  regular20(TextStyle(fontSize: 20)),
-  regular22(TextStyle(fontSize: 20)),
+  // regular14(TextStyle(fontSize: 14)),
+  // regular16(TextStyle(fontSize: 16)),
+  // regular20(TextStyle(fontSize: 20)),
+  //
+  // medium12(TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+  // medium15(TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+  // medium16(TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+  // medium20(TextStyle(fontWeight: FontWeight.w500, fontSize: 20)),
+  //
+  // semiBold12(TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
 
-  medium11(TextStyle(fontWeight: FontWeight.w500, fontSize: 11)),
+  displayLarge(
+    TextStyle(fontSize: 57),
+  ),
+  displayMedium(
+    TextStyle(fontSize: 45),
+  ),
+  displaySmall(
+    TextStyle(fontSize: 36),
+  ),
 
-  medium12(TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
-  medium13(TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
-  medium14(TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-  medium15(TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-  medium16(TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-  medium18(TextStyle(fontWeight: FontWeight.w500, fontSize: 18)),
-  medium20(TextStyle(fontWeight: FontWeight.w500, fontSize: 20)),
+  headlineLarge(
+    TextStyle(fontSize: 32),
+  ),
+  headlineMedium(
+    TextStyle(fontSize: 28),
+  ),
+  headlineSmall(
+    TextStyle(fontSize: 24),
+  ),
 
-  semiBold12(TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+  titleLarge(
+    TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+  ),
+  titleMedium(
+    TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+  ),
+  titleSmall(
+    TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+  ),
 
-  bold10(TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+  labelLarge(
+    TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+  ),
+  labelMedium(
+    TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+  ),
+  labelSmall(
+    TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+  ),
 
-  bold11(TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+  bodyLarge(
+    TextStyle(fontSize: 16),
+  ),
+  bodyMedium(
+    TextStyle(fontSize: 14),
+  ),
+  bodySmall(
+    TextStyle(fontSize: 12),
+  );
 
-  bold13(TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-
-  bold14(TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-  bold16(TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.blue));
+  const AppTextStyle(this.value);
 
   final TextStyle value;
-
-  // ignore: sort_constructors_first
-  const AppTextStyle(this.value);
 }

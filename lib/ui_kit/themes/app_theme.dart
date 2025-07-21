@@ -31,7 +31,7 @@ abstract class AppThemeData {
         scrolledUnderElevation: 0,
         centerTitle: true,
         backgroundColor: colorScheme.primary,
-        titleTextStyle: _textTheme.regular20.copyWith(color: _lightColorScheme.onSecondary),
+        titleTextStyle: _textTheme.titleLarge.copyWith(color: colorScheme.onPrimary),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 0,
@@ -53,10 +53,10 @@ abstract class AppThemeData {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          textStyle: _textTheme.medium16,
+          textStyle: _textTheme.titleMedium,
           shadowColor: Colors.transparent,
           elevation: 0,
-          backgroundColor: colorScheme.primary,
+          backgroundColor: seedColor,
           foregroundColor: _lightColorScheme.onPrimary,
         ),
       ),
@@ -65,9 +65,7 @@ abstract class AppThemeData {
       ),
       inputDecorationTheme: InputDecorationTheme(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        labelStyle: _textTheme.regular14.copyWith(
-          color: _lightColorScheme.inactiveSecondary,
-        ),
+        labelStyle: _textTheme.bodyMedium.copyWith(color: _lightColorScheme.inactiveSecondary),
         border: const OutlineInputBorder(),
       ),
       datePickerTheme: DatePickerThemeData(
@@ -80,9 +78,9 @@ abstract class AppThemeData {
         iconColor: _lightColorScheme.unselectedItem,
         textColor: _lightColorScheme.unselectedItem,
         contentPadding: const HorizontalSpacing.compact(),
-        titleTextStyle: _textTheme.regular16,
-        subtitleTextStyle: _textTheme.regular14,
-        leadingAndTrailingTextStyle: _textTheme.regular16,
+        titleTextStyle: _textTheme.bodyLarge,
+        subtitleTextStyle: _textTheme.bodyMedium,
+        leadingAndTrailingTextStyle: _textTheme.bodyLarge,
       ),
       fontFamily: 'NunitoSans',
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -91,16 +89,12 @@ abstract class AppThemeData {
         backgroundColor: _lightColorScheme.surface,
         selectedItemColor: _lightColorScheme.unselectedItem,
         unselectedItemColor: _lightColorScheme.unselectedItem,
-        selectedLabelStyle: _textTheme.semiBold12,
-        unselectedLabelStyle: _textTheme.semiBold12,
+        selectedLabelStyle: _textTheme.labelMedium.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: _textTheme.labelMedium.copyWith(fontWeight: FontWeight.w600),
         selectedIconTheme: const IconThemeData(size: AppSizes.double24),
         unselectedIconTheme: const IconThemeData(size: AppSizes.double24),
       ),
-      textTheme: TextTheme(
-        bodyMedium: _textTheme.regular14,
-        bodyLarge: _textTheme.regular16,
-        labelSmall: _textTheme.medium12,
-      ),
+      textTheme: AppTextTheme.textTheme(),
       dividerTheme: DividerThemeData(
         color: _lightColorScheme.dividerColor,
         space: AppSizes.double1,
@@ -131,8 +125,8 @@ abstract class AppThemeData {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        backgroundColor: seedColor,
-        titleTextStyle: _textTheme.regular20.copyWith(color: colorScheme.onPrimary),
+        backgroundColor: colorScheme.primary,
+        titleTextStyle: _textTheme.titleLarge.copyWith(color: colorScheme.onPrimary),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 0,
@@ -141,14 +135,10 @@ abstract class AppThemeData {
         sizeConstraints: BoxConstraints.tight(const Size.square(AppSizes.double56)),
         shape: const CircleBorder(),
       ),
-      textTheme: TextTheme(
-        bodyMedium: _textTheme.regular14,
-        bodyLarge: _textTheme.regular16,
-        labelSmall: _textTheme.medium12,
-      ),
+      textTheme: AppTextTheme.textTheme(),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          textStyle: _textTheme.medium16,
+          textStyle: _textTheme.titleMedium,
           shadowColor: Colors.transparent,
           elevation: 0,
           backgroundColor: seedColor,
@@ -162,19 +152,20 @@ abstract class AppThemeData {
       ),
       inputDecorationTheme: InputDecorationTheme(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        labelStyle: _textTheme.regular14,
+        labelStyle: _textTheme.bodyMedium,
         border: const OutlineInputBorder(),
       ),
       listTileTheme: ListTileThemeData(
         contentPadding: const HorizontalSpacing.compact(),
-        titleTextStyle: _textTheme.regular16,
-        subtitleTextStyle: _textTheme.regular14,
-        leadingAndTrailingTextStyle: _textTheme.regular16,
+        titleTextStyle: _textTheme.bodyLarge,
+        subtitleTextStyle: _textTheme.bodyMedium,
+        leadingAndTrailingTextStyle: _textTheme.bodyLarge,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         elevation: 0,
         type: BottomNavigationBarType.fixed,
-        unselectedLabelStyle: _textTheme.semiBold12,
+        selectedLabelStyle: _textTheme.labelMedium.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: _textTheme.labelMedium.copyWith(fontWeight: FontWeight.w600),
         selectedIconTheme: const IconThemeData(size: AppSizes.double24),
         unselectedIconTheme: const IconThemeData(size: AppSizes.double24),
       ),
@@ -189,5 +180,5 @@ abstract class AppThemeData {
 
   static const _lightColorScheme = AppColorScheme.light();
   static const _darkColorScheme = AppColorScheme.dark();
-  static final _textTheme = AppTextTheme.base();
+  static final _textTheme = AppTextTheme.effective;
 }
