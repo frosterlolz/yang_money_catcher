@@ -266,7 +266,7 @@ void main() {
 
   group('deleteTransaction', () {
     test('emits offline then online result when transaction exists', () async {
-      final transaction = MockTransactionsEntitiesHelper.transaction(123); // заполни нужными полями
+      final transaction = MockTransactionsEntitiesHelper.transaction(123);
 
       when(transactionsLocalDataSource.deleteTransaction(123)).thenAnswer((_) async => transaction);
       when(transactionEventsSyncDataSource.fetchActions(any))
@@ -412,7 +412,7 @@ void main() {
       );
 
       when(transactionsLocalDataSource.fetchTransactionCategories())
-          .thenAnswer((_) async => <TransactionCategory>[]); // Можно вернуть пустой список локально
+          .thenAnswer((_) async => <TransactionCategory>[]);
 
       when(transactionsNetworkDataSource.getTransactionCategories()).thenThrow(structuredException);
 

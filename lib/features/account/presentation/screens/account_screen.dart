@@ -176,6 +176,7 @@ class _AccountSuccessViewState extends State<_AccountSuccessView> {
               child: CalendarSegmentedButton(
                 selected: _fetchCalendarValue,
                 values: const [CalendarValues.day, CalendarValues.month],
+                titleBuilder: (value) => context.l10n.selectByCalendarValue(value.name),
                 onChanged: _changeCalendarValue,
               ),
             ),

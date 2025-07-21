@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 
 enum CalendarValues { day, week, month, year }
 
@@ -13,11 +12,13 @@ class CalendarSegmentedButton extends StatelessWidget {
     required this.selected,
     required this.values,
     required this.onChanged,
+    required this.titleBuilder,
   });
 
   final CalendarValues selected;
   final List<CalendarValues> values;
   final ValueChanged<CalendarValues> onChanged;
+  final String Function(CalendarValues value) titleBuilder;
 
   void _onSelectionChanged(Set<CalendarValues> calendarValues) {
     final selectedValue = calendarValues.firstOrNull;
@@ -31,7 +32,7 @@ class CalendarSegmentedButton extends StatelessWidget {
             .map(
               (calendarValue) => ButtonSegment(
                 value: calendarValue,
-                label: Text(context.l10n.selectByCalendarValue(calendarValue.name)),
+                label: Text(titleBuilder.call(calendarValue)),
                 icon: const Icon(Icons.done, color: Colors.transparent),
               ),
             )
