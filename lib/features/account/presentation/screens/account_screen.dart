@@ -428,6 +428,8 @@ class _AccountTransactionsAnalyzeChartState extends State<_AccountTransactionsAn
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = ColorScheme.of(context);
     final appColorScheme = AppColorScheme.of(context);
     if (widget.transactions.isEmpty) return Center(child: Text(context.l10n.nothingFound, textAlign: TextAlign.center));
 
@@ -438,6 +440,7 @@ class _AccountTransactionsAnalyzeChartState extends State<_AccountTransactionsAn
         return shouldShowLabel ? e : e.copyWith(label: '');
       }).toList(),
       columnColorBuilder: (item) => item.isNegative ? appColorScheme.analyzeNegative : appColorScheme.primary,
+      labelStyle: textTheme.labelSmall?.copyWith(color: colorScheme.onSurface),
     );
   }
 }
