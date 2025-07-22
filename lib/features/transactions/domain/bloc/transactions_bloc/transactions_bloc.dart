@@ -29,8 +29,8 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
   StreamSubscription<List<TransactionDetailEntity>>? _transactionsListChangesSubscription;
 
   @override
-  Future<void> close() {
-    _transactionsListChangesSubscription?.cancel();
+  Future<void> close() async {
+    await _transactionsListChangesSubscription?.cancel();
     return super.close();
   }
 
@@ -62,10 +62,11 @@ class TransactionsBloc extends Bloc<TransactionsEvent, TransactionsState> {
     emitter(TransactionsState.idle(UnmodifiableListView(event.transactions.toList()), isOffline: state.isOffline));
   }
 
+  void _onTransactionsChanged(List<TransactionDetailEntity> transactions) => add(_Update(transactions));
+
   void _updateTransactionChangesSubscription(TransactionFilters filters) {
     _transactionsListChangesSubscription?.cancel();
-    _transactionsListChangesSubscription = _transactionsRepository.transactionsListChanges(filters).listen(
-          (transactions) => add(_Update(transactions)),
-        );
+    _transactionsListChangesSubscription =
+        _transactionsRepository.transactionsListChanges(filters).listen(_onTransactionsChanged);
   }
 }

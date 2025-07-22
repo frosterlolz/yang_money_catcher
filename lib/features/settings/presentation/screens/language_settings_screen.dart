@@ -18,7 +18,6 @@ class LanguageSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = TextTheme.of(context);
     final colorScheme = ColorScheme.of(context);
 
     return Scaffold(

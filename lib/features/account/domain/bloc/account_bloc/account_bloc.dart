@@ -30,6 +30,12 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   final AccountRepository _accountRepository;
   StreamSubscription<AccountDetailEntity>? _accountSubscription;
 
+  @override
+  Future<void> close() async {
+    await _accountSubscription?.cancel();
+    return super.close();
+  }
+
   Future<void> _load(_Load event, _Emitter emitter) async {
     final isSameAccount = state.account?.id == event.accountId;
     emitter(AccountState.processing(state.account, isOffline: state.isOffline));
@@ -110,6 +116,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
 
   void _updateAccountSubscription(int id) {
     _accountSubscription?.cancel();
+    _accountSubscription = null;
     _accountSubscription = _accountRepository.watchAccount(id).listen(_accountChangesListener);
   }
 }

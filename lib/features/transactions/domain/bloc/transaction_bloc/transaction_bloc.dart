@@ -32,8 +32,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   StreamSubscription<TransactionDetailEntity?>? _transactionChangesSubscription;
 
   @override
-  Future<void> close() {
-    _transactionChangesSubscription?.cancel();
+  Future<void> close() async {
+    await _transactionChangesSubscription?.cancel();
     return super.close();
   }
 
