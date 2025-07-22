@@ -103,6 +103,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colorScheme = ColorScheme.of(context);
 
     return BlocListener<AccountBloc, AccountState>(
@@ -110,6 +111,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
       listener: _accountListener,
       child: Scaffold(
         appBar: AppBar(
+          iconTheme: theme.appBarTheme.iconTheme?.copyWith(color: colorScheme.onSurface),
           backgroundColor: colorScheme.surface,
           title: AppText.titleLarge(context.l10n.analyze, color: colorScheme.onSurface),
         ),

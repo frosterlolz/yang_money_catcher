@@ -151,7 +151,13 @@ class _TransactionsHistoryScreenState extends State<TransactionsHistoryScreen> w
         appBar: AppBar(
           title: Text(context.l10n.myHistory),
           actions: [
-            IconButton(onPressed: () => _onAnalyzeTap(context), icon: SvgPicture.asset(SvgIcons.calendarPlan)),
+            IconButton(
+              onPressed: () => _onAnalyzeTap(context),
+              icon: SvgPicture.asset(
+                SvgIcons.calendarPlan,
+                colorFilter: ColorFilter.mode(colorScheme.onPrimary, BlendMode.srcIn),
+              ),
+            ),
           ],
         ),
         body: RefreshIndicator.adaptive(

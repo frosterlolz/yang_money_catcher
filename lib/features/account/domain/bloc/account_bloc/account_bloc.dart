@@ -21,7 +21,6 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
         _Delete() => _delete(event, emitter),
         _InternalUpdate() => _internalUpdate(event, emitter),
       },
-      // transformer: droppable(),
     );
     if (state.account != null) {
       _updateAccountSubscription(state.account!.id);
@@ -107,10 +106,10 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     emitter(AccountState.idle(event.account, isOffline: event.account?.remoteId == null));
   }
 
+  void _accountChangesListener(AccountDetailEntity account) => add(_InternalUpdate(account));
+
   void _updateAccountSubscription(int id) {
     _accountSubscription?.cancel();
-    _accountSubscription = _accountRepository.watchAccount(id).listen(
-          (transaction) => add(_InternalUpdate(transaction)),
-        );
+    _accountSubscription = _accountRepository.watchAccount(id).listen(_accountChangesListener);
   }
 }

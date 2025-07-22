@@ -31,25 +31,27 @@ abstract class AppThemeData {
         scrolledUnderElevation: 0,
         centerTitle: true,
         backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        iconTheme: IconThemeData(color: colorScheme.onPrimary),
         titleTextStyle: _textTheme.titleLarge.copyWith(color: colorScheme.onPrimary),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         elevation: 0,
         backgroundColor: colorScheme.primary,
-        foregroundColor: _lightColorScheme.onPrimary,
+        foregroundColor: colorScheme.onPrimary,
         iconSize: 15.56 * 2,
         sizeConstraints: BoxConstraints.tight(const Size.square(AppSizes.double56)),
         shape: const CircleBorder(),
       ),
       applyElevationOverlayColor: false,
-      badgeTheme: BadgeThemeData(
-        backgroundColor: colorScheme.onError,
-        textColor: _lightColorScheme.onPrimary,
-      ),
-      cardColor: _lightColorScheme.onPrimary,
       cardTheme: CardThemeData(
-        surfaceTintColor: _lightColorScheme.onPrimary,
+        margin: EdgeInsets.zero,
+        color: colorScheme.outline,
+        surfaceTintColor: colorScheme.onPrimary,
         elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -69,7 +71,7 @@ abstract class AppThemeData {
         border: const OutlineInputBorder(),
       ),
       datePickerTheme: DatePickerThemeData(
-        backgroundColor: _lightColorScheme.secondary,
+        backgroundColor: colorScheme.primaryContainer,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16))),
         cancelButtonStyle: TextButton.styleFrom(foregroundColor: _lightColorScheme.onSurface),
         confirmButtonStyle: TextButton.styleFrom(foregroundColor: _lightColorScheme.onSurface),
@@ -120,17 +122,19 @@ abstract class AppThemeData {
       bottomSheetTheme: const BottomSheetThemeData(
         dragHandleSize: Size(45, 5),
       ),
-      // scaffoldBackgroundColor: _darkColorScheme.background,
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        iconTheme: IconThemeData(color: colorScheme.onPrimary),
         titleTextStyle: _textTheme.titleLarge.copyWith(color: colorScheme.onPrimary),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         elevation: 0,
-        backgroundColor: seedColor,
         iconSize: 15.56 * 2,
         sizeConstraints: BoxConstraints.tight(const Size.square(AppSizes.double56)),
         shape: const CircleBorder(),
@@ -145,7 +149,7 @@ abstract class AppThemeData {
         ),
       ),
       datePickerTheme: DatePickerThemeData(
-        backgroundColor: _darkColorScheme.secondary,
+        backgroundColor: colorScheme.primaryContainer,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16))),
         cancelButtonStyle: TextButton.styleFrom(foregroundColor: _darkColorScheme.onSurface),
         confirmButtonStyle: TextButton.styleFrom(foregroundColor: _darkColorScheme.onSurface),

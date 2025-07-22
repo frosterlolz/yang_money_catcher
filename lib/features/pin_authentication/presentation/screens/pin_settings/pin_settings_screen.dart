@@ -210,18 +210,13 @@ class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
         children: [
           const SizedBox(height: AppSizes.double10),
           Card(
-            margin: EdgeInsets.zero,
-            color: colorScheme.tertiary,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(onPressed: () => _onPinResetTap(context), child: Text(context.l10n.pinDisable)),
+                TextButton(onPressed: () => _onPinResetTap(context), child: AppText.bodyMedium(context.l10n.pinDisable, color: colorScheme.onSecondary)),
                 const Divider(indent: AppSizes.double10, endIndent: AppSizes.double10),
-                TextButton(onPressed: widget.onChangePinTap, child: Text(context.l10n.pinChange)),
+                TextButton(onPressed: widget.onChangePinTap, child: AppText.bodyMedium(context.l10n.pinChange,color: colorScheme.onSecondary)),
               ],
             ),
           ),
@@ -240,7 +235,7 @@ class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
                 if (availableBiometricType == null) return const SizedBox.shrink();
 
                 return SwitchListTile(
-                  tileColor: colorScheme.tertiary,
+                  tileColor: colorScheme.outline,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
                   ),

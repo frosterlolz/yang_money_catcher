@@ -39,6 +39,21 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
   final AsyncCache<List<TransactionDetailsDto>> _transactionsLoaderCache$Network;
 
   @override
+  Stream<DataResult<Iterable<TransactionCategory>>> getTransactionCategories() async* {
+    await _syncActions();
+    final categories$Local = await _transactionsLocalDataSource.fetchTransactionCategories();
+    yield DataResult.offline(data: categories$Local);
+    try {
+      final categories$Remote = await _transactionsNetworkDataSource.getTransactionCategories();
+      final syncedCategories = await _transactionsLocalDataSource.insertTransactionCategories(categories$Remote);
+      yield DataResult.online(data: syncedCategories);
+    } on StructuredBackendException catch (e, s) {
+      final appException = AppException$Simple.fromStructuredException(e.error);
+      Error.throwWithStackTrace(appException, s);
+    }
+  }
+
+  @override
   Stream<DataResult<Iterable<TransactionDetailEntity>>> getTransactions(TransactionFilters filters) async* {
     await _syncActions();
     final transactions$Local = await _transactionsLoaderCache$Local.fetch(
@@ -115,21 +130,6 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
       final syncedTransactions =
           await _transactionsLocalDataSource.syncTransactionWithDetails(transaction$Remote, localId: id);
       yield DataResult.online(data: syncedTransactions);
-    } on StructuredBackendException catch (e, s) {
-      final appException = AppException$Simple.fromStructuredException(e.error);
-      Error.throwWithStackTrace(appException, s);
-    }
-  }
-
-  @override
-  Stream<DataResult<Iterable<TransactionCategory>>> getTransactionCategories() async* {
-    await _syncActions();
-    final categories$Local = await _transactionsLocalDataSource.fetchTransactionCategories();
-    yield DataResult.offline(data: categories$Local);
-    try {
-      final categories$Remote = await _transactionsNetworkDataSource.getTransactionCategories();
-      final syncedCategories = await _transactionsLocalDataSource.insertTransactionCategories(categories$Remote);
-      yield DataResult.online(data: syncedCategories);
     } on StructuredBackendException catch (e, s) {
       final appException = AppException$Simple.fromStructuredException(e.error);
       Error.throwWithStackTrace(appException, s);

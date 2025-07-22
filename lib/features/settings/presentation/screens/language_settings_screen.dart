@@ -30,22 +30,17 @@ class LanguageSettingsScreen extends StatelessWidget {
             BlocSelector<SettingsBloc, SettingsState, Locale>(
               selector: (state) => state.settings.locale,
               builder: (context, selectedLocale) => Card(
-                margin: EdgeInsets.zero,
-                color: colorScheme.tertiary.withValues(alpha: 0.6),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
-                ),
                 child: Column(
                   children: ListTile.divideTiles(
                     context: context,
                     tiles: Localization.supportedLocales.map(
                       (locale) => ListTile(
                         onTap: () => _onLocaleTap(context, locale),
-                        title: Text(
+                        title: AppText.labelLarge(
                           context.l10n.localeTitle(locale.languageCode),
-                          style: textTheme.labelLarge?.copyWith(color: colorScheme.onTertiary),
+                          color: colorScheme.onSecondary,
                         ),
-                        trailing: locale == selectedLocale ? const Icon(Icons.done) : null,
+                        trailing: locale == selectedLocale ? Icon(Icons.done, color: colorScheme.onSecondary) : null,
                       ),
                     ),
                   ).toList(),
