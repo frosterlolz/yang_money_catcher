@@ -111,7 +111,7 @@ class _TransactionsAnalyzeScreenState extends State<TransactionsAnalyzeScreen> w
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: colorScheme.surface,
-          title: Text(context.l10n.analyze),
+          title: AppText.titleLarge(context.l10n.analyze, color: colorScheme.onSurface),
         ),
         body: CustomScrollView(
           slivers: [

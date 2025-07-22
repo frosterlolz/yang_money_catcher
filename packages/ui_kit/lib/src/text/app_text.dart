@@ -192,13 +192,16 @@ class AppText extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) => Text(
+  Widget build(BuildContext context) {
+    final effectiveStyle = color == null ? style.value : style.value.copyWith(color: color);
+    return Text(
         text,
         softWrap: softWrap,
         overflow: overflow,
         maxLines: maxLines,
         textAlign: textAlign,
-        style: style.value,
+        style: effectiveStyle,
         key: key,
       );
+  }
 }
