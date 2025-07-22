@@ -43,11 +43,15 @@ class HapticSettingsScreen extends StatelessWidget {
                     final item = HapticType.values[index];
                     final isSelected = item == hapticType;
 
-                    return ListTile(
-                      title: Text(context.l10n.hapticTitleValue(item.name)),
-                      subtitle: Text(context.l10n.hapticDescriptionValue(item.name)),
-                      leading: Icon(Icons.check, color: isSelected ? colorScheme.primary : Colors.transparent),
-                      onTap: () => _setSelectedHaptic(context, type: item),
+                    return Material(
+                      color: Colors.transparent,
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.double16)),
+                        title: Text(context.l10n.hapticTitleValue(item.name)),
+                        subtitle: Text(context.l10n.hapticDescriptionValue(item.name)),
+                        leading: Icon(Icons.check, color: isSelected ? colorScheme.primary : Colors.transparent),
+                        onTap: () => _setSelectedHaptic(context, type: item),
+                      ),
                     );
                   },
                   separatorBuilder: (context, index) => const Padding(

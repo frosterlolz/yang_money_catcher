@@ -34,6 +34,7 @@ class LanguageSettingsScreen extends StatelessWidget {
                     context: context,
                     tiles: Localization.supportedLocales.map(
                       (locale) => ListTile(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.double16)),
                         onTap: () => _onLocaleTap(context, locale),
                         title: AppText.labelLarge(
                           context.l10n.localeTitle(locale.languageCode),
