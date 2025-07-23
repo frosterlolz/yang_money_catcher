@@ -206,13 +206,16 @@ class _PinInputViewState extends State<PinInputView> {
         ),
         const Spacer(),
         if (widget.onResetPin != null) TextButton(onPressed: _onResetPin, child: Text(context.l10n.resetPin)),
-        FractionallySizedBox(
-          widthFactor: 0.8,
-          child: PinInputKeyboard(
-            onTap: _onKeyTap,
-            onDelTap: _onDelTap,
-            onBiometricTap: _onBiometricTap,
-            biometricPreference: _biometricAvailableType,
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: FractionallySizedBox(
+            widthFactor: 0.8,
+            child: PinInputKeyboard(
+              onTap: _onKeyTap,
+              onDelTap: _onDelTap,
+              onBiometricTap: _onBiometricTap,
+              biometricPreference: _biometricAvailableType,
+            ),
           ),
         ),
       ],

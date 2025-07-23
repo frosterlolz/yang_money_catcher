@@ -25,7 +25,10 @@ class PinSettingsPreviewScreen extends StatelessWidget {
           const Spacer(),
           FractionallySizedBox(
             widthFactor: 0.5,
-            child: Image.asset(AppImages.pinCode),
+            child: ConstrainedBox(
+              constraints: BoxConstraints.tight(const Size.fromHeight(250)),
+              child: Image.asset(AppImages.pinCode),
+            ),
           ),
           Text(context.l10n.pinScreenTitle, style: textTheme.headlineSmall),
           Text(
