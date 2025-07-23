@@ -62,6 +62,7 @@ class _TransactionCategoriesListView extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         return ListTile(
+          key: Key('transaction_category_$index'),
           leading: Text(item.emoji),
           title: Text(item.name),
           subtitle: Text(item.isIncome ? context.l10n.singleIncome : context.l10n.expense),

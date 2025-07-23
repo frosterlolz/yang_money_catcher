@@ -31,14 +31,17 @@ flutter gen-l10n
 
 ## ⚙️ 2. Конфигурация окружения
 В директории config/ по образцу config.template.json создайте файл dev.json.
+Обязательные параметры можно уточнить в lib/core/config/env_constants.dart
 
 Пример содержимого:
 ```json
 {
   "ENVIRONMENT": "dev",
-  "BASE_URL": "***",
+  "BASE_URL": "https://dart.dev",
   "AUTH_TOKEN": "***",
-  "SYNC_ATTEMPTS": 3
+  "SYNC_ATTEMPTS": 3,
+  "SKIP_AUTH": false,
+  "USE_MOCKS": false
 }
 ```
 

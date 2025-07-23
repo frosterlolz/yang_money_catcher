@@ -24,6 +24,7 @@ import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mod
 import 'package:yang_money_catcher/features/pin_authentication/data/repository/pin_authentication_repository_impl.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/source/local/pin_config_sorage_impl.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
+import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 import 'package:yang_money_catcher/features/settings/data/codecs/settings_codec.dart';
 import 'package:yang_money_catcher/features/settings/data/repository/settings_repository_impl.dart';
 import 'package:yang_money_catcher/features/settings/data/source/local/settings_data_source_local.dart';
@@ -89,7 +90,12 @@ final class InitializationRoot {
           final pinConfigStorage = PinConfigStorageImpl(d.secureStorage);
           final pinConfig = await pinConfigStorage.fetchPinConfig();
           final pinAuthRepository = PinAuthenticationRepositoryImpl(pinConfigStorage);
-          final status = await pinAuthRepository.checkAuthenticationStatus();
+          final initialStatus = await pinAuthRepository.checkAuthenticationStatus();
+          final status = switch (initialStatus) {
+            PinAuthenticationStatus.disabled => initialStatus,
+            _ when EnvConstants.skipAuthentication => PinAuthenticationStatus.authenticated,
+            _ => initialStatus,
+          };
           final initialState = PinAuthenticationState.idle(
             status: status,
             shouldAllowBiometric: pinConfig.shouldAllowBiometric,

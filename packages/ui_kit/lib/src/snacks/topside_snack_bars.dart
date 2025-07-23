@@ -35,12 +35,13 @@ abstract class BottomSideSnackBars {
     );
   }
 
-  static SnackBar error(BuildContext context, {required String titleText, VoidCallback? onTap}) {
+  static SnackBar error(BuildContext context, {required String titleText, VoidCallback? onTap, Key? key}) {
     final colorScheme = ColorScheme.of(context);
     final backgroundColor = colorScheme.error;
     final foregroundColor = colorScheme.onError;
 
     return SnackBar(
+      key: key,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
       dismissDirection: DismissDirection.down,
       backgroundColor: backgroundColor,

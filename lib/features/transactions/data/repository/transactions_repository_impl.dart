@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:async/async.dart';
 import 'package:rest_client/rest_client.dart';
 import 'package:yang_money_catcher/core/data/sync_backup/sync_action.dart';
@@ -7,7 +5,6 @@ import 'package:yang_money_catcher/core/data/sync_backup/utils/sync_handler_mixi
 import 'package:yang_money_catcher/core/domain/entity/data_result.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
-import 'package:yang_money_catcher/features/transaction_categories/data/source/mock_transaction_categories.dart';
 import 'package:yang_money_catcher/features/transaction_categories/domain/entity/transaction_category.dart';
 import 'package:yang_money_catcher/features/transactions/data/dto/transaction_dto.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source.dart';
@@ -276,44 +273,6 @@ final class TransactionsRepositoryImpl with SyncHandlerMixin implements Transact
         _ => e,
       };
       Error.throwWithStackTrace(resException, s);
-    }
-  }
-
-  @Deprecated('For testing only, now REST API is used')
-  Future<void> generateMockData() async {
-    await fillTransactionCategories();
-    final transactionsCount = await _transactionsLocalDataSource.getTransactionsCount();
-    if (transactionsCount > 0) return;
-    final random = Random();
-    final categories = await _transactionsLocalDataSource.fetchTransactionCategories();
-    final requests = List.generate(
-      1000,
-      (index) {
-        final categoryIndex = random.nextInt(categories.length);
-        final amountFractionalPart = random.nextInt(2) > 0 ? '00' : '50';
-        final transactionHour = random.nextInt(24);
-        final transactionMinute = random.nextInt(60);
-        final transactionDate = DateTime.now()
-            .copyWith(hour: transactionHour, minute: transactionMinute)
-            .subtract(Duration(days: random.nextInt(100)));
-        return TransactionRequest.create(
-          accountId: 1,
-          amount: '10000.$amountFractionalPart',
-          categoryId: categories.elementAt(categoryIndex).id,
-          comment: 'Comment at $index',
-          transactionDate: transactionDate,
-        );
-      },
-    ).cast<TransactionRequest$Create>();
-    await _transactionsLocalDataSource.insertTransactions(requests);
-  }
-
-  @Deprecated('For testing only, now REST API is used')
-  Future<void> fillTransactionCategories() async {
-    final transactionCategories = await _transactionsLocalDataSource.transactionCategoriesCount();
-    if (transactionCategories == 0) {
-      final mockCategories = transactionCategoriesJson.map(TransactionCategory.fromJson);
-      await _transactionsLocalDataSource.insertTransactionCategories(mockCategories.toList());
     }
   }
 }

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -154,7 +153,11 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
-          BottomSideSnackBars.error(context, titleText: ErrorUtil.messageFromObject(context, error: error)),
+          BottomSideSnackBars.error(
+            context,
+            key: const Key('error_snackbar'),
+            titleText: ErrorUtil.messageFromObject(context, error: error),
+          ),
         );
     }
     return;
@@ -170,8 +173,13 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       debugPrint('$e');
       debugPrintStack(stackTrace: s);
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(BottomSideSnackBars.error(context, titleText: ErrorUtil.messageFromObject(context, error: e)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        BottomSideSnackBars.error(
+          context,
+          key: const Key('error_snackbar'),
+          titleText: ErrorUtil.messageFromObject(context, error: e),
+        ),
+      );
       return;
     }
     final nextState = await transactionBloc.stream.firstWhere((state) => state is! TransactionState$Processing);
@@ -196,7 +204,11 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
-          BottomSideSnackBars.error(context, titleText: ErrorUtil.messageFromObject(context, error: error)),
+          BottomSideSnackBars.error(
+            context,
+            key: const Key('error_snackbar'),
+            titleText: ErrorUtil.messageFromObject(context, error: error),
+          ),
         );
     }
   }
@@ -216,7 +228,13 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
             ),
           ),
           title: Text(context.l10n.myExpenses),
-          actions: [if (_hasChanges) _SaveTransactionButton(() => doProcessing(() => _save(context)))],
+          actions: [
+            if (_hasChanges)
+              _SaveTransactionButton(
+                key: const Key('save_transaction_button'),
+                () => doProcessing(() => _save(context)),
+              ),
+          ],
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -226,6 +244,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
               tiles: [
                 // Счет
                 ListTile(
+                  key: const Key('account_tile'),
                   onTap: _selectAccount,
                   title: Row(
                     children: [
@@ -243,6 +262,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Статья
                 ListTile(
+                  key: const Key('category_tile'),
                   onTap: _selectTransactionCategory,
                   title: Row(
                     children: [
@@ -264,6 +284,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                   child: _account == null
                       ? const SizedBox.shrink()
                       : ListTile(
+                          key: const Key('amount_tile'),
                           onTap: () => _selectAmount(_account!.currency),
                           title: Row(
                             children: [
@@ -284,6 +305,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Дата
                 ListTile(
+                  key: const Key('date_tile'),
                   onTap: _selectDate,
                   title: Row(
                     children: [
@@ -295,6 +317,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Время
                 ListTile(
+                  key: const Key('time_tile'),
                   onTap: _selectTime,
                   title: Row(
                     children: [
@@ -306,6 +329,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Комментарий
                 ListTile(
+                  key: const Key('comment_tile'),
                   onTap: _selectComment,
                   title: _comment?.trim().isEmpty ?? true ? Text(context.l10n.comment) : Text(_comment!),
                 ),
@@ -317,16 +341,6 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
               onDeleteTap: (transactionId) => doProcessing(() => _deleteTransaction(transactionId)),
               isIncome: widget.isIncome,
             ),
-            if (kDebugMode)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
-                  Text(
-                    'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}',
-                  ),
-                ],
-              ),
           ],
         ),
       ),
@@ -496,6 +510,7 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
   Widget build(BuildContext context) => AlertDialog(
         title: Text(context.l10n.inputAmount),
         content: TextFormField(
+          key: const Key('amount_input_field'),
           onChanged: _onChanged,
           initialValue: NumberFormat.decimalPattern(context.l10n.localeName).format(_amount),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -522,7 +537,7 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
 /// {@endtemplate}
 class _SaveTransactionButton extends StatefulWidget {
   /// {@macro _SaveTransactionButton.class}
-  const _SaveTransactionButton(this.onSaveTap);
+  const _SaveTransactionButton(this.onSaveTap, {super.key});
 
   final Future<void> Function() onSaveTap;
 

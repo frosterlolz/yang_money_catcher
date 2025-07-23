@@ -55,6 +55,7 @@ class TransactionsScreen extends StatelessWidget {
           builder: (context, accountState) => accountState.account == null
               ? const SizedBox.shrink()
               : FloatingActionButton(
+                  key: Key('TransactionsScreen.isIncome = $isIncome floatingActionButton'),
                   heroTag: 'TransactionsScreen with isIncome flag = $isIncome',
                   onPressed: () => _onAddTransactionTap(context),
                   child: const Icon(Icons.add),

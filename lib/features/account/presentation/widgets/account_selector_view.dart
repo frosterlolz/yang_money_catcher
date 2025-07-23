@@ -54,6 +54,7 @@ class _AccountItemsView extends StatelessWidget {
         final item = items[index];
         final balance = item.balance.amountToNum().thousandsSeparated().withCurrency(item.currency.symbol, 1);
         return ListTile(
+          key: Key('account_item_$index'),
           title: Text(item.name),
           subtitle: Text('${context.l10n.balance}: $balance'),
           trailing:

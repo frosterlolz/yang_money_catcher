@@ -43,13 +43,22 @@ class _TextConfirmDialogState extends State<TextConfirmDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
         title: Text(widget.title),
-        content: TextFormField(onChanged: _onChanged, initialValue: _value),
+        content: TextFormField(
+          key: const Key('TextConfirmDialog.textFormField'),
+          onChanged: _onChanged,
+          initialValue: _value,
+        ),
         actions: [
           TextButton(
+            key: const Key('TextConfirmDialog.confirmButton'),
             onPressed: _isValuesEqual ? null : () => widget.onConfirmTap.call(_value),
             child: Text(widget.confirmButtonTitle),
           ),
-          TextButton(onPressed: Navigator.of(context).maybePop, child: Text(widget.cancelButtonTitle)),
+          TextButton(
+            key: const Key('TextConfirmDialog.cancelButton'),
+            onPressed: Navigator.of(context).maybePop,
+            child: Text(widget.cancelButtonTitle),
+          ),
         ],
       );
 }
