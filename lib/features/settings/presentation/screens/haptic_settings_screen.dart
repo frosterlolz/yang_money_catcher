@@ -1,11 +1,9 @@
 import 'package:auto_route/annotations.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/features/settings/domain/bloc/settings_bloc/settings_bloc.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/haptic_type.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 
 /// {@template HapticSettingsScreen.class}
 /// HapticSettingsScreen widget.
@@ -45,11 +43,15 @@ class HapticSettingsScreen extends StatelessWidget {
                     final item = HapticType.values[index];
                     final isSelected = item == hapticType;
 
-                    return ListTile(
-                      title: Text(context.l10n.hapticTitleValue(item.name)),
-                      subtitle: Text(context.l10n.hapticDescriptionValue(item.name)),
-                      leading: Icon(Icons.check, color: isSelected ? colorScheme.primary : Colors.transparent),
-                      onTap: () => _setSelectedHaptic(context, type: item),
+                    return Material(
+                      color: Colors.transparent,
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.double16)),
+                        title: Text(context.l10n.hapticTitleValue(item.name)),
+                        subtitle: Text(context.l10n.hapticDescriptionValue(item.name)),
+                        leading: Icon(Icons.check, color: isSelected ? colorScheme.primary : Colors.transparent),
+                        onTap: () => _setSelectedHaptic(context, type: item),
+                      ),
                     );
                   },
                   separatorBuilder: (context, index) => const Padding(

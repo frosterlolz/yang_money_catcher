@@ -3,6 +3,8 @@ const _baseUrl = 'BASE_URL';
 const _apiEndpoint = 'api/v1';
 const _authKey = 'AUTH_TOKEN';
 const _syncAttempts = 'SYNC_ATTEMPTS';
+const _skipAuth = 'SKIP_AUTH';
+const _useMocks = 'USE_MOCKS';
 
 abstract final class EnvConstants {
   const EnvConstants();
@@ -23,6 +25,14 @@ abstract final class EnvConstants {
   // --- DATABASE CONSTANTS --- //
 
   static const int maxSyncActionAttempts = int.fromEnvironment(_syncAttempts, defaultValue: 3);
+
+  // --- CORE SETTINGS --- //
+
+  /// if true -> PinAuthenticationStatus will be true at startup
+  static const bool skipAuthentication = bool.fromEnvironment(_skipAuth, defaultValue: false);
+
+  /// if true -> will used mock repositories
+  static const bool useMocks = bool.fromEnvironment(_useMocks, defaultValue: false);
 }
 
 /// Environment flavor.

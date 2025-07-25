@@ -1,0 +1,23 @@
+name: ui_kit
+description: 'Independent UI Kit for main project'
+publish_to: none
+version: 0.0.1
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+  flutter: ">=3.27.1"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  golden_toolkit: ^0.15.0
+
+flutter:
+  uses-material-design: true

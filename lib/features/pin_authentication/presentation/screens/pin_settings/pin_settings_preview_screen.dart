@@ -1,9 +1,7 @@
 import 'package:auto_route/annotations.dart';
-import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/core/assets/res/app_images.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 
 /// {@template PinSettingsPreviewScreen.class}
 /// PinSettingsPreviewScreen widget.
@@ -27,7 +25,10 @@ class PinSettingsPreviewScreen extends StatelessWidget {
           const Spacer(),
           FractionallySizedBox(
             widthFactor: 0.5,
-            child: Image.asset(AppImages.pinCode),
+            child: ConstrainedBox(
+              constraints: BoxConstraints.tight(const Size.fromHeight(250)),
+              child: Image.asset(AppImages.pinCode),
+            ),
           ),
           Text(context.l10n.pinScreenTitle, style: textTheme.headlineSmall),
           Text(

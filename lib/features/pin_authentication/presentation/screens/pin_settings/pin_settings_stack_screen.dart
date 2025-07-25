@@ -1,10 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localization/localization.dart';
 import 'package:yang_money_catcher/features/navigation/app_router.gr.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
 
 enum PinSettingsScreenStatus {
   // Инициирован процесс создания код-пароля

@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
+import 'package:yang_money_catcher/core/presentation/common/error_util.dart';
 import 'package:yang_money_catcher/core/presentation/common/input_formatters.dart';
 import 'package:yang_money_catcher/core/presentation/common/processing_state_mixin.dart';
 import 'package:yang_money_catcher/core/utils/exceptions/app_exception.dart';
@@ -22,13 +23,6 @@ import 'package:yang_money_catcher/features/transaction_categories/presentation/
 import 'package:yang_money_catcher/features/transactions/domain/bloc/transaction_bloc/transaction_bloc.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_change_request.dart';
 import 'package:yang_money_catcher/features/transactions/domain/entity/transaction_entity.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/bottom_sheets/item_selector_sheet.dart';
-import 'package:yang_money_catcher/ui_kit/dialogs/text_confirm_dialog.dart';
-import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
-import 'package:yang_money_catcher/ui_kit/loaders/typed_progress_indicator.dart';
-import 'package:yang_money_catcher/ui_kit/snacks/topside_snack_bars.dart';
 
 Future<void> showTransactionScreen(
   BuildContext context, {
@@ -46,7 +40,7 @@ Future<void> showTransactionScreen(
       builder: (_) => BlocProvider(
         create: (_) {
           final bloc = TransactionBloc(
-            TransactionState.processing(initialTransaction, isOffline: initialTransaction?.remoteId == null),
+            TransactionState.idle(initialTransaction, isOffline: initialTransaction?.remoteId == null),
             transactionsRepository: DependenciesScope.of(context).transactionsRepository,
           );
           if (initialTransaction != null) {
@@ -117,6 +111,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       firstDate: fallbackFirstDate,
       lastDate: fallbackEndDate,
       initialDate: _transactionDate,
+      confirmText: context.l10n.ok,
+      cancelText: context.l10n.cancelAction,
     );
     if (date == null) return;
     _changeTransactionDate(date);
@@ -126,6 +122,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_transactionDate),
+      confirmText: context.l10n.ok,
+      cancelText: context.l10n.cancelAction,
     );
     if (time == null) return;
     _changeTransactionTime(time);
@@ -138,6 +136,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         initialValue: _comment,
         onConfirmTap: context.maybePop,
         title: context.l10n.inputComment,
+        confirmButtonTitle: context.l10n.save,
+        cancelButtonTitle: context.l10n.cancel,
       ),
     );
     if (comment == null) return;
@@ -156,7 +156,13 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         unawaited(context.maybePop());
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(
+          BottomSideSnackBars.error(
+            context,
+            key: const Key('error_snackbar'),
+            titleText: ErrorUtil.messageFromObject(context, error: error),
+          ),
+        );
     }
     return;
   }
@@ -171,7 +177,13 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       debugPrint('$e');
       debugPrintStack(stackTrace: s);
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: e));
+      ScaffoldMessenger.of(context).showSnackBar(
+        BottomSideSnackBars.error(
+          context,
+          key: const Key('error_snackbar'),
+          titleText: ErrorUtil.messageFromObject(context, error: e),
+        ),
+      );
       return;
     }
     final nextState = await transactionBloc.stream.firstWhere((state) => state is! TransactionState$Processing);
@@ -195,7 +207,13 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
         }
       case TransactionState$Error(:final error):
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(BottomSideSnackBars.error(context, error: error));
+        ScaffoldMessenger.of(context).showSnackBar(
+          BottomSideSnackBars.error(
+            context,
+            key: const Key('error_snackbar'),
+            titleText: ErrorUtil.messageFromObject(context, error: error),
+          ),
+        );
     }
   }
 
@@ -214,7 +232,13 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
             ),
           ),
           title: Text(context.l10n.myExpenses),
-          actions: [if (_hasChanges) _SaveTransactionButton(() => doProcessing(() => _save(context)))],
+          actions: [
+            if (_hasChanges || isProcessing)
+              _SaveTransactionButton(
+                key: const Key('save_transaction_button'),
+                () => doProcessing(() => _save(context)),
+              ),
+          ],
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -224,6 +248,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
               tiles: [
                 // Счет
                 ListTile(
+                  key: const Key('account_tile'),
                   onTap: _selectAccount,
                   title: Row(
                     children: [
@@ -241,6 +266,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Статья
                 ListTile(
+                  key: const Key('category_tile'),
                   onTap: _selectTransactionCategory,
                   title: Row(
                     children: [
@@ -262,6 +288,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                   child: _account == null
                       ? const SizedBox.shrink()
                       : ListTile(
+                          key: const Key('amount_tile'),
                           onTap: () => _selectAmount(_account!.currency),
                           title: Row(
                             children: [
@@ -282,6 +309,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Дата
                 ListTile(
+                  key: const Key('date_tile'),
                   onTap: _selectDate,
                   title: Row(
                     children: [
@@ -293,6 +321,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Время
                 ListTile(
+                  key: const Key('time_tile'),
                   onTap: _selectTime,
                   title: Row(
                     children: [
@@ -304,6 +333,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
                 ),
                 // Комментарий
                 ListTile(
+                  key: const Key('comment_tile'),
                   onTap: _selectComment,
                   title: _comment?.trim().isEmpty ?? true ? Text(context.l10n.comment) : Text(_comment!),
                 ),
@@ -315,16 +345,6 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
               onDeleteTap: (transactionId) => doProcessing(() => _deleteTransaction(transactionId)),
               isIncome: widget.isIncome,
             ),
-            if (kDebugMode)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('LocalId:${widget.initialTransaction?.id} RemoteId:${widget.initialTransaction?.remoteId}'),
-                  Text(
-                    'AccountId:${widget.initialTransaction?.account.id} AccountRemoteId:${widget.initialTransaction?.account.remoteId}',
-                  ),
-                ],
-              ),
           ],
         ),
       ),
@@ -494,6 +514,7 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
   Widget build(BuildContext context) => AlertDialog(
         title: Text(context.l10n.inputAmount),
         content: TextFormField(
+          key: const Key('amount_input_field'),
           onChanged: _onChanged,
           initialValue: NumberFormat.decimalPattern(context.l10n.localeName).format(_amount),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -507,10 +528,15 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
         ),
         actions: [
           TextButton(
+            key: const Key('confirm_button'),
             onPressed: _amount == widget.inputAmount ? null : () => context.maybePop(_amount),
             child: Text(context.l10n.save),
           ),
-          TextButton(onPressed: () => context.maybePop(), child: Text(context.l10n.cancel)),
+          TextButton(
+            key: const Key('cancel_button'),
+            onPressed: () => context.maybePop(),
+            child: Text(context.l10n.cancel),
+          ),
         ],
       );
 }
@@ -520,7 +546,7 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
 /// {@endtemplate}
 class _SaveTransactionButton extends StatefulWidget {
   /// {@macro _SaveTransactionButton.class}
-  const _SaveTransactionButton(this.onSaveTap);
+  const _SaveTransactionButton(this.onSaveTap, {super.key});
 
   final Future<void> Function() onSaveTap;
 

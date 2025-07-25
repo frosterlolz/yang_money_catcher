@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart' show Locale, ThemeMode, immutable;
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/haptic_type.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/theme_configuration.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
 
 @immutable
 class Settings {

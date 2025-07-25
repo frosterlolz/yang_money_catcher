@@ -170,7 +170,7 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
     try {
       final newConfig = await _pinAuthenticationRepository.changePinCode(event.pin);
       emitter(
-        PinAuthenticationState.idle(
+        PinAuthenticationState.success(
           status: PinAuthenticationStatus.authenticated,
           shouldAllowBiometric: state.shouldAllowBiometric,
           pinLength: newConfig.pinLength,
@@ -187,6 +187,14 @@ class PinAuthenticationBloc extends Bloc<PinAuthenticationEvent, PinAuthenticati
       );
 
       onError(e, s);
+    } finally {
+      emitter(
+        PinAuthenticationState.idle(
+          status: PinAuthenticationStatus.authenticated,
+          shouldAllowBiometric: state.shouldAllowBiometric,
+          pinLength: state.pinLength,
+        ),
+      );
     }
   }
 

@@ -1,55 +1,101 @@
-import 'package:database/database.dart';
+import 'package:yang_money_catcher/features/account/data/dto/dto.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
-import 'package:yang_money_catcher/features/account/domain/entity/account_history.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 
 abstract class MockAccountEntitiesHelper {
-  static AccountRequest$Create sampleCreateRequest() =>
-      const AccountRequest$Create(name: 'My Account', balance: '1000', currency: Currency.rub);
+  static AccountDto accountDto({
+    int id = 1,
+    String name = 'Test Account',
+    String balance = '100.00',
+    Currency currency = Currency.rub,
+    int userId = 1,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    final now = DateTime.now();
 
-  static AccountItem sampleAccountItem() => AccountItem(
+    return AccountDto(
+      id: id,
+      name: name,
+      balance: balance,
+      currency: currency,
+      userId: userId,
+      createdAt: createdAt ?? now,
+      updatedAt: updatedAt ?? now,
+    );
+  }
+
+  static AccountEntity account({
+    int id = 1,
+    String name = 'Test Account',
+    String balance = '100.00',
+    Currency currency = Currency.rub,
+    int? remoteId = 1,
+    int userId = 1,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    final now = DateTime.now();
+
+    return AccountEntity(
+      id: id,
+      name: name,
+      balance: balance,
+      currency: currency,
+      remoteId: remoteId,
+      userId: userId,
+      createdAt: createdAt ?? now,
+      updatedAt: updatedAt ?? now,
+    );
+  }
+
+  static AccountDetailsDto accountDetailsDto(int id) {
+    final now = DateTime.now();
+    return AccountDetailsDto(
+      id: id,
+      name: 'Test Account',
+      balance: '100.00',
+      currency: Currency.rub,
+      createdAt: now,
+      updatedAt: now,
+      incomeStats: [],
+      expenseStats: [],
+    );
+  }
+
+  static AccountDetailEntity makeFakeAccountDetail(int id) {
+    final now = DateTime.now();
+    return AccountDetailEntity(
+      id: id,
+      name: 'Test Account',
+      balance: '100.00',
+      currency: Currency.rub,
+      incomeStats: [],
+      expenseStats: [],
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  static AccountRequest$Create createRequest() => const AccountRequest$Create(
+        name: 'Test Account',
+        balance: '123.45',
+        currency: Currency.rub,
+      );
+
+  static AccountRequest$Update updateRequest() => const AccountRequest$Update(
         id: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        name: 'My Account',
-        balance: '1000',
-        currency: 'RUB',
-        userId: 1,
+        name: 'Test Account',
+        balance: '123.45',
+        currency: Currency.rub,
       );
 
-  static AccountItem accountFromRequest(AccountRequest request, {int id = 1}) => AccountItem(
-        id: switch (request) {
-          AccountRequest$Create() => id,
-          AccountRequest$Update(:final id) => id,
-        },
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        name: request.name,
-        balance: request.balance,
-        currency: request.currency.name,
-        userId: 1,
-      );
-
-  static AccountEntity entityFromRequest(AccountRequest request, {int id = 1}) => AccountEntity(
-        id: switch (request) {
-          AccountRequest$Create() => id,
-          AccountRequest$Update(:final id) => id,
-        },
-        remoteId: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        name: request.name,
-        balance: request.balance,
-        currency: request.currency,
-        userId: 1,
-      );
-
-  static AccountHistory historyFromEntity(AccountEntity entity) => AccountHistory(
-        accountId: entity.id,
-        accountName: entity.name,
-        currencyBalance: entity.balance,
+  static AccountHistoryDto accountHistoryDto(int id) => AccountHistoryDto(
+        accountId: id,
         history: [],
-        currency: entity.currency,
+        currencyBalance: '123.45',
+        currency: Currency.rub,
+        accountName: 'Test Account',
       );
 }

@@ -1,16 +1,14 @@
 import 'package:auto_route/annotations.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localization/localization.dart';
 import 'package:pretty_logger/pretty_logger.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/features/pin_authentication/data/utils/pin_exception.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/service/local_auth_service.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/screens/pin_settings/pin_settings.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_view.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
-import 'package:yang_money_catcher/ui_kit/layout/material_spacing.dart';
 
 /// {@template PinSettingsScreen.class}
 /// PinSettingsScreen widget.
@@ -212,18 +210,13 @@ class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
         children: [
           const SizedBox(height: AppSizes.double10),
           Card(
-            margin: EdgeInsets.zero,
-            color: colorScheme.tertiary,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(onPressed: () => _onPinResetTap(context), child: Text(context.l10n.pinDisable)),
+                TextButton(onPressed: () => _onPinResetTap(context), child: AppText.bodyMedium(context.l10n.pinDisable, color: colorScheme.onSecondary)),
                 const Divider(indent: AppSizes.double10, endIndent: AppSizes.double10),
-                TextButton(onPressed: widget.onChangePinTap, child: Text(context.l10n.pinChange)),
+                TextButton(onPressed: widget.onChangePinTap, child: AppText.bodyMedium(context.l10n.pinChange,color: colorScheme.onSecondary)),
               ],
             ),
           ),
@@ -242,7 +235,7 @@ class _PinSettingsPanelScreenState extends State<_PinSettingsPanelScreen> {
                 if (availableBiometricType == null) return const SizedBox.shrink();
 
                 return SwitchListTile(
-                  tileColor: colorScheme.tertiary,
+                  tileColor: colorScheme.outline,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(AppSizes.double16)),
                   ),

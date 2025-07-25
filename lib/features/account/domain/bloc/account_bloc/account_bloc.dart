@@ -21,7 +21,6 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
         _Delete() => _delete(event, emitter),
         _InternalUpdate() => _internalUpdate(event, emitter),
       },
-      // transformer: droppable(),
     );
     if (state.account != null) {
       _updateAccountSubscription(state.account!.id);
@@ -30,6 +29,12 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
 
   final AccountRepository _accountRepository;
   StreamSubscription<AccountDetailEntity>? _accountSubscription;
+
+  @override
+  Future<void> close() async {
+    await _accountSubscription?.cancel();
+    return super.close();
+  }
 
   Future<void> _load(_Load event, _Emitter emitter) async {
     final isSameAccount = state.account?.id == event.accountId;
@@ -107,10 +112,11 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     emitter(AccountState.idle(event.account, isOffline: event.account?.remoteId == null));
   }
 
+  void _accountChangesListener(AccountDetailEntity account) => add(_InternalUpdate(account));
+
   void _updateAccountSubscription(int id) {
     _accountSubscription?.cancel();
-    _accountSubscription = _accountRepository.watchAccount(id).listen(
-          (transaction) => add(_InternalUpdate(transaction)),
-        );
+    _accountSubscription = null;
+    _accountSubscription = _accountRepository.watchAccount(id).listen(_accountChangesListener);
   }
 }

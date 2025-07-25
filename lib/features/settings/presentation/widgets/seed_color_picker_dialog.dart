@@ -1,8 +1,7 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/colors/app_color_scheme.dart';
+import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 
 Future<Color?> showSeedColorDialog(BuildContext context, {required Color initialColor}) => showDialog(
       context: context,

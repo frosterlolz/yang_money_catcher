@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -7,7 +8,7 @@ import 'package:yang_money_catcher/features/settings/domain/enity/haptic_type.da
 
 mixin VisibilityByTiltMixin<T extends StatefulWidget> on State<T> {
   bool _isVisible = true;
-  late final StreamSubscription<AccelerometerEvent> _accelerationSubscription;
+  StreamSubscription<AccelerometerEvent>? _accelerationSubscription;
   bool _toggleInProcessing = false;
 
   DateTime? _tiltTimestamp;
@@ -17,12 +18,29 @@ mixin VisibilityByTiltMixin<T extends StatefulWidget> on State<T> {
   @override
   void initState() {
     super.initState();
-    _accelerationSubscription = accelerometerEventStream().listen(_onAccelerometer);
+    _platformSpecificInit();
+  }
+
+  void _platformSpecificInit() {
+    if (kIsWeb) {
+      _accelerationSubscription = accelerometerEventStream().listen(_onAccelerometer);
+      return;
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+      case TargetPlatform.iOS:
+        _accelerationSubscription = accelerometerEventStream().listen(_onAccelerometer);
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+        break;
+    }
   }
 
   @override
   void dispose() {
-    _accelerationSubscription.cancel();
+    _accelerationSubscription?.cancel();
     super.dispose();
   }
 

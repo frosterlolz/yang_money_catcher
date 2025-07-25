@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
+import 'package:yang_money_catcher/core/presentation/common/error_util.dart';
 import 'package:yang_money_catcher/features/account/domain/bloc/account_bloc/account_bloc.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
-import 'package:yang_money_catcher/ui_kit/common/error_body_view.dart';
-import 'package:yang_money_catcher/ui_kit/common/loading_body_view.dart';
 
 typedef AccountDetailsBuilder = Widget Function(AccountDetailEntity account);
 
@@ -39,8 +39,12 @@ class _AccountSelectedWrapperState extends State<AccountSelectedWrapper> {
   Widget build(BuildContext context) => BlocBuilder<AccountBloc, AccountState>(
         builder: (context, accountState) => switch (accountState) {
           _ when accountState.account != null => widget.accountDetailsBuilder.call(accountState.account!),
-          AccountState$Error(:final error) =>
-            ErrorBodyView.fromError(error, onRetryTap: () => _onAccountReloadTap(context)),
+          AccountState$Error(:final error) => ErrorBodyView(
+              title: ErrorUtil.messageFromObject(context, error: error),
+              retryButtonText: context.l10n.tryItAgain,
+              description: context.l10n.retry,
+              onRetryTap: () => _onAccountReloadTap(context),
+            ),
           _ => const LoadingBodyView(),
         },
       );

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/bloc/pin_authentication_bloc/pin_authentication_bloc.dart';
@@ -35,6 +36,8 @@ class _SecureBlurOverlayWrapperState extends State<SecureBlurOverlayWrapper> wit
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (kIsWeb) return;
+    if (defaultTargetPlatform != TargetPlatform.android || defaultTargetPlatform != TargetPlatform.iOS) return;
     switch (state) {
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:

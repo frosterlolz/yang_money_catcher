@@ -139,22 +139,6 @@ final class TransactionsLocalDataSource$Drift implements TransactionsLocalDataSo
   }
 
   @override
-  Future<void> insertTransactions(List<TransactionRequest$Create> requests) async {
-    final companions = requests
-        .map(
-          (e) => TransactionItemsCompanion.insert(
-            account: e.accountId,
-            category: e.categoryId,
-            amount: e.amount,
-            transactionDate: e.transactionDate,
-            comment: Value(e.comment),
-          ),
-        )
-        .toList(growable: false);
-    await _transactionsDao.insertTransactions(companions);
-  }
-
-  @override
   Future<TransactionEntity> upsertTransaction(TransactionRequest request) async {
     final companion = TransactionItemsCompanion(
       id: switch (request) {

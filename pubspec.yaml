@@ -15,12 +15,12 @@ workspace:
   - packages/database
   - packages/pretty_chart
   - packages/rest_client
+  - packages/localization
+  - packages/ui_kit
 
 dependencies:
   # ✅ Core Flutter SDK
   flutter:
-    sdk: flutter
-  flutter_localizations:
     sdk: flutter
 
   # 🧱 Workspace / Local packages
@@ -32,6 +32,10 @@ dependencies:
     path: ./packages/pretty_chart
   rest_client:
     path: ./packages/rest_client
+  localization:
+    path: ./packages/localization
+  ui_kit:
+    path: ./packages/ui_kit
 
   # 🚀 Navigation
   auto_route: 10.1.0
@@ -79,11 +83,14 @@ dependency_overrides:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^5.0.0
   build_runner: 2.4.15
   auto_route_generator: 10.0.1
   json_serializable: 6.9.4
   mockito: ^5.4.5
+  golden_toolkit: ^0.15.0
 
 flutter:
   uses-material-design: true

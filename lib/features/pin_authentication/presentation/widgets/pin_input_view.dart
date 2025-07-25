@@ -1,11 +1,10 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
+import 'package:ui_kit/ui_kit.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/entity/pin_config.dart';
 import 'package:yang_money_catcher/features/pin_authentication/domain/service/local_auth_service.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_field.dart';
 import 'package:yang_money_catcher/features/pin_authentication/presentation/widgets/pin_input_keyboard.dart';
-import 'package:yang_money_catcher/l10n/app_localizations_x.dart';
-import 'package:yang_money_catcher/ui_kit/app_sizes.dart';
 
 const _pinLength = 4;
 const _errorAnimationDuration = Duration(milliseconds: 400);
@@ -207,13 +206,16 @@ class _PinInputViewState extends State<PinInputView> {
         ),
         const Spacer(),
         if (widget.onResetPin != null) TextButton(onPressed: _onResetPin, child: Text(context.l10n.resetPin)),
-        FractionallySizedBox(
-          widthFactor: 0.8,
-          child: PinInputKeyboard(
-            onTap: _onKeyTap,
-            onDelTap: _onDelTap,
-            onBiometricTap: _onBiometricTap,
-            biometricPreference: _biometricAvailableType,
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: FractionallySizedBox(
+            widthFactor: 0.8,
+            child: PinInputKeyboard(
+              onTap: _onKeyTap,
+              onDelTap: _onDelTap,
+              onBiometricTap: _onBiometricTap,
+              biometricPreference: _biometricAvailableType,
+            ),
           ),
         ),
       ],
