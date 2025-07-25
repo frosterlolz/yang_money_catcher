@@ -40,7 +40,7 @@ Future<void> showTransactionScreen(
       builder: (_) => BlocProvider(
         create: (_) {
           final bloc = TransactionBloc(
-            TransactionState.processing(initialTransaction, isOffline: initialTransaction?.remoteId == null),
+            TransactionState.idle(initialTransaction, isOffline: initialTransaction?.remoteId == null),
             transactionsRepository: DependenciesScope.of(context).transactionsRepository,
           );
           if (initialTransaction != null) {
@@ -111,6 +111,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
       firstDate: fallbackFirstDate,
       lastDate: fallbackEndDate,
       initialDate: _transactionDate,
+      confirmText: context.l10n.ok,
+      cancelText: context.l10n.cancelAction,
     );
     if (date == null) return;
     _changeTransactionDate(date);
@@ -120,6 +122,8 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_transactionDate),
+      confirmText: context.l10n.ok,
+      cancelText: context.l10n.cancelAction,
     );
     if (time == null) return;
     _changeTransactionTime(time);
@@ -229,7 +233,7 @@ class _TransactionScreenState extends State<TransactionScreen> with _Transaction
           ),
           title: Text(context.l10n.myExpenses),
           actions: [
-            if (_hasChanges)
+            if (_hasChanges || isProcessing)
               _SaveTransactionButton(
                 key: const Key('save_transaction_button'),
                 () => doProcessing(() => _save(context)),
@@ -524,10 +528,15 @@ class _SelectAmountDialogState extends State<_SelectAmountDialog> {
         ),
         actions: [
           TextButton(
+            key: const Key('confirm_button'),
             onPressed: _amount == widget.inputAmount ? null : () => context.maybePop(_amount),
             child: Text(context.l10n.save),
           ),
-          TextButton(onPressed: () => context.maybePop(), child: Text(context.l10n.cancel)),
+          TextButton(
+            key: const Key('cancel_button'),
+            onPressed: () => context.maybePop(),
+            child: Text(context.l10n.cancel),
+          ),
         ],
       );
 }

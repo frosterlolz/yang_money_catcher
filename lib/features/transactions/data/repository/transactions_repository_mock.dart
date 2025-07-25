@@ -17,12 +17,26 @@ final class TransactionsRepository$Mock implements TransactionsRepository {
     final detailed = await _mockDataStore.fetchTransaction(upsertedId);
     if (detailed == null) throw StateError('Cannot fetch transaction after insert/update');
     yield DataResult.offline(data: detailed);
+    await Future<void>.delayed(const Duration(seconds: 3));
+    yield DataResult.online(data: detailed);
+  }
+
+  @override
+  Stream<DataResult<TransactionDetailEntity>> updateTransaction(TransactionRequest$Update request) async* {
+    final upsertedId = _mockDataStore.upsertTransaction(request);
+    final detailed = await _mockDataStore.fetchTransaction(upsertedId);
+    if (detailed == null) throw StateError('Cannot fetch transaction after update');
+    yield DataResult.offline(data: detailed);
+    await Future<void>.delayed(const Duration(seconds: 1));
+    yield DataResult.online(data: detailed);
   }
 
   @override
   Stream<DataResult<void>> deleteTransaction(int id) async* {
     _mockDataStore.deleteTransaction(id);
     yield const DataResult.offline(data: null);
+    await Future<void>.delayed(const Duration(seconds: 1));
+    yield const DataResult.online(data: null);
   }
 
   @override
@@ -30,18 +44,24 @@ final class TransactionsRepository$Mock implements TransactionsRepository {
     final res = await _mockDataStore.fetchTransaction(id);
     if (res == null) throw StateError('Cannot fetch transaction');
     yield DataResult.offline(data: res);
+    await Future<void>.delayed(const Duration(seconds: 1));
+    yield DataResult.online(data: res);
   }
 
   @override
   Stream<DataResult<Iterable<TransactionCategory>>> getTransactionCategories() async* {
     final res = _mockDataStore.transactionCategories;
     yield DataResult.offline(data: res);
+    await Future<void>.delayed(const Duration(seconds: 1));
+    yield DataResult.online(data: res);
   }
 
   @override
   Stream<DataResult<Iterable<TransactionDetailEntity>>> getTransactions(TransactionFilters filters) async* {
     final res = await _mockDataStore.fetchTransactionsDetailed(filters);
     yield DataResult.offline(data: res);
+    await Future<void>.delayed(const Duration(seconds: 1));
+    yield DataResult.online(data: res);
   }
 
   @override
@@ -50,12 +70,4 @@ final class TransactionsRepository$Mock implements TransactionsRepository {
   @override
   Stream<List<TransactionDetailEntity>> transactionsListChanges(TransactionFilters filters) =>
       _mockDataStore.transactionDetailedListChanges(filters);
-
-  @override
-  Stream<DataResult<TransactionDetailEntity>> updateTransaction(TransactionRequest$Update request) async* {
-    final upsertedId = _mockDataStore.upsertTransaction(request);
-    final detailed = await _mockDataStore.fetchTransaction(upsertedId);
-    if (detailed == null) throw StateError('Cannot fetch transaction after update');
-    yield DataResult.offline(data: detailed);
-  }
 }

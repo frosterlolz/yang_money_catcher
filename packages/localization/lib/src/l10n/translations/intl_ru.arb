@@ -114,6 +114,7 @@
   "incomeSavedSuccessfully": "Доход сохранен",
   "expenseSavedSuccessfully": "Расход сохранен",
   "balance": "Баланс",
+  "ok": "ОК",
   "cancel": "Отменить",
   "cancelAction": "Отмена",
   "save": "Сохранить",

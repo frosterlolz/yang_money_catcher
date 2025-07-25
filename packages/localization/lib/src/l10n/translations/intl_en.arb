@@ -114,6 +114,7 @@
   "incomeSavedSuccessfully": "Income saved",
   "expenseSavedSuccessfully": "Expense saved",
   "balance": "Balance",
+  "ok": "OK",
   "cancel": "Cancel",
   "cancelAction": "Cancel",
   "save": "Save",

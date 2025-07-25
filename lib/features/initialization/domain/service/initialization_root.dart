@@ -14,10 +14,12 @@ import 'package:yang_money_catcher/core/data/rest_client/interceptors/logging_in
 import 'package:yang_money_catcher/core/data/rest_client/interceptors/offline_mode_check_interceptor.dart';
 import 'package:yang_money_catcher/core/data/rest_client/transformers/worker_background_transformer.dart';
 import 'package:yang_money_catcher/features/account/data/repository/account_repository_impl.dart';
+import 'package:yang_money_catcher/features/account/data/repository/account_repository_mock.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/account_events_sync_data_source_drift.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source.dart';
 import 'package:yang_money_catcher/features/account/data/source/local/accounts_local_data_source_drift.dart';
 import 'package:yang_money_catcher/features/account/data/source/network/accounts_network_data_source_rest.dart';
+import 'package:yang_money_catcher/features/common/data/mock_data_store.dart';
 import 'package:yang_money_catcher/features/initialization/domain/entity/dependencies.dart';
 import 'package:yang_money_catcher/features/offline_mode/data/repository/offline_mode_repository_impl.dart';
 import 'package:yang_money_catcher/features/offline_mode/domain/bloc/offline_mode_bloc/offline_mode_bloc.dart';
@@ -31,6 +33,7 @@ import 'package:yang_money_catcher/features/settings/data/source/local/settings_
 import 'package:yang_money_catcher/features/settings/domain/bloc/settings_bloc/settings_bloc.dart';
 import 'package:yang_money_catcher/features/settings/domain/enity/settings.dart';
 import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_impl.dart';
+import 'package:yang_money_catcher/features/transactions/data/repository/transactions_repository_mock.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transaction_events_sync_data_source_drift.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source.dart';
 import 'package:yang_money_catcher/features/transactions/data/source/local/transactions_local_data_source_drift.dart';
@@ -152,7 +155,9 @@ final class InitializationRoot {
             transactionsLocalStorage: transactionsLocalDataSource,
             accountEventsSyncDataSource: accountEventsSyncDataSource,
           );
-          d.accountRepository = accountsRepository;
+          final mockDataStore = MockDataStore();
+          d.context['mock_data_store'] = mockDataStore;
+          d.accountRepository = EnvConstants.useMocks ? AccountRepository$Mock(mockDataStore) : accountsRepository;
         },
         'Prepare transactions feature': (d) async {
           final database = d.context['drift_database']! as AppDatabase;
@@ -168,7 +173,9 @@ final class InitializationRoot {
             transactionsSyncDataSource: transactionEventsSyncDataSource,
             accountsLocalDataSource: accountsLocalDataSource,
           );
-          d.transactionsRepository = transactionsRepository;
+          final mockDataStore = d.context['mock_data_store']! as MockDataStore;
+          d.transactionsRepository =
+              EnvConstants.useMocks ? TransactionsRepository$Mock(mockDataStore) : transactionsRepository;
         },
       };
 

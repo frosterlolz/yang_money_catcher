@@ -3,9 +3,21 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_change_request.dart';
 import 'package:yang_money_catcher/features/account/domain/entity/account_entity.dart';
+import 'package:yang_money_catcher/features/account/domain/entity/enum.dart';
 
 mixin MockDataSource$Accounts {
-  final List<AccountEntity> _accounts = List.empty(growable: true);
+  final List<AccountEntity> _accounts = [
+    AccountEntity(
+      id: 1,
+      remoteId: 1,
+      userId: 1,
+      name: 'Mock account 1',
+      balance: '0.0',
+      currency: Currency.rub,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ),
+  ];
 
   final StreamController<List<AccountEntity>> _accountsListController =
       StreamController<List<AccountEntity>>.broadcast();
@@ -28,7 +40,8 @@ mixin MockDataSource$Accounts {
     _accountsListController.add(newAccounts);
     for (final oldAccount in oldAccounts) {
       final updatedAccount = newAccounts.firstWhereOrNull(
-          (newAccount) => newAccount.id == oldAccount.id || newAccount.remoteId == oldAccount.remoteId);
+        (newAccount) => newAccount.id == oldAccount.id || newAccount.remoteId == oldAccount.remoteId,
+      );
       if (updatedAccount == null) {
         _accountChangesController.add((oldAccount, true));
       } else {
