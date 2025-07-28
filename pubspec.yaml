@@ -41,8 +41,7 @@ dependencies:
   auto_route: 10.1.0
 
   # 📦 Data Models / Code Generation
-  freezed: 3.1.0
-  freezed_annotation: 3.1.0
+  freezed_annotation: 2.4.4
   json_annotation: 4.9.0
 
   # 🧰 Utilities
@@ -83,6 +82,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: any
+  freezed: 2.5.8
   build_runner: 2.5.4
   auto_route_generator: 10.2.3
   json_serializable: 6.9.5
